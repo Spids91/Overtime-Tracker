@@ -144,8 +144,15 @@
     <div id="callList"></div>
     <button class="act ghost" id="addCall">+ Add call</button>
 
-    <h2 class="sec">End of shift</h2>
-    <div class="card"><label class="fld"><span>Actual back-at-base time (drives overtime, not the last clear)</span><input type="time" id="backAtBase"></label></div>
+    <h2 class="sec">Actual times worked</h2>
+    <div class="card">
+      <div class="locnote" style="margin-bottom:10px">The paysheet asks for roster and actual. Actual start defaults to your roster start, change it for a lay-off, early start, or early finish.</div>
+      <div class="row2">
+        <label class="fld"><span>Actual start (booked on)</span><input type="time" id="actualStart"></label>
+        <label class="fld"><span>Actual end (back at base)</span><input type="time" id="backAtBase"></label>
+      </div>
+      <div class="locnote" style="margin-top:6px">Actual end drives overtime (vs roster end). Actual start is for the paysheet only, it does not change overtime or subsistence.</div>
+    </div>
 
     <div id="gapQuestions"></div>
     <button class="act" id="compute" style="margin-top:6px">Compute shift</button>
@@ -247,7 +254,7 @@ function renderPatterns(){
   $('patternChips').innerHTML=PATTERNS.map(p=>`<div class="chip" data-p="${p}">${p}</div>`).join('')+`<div class="chip" data-p="custom">custom</div>`;
   $('patternChips').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
     $('patternChips').querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');
-    const p=c.dataset.p;if(p!=='custom'){const[s,e]=p.split('-');$('rosterStart').value=s+':00';$('rosterEnd').value=e+':00';}else{$('rosterStart').value='';$('rosterEnd').value='';}
+    const p=c.dataset.p;if(p!=='custom'){const[s,e]=p.split('-');$('rosterStart').value=s+':00';$('rosterEnd').value=e+':00';$('actualStart').value=s+':00';}else{$('rosterStart').value='';$('rosterEnd').value='';$('actualStart').value='';}
   });
 }
 
@@ -491,7 +498,7 @@ function saveShift(){
     date,
     station: stn || '',
     rosterStart: input.rosterStart, rosterEnd: input.rosterEnd,
-    actualStart: r.events[0] ? ENGINE.fmtClock(r.events[0].startM) : input.rosterStart,
+    actualStart: $('actualStart').value || input.rosterStart,
     actualEnd: ENGINE.fmtClock(r.overtime.backM),
     otFrom: ENGINE.fmtClock(r.overtime.rosterEndM),
     otTo: ENGINE.fmtClock(r.overtime.backM),
@@ -623,6 +630,8 @@ function renderWeekTotals(){
 }
 
 renderPatterns();$('shiftDate').valueAsDate=new Date();
+// when roster start is typed manually, mirror it to actual start if actual is still blank
+$('rosterStart').addEventListener('change',()=>{ if(!$('actualStart').value) $('actualStart').value=$('rosterStart').value; });
 loadLocations();
 renderHistory();
 renderStationBanner();
