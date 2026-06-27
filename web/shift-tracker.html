@@ -67,6 +67,16 @@
   .hm input[type=number]{width:46px;text-align:center}
   .hmlab{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-right:4px}
   .custombox{margin-top:10px;padding:12px;border:1px dashed var(--ask);border-radius:10px;background:var(--ask-soft)}
+  .week{border:1px solid var(--line);border-radius:var(--radius);margin-bottom:14px;overflow:hidden}
+  .weekhead{display:flex;justify-content:space-between;align-items:center;padding:11px 13px;background:var(--ink);color:#fff}
+  .weekhead .weektot{font-family:var(--mono);font-size:12px;opacity:.9}
+  .dayrow{border-top:1px solid var(--line);padding:10px 13px}
+  .dayhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+  .dayhead .del{background:none;border:none;color:var(--bad);font-size:17px;cursor:pointer;line-height:1;padding:0 2px}
+  .daygrid{display:grid;grid-template-columns:1fr 1fr;gap:7px 14px;font-size:13px}
+  .daygrid .cadcell{grid-column:1/-1;border-top:1px dashed var(--line-soft);padding-top:7px;font-family:var(--mono);word-break:break-word}
+  .dl{display:block;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);margin-bottom:2px}
+  .clearcads{margin:10px 13px 13px}
 </style>
 </head>
 <body>
@@ -110,6 +120,10 @@
   <div id="gapQuestions"></div>
   <button class="act" id="compute" style="margin-top:6px">Compute shift</button>
   <div id="output" style="margin-top:18px"></div>
+  <button class="act ghost" id="saveShift" style="margin-top:10px;display:none">Save this shift to my week</button>
+
+  <h2 class="sec">My weeks</h2>
+  <div id="history"></div>
 </div>
 
 <script>
@@ -331,10 +345,114 @@ function compute(){
     <div class="lrow" style="border-top:1px solid var(--line);margin-top:6px;padding-top:9px"><span class="t">${ENGINE.fmtClock(ot.rosterEndM)}</span><span class="d">Rostered end &middot; back at base ${ENGINE.fmtClock(ot.backM)} &middot; raw ${ENGINE.fmtDur(ot.rawMin)}${Number($('otRound').value)?', up to '+ENGINE.fmtDur(ot.roundedMin):''}</span></div></div>
     <details class="tt" style="padding:10px 14px"><summary>Step trace</summary><div style="margin-top:8px">${r.ledger.map(l=>`<div class="lrow"><span class="t">${ENGINE.fmtClock(l.atMin)}</span><span class="d">${l.text}<span class="pill ${l.kind}">${l.kind}</span></span></div>`).join('')}</div></details>
     <div class="note">App assists, you assert. These figures rest on the locations and gap answers you confirmed, the record you stand behind for the claim.</div></div>`;
+  lastComputed = { r, input: currentInput() };
+  $('saveShift').style.display = '';
 }
 $('compute').onclick=compute;
+
+/* ===== SAVE + WEEK HISTORY (Sunday-ending, mirrors the paper paysheet) ===== */
+// NOTE: artifacts cannot persist across reloads. This holds shifts for the session.
+// The logic is storage-ready: swap `shiftStore` for a real store and history persists.
+let lastComputed = null;
+let shiftStore = {};   // keyed by date 'YYYY-MM-DD'
+
+function weekEndingSunday(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  const day = d.getDay();                 // 0=Sun..6=Sat
+  const add = (7 - day) % 7;              // days to next Sunday (0 if already Sun)
+  d.setDate(d.getDate()+add);
+  return d.toISOString().slice(0,10);
+}
+function fmtDate(dateStr){
+  return new Date(dateStr+'T00:00:00').toLocaleDateString('en-IE',{weekday:'short',day:'numeric',month:'short'});
+}
+
+function saveShift(){
+  if(!lastComputed) return;
+  const date = $('shiftDate').value;
+  if(!date){ alert('Set the shift date first.'); return; }
+  const { r, input } = lastComputed;
+  const stn = LOC && homeStationId ? (LOC.stations.find(s=>s.id===homeStationId)||{}).name : '';
+  // capture exactly what the paysheet row needs
+  shiftStore[date] = {
+    date,
+    station: stn || '',
+    rosterStart: input.rosterStart, rosterEnd: input.rosterEnd,
+    actualStart: r.events[0] ? ENGINE.fmtClock(r.events[0].startM) : input.rosterStart,
+    actualEnd: ENGINE.fmtClock(r.overtime.backM),
+    otFrom: ENGINE.fmtClock(r.overtime.rosterEndM),
+    otTo: ENGINE.fmtClock(r.overtime.backM),
+    otHours: +(r.overtime.roundedMin/60).toFixed(2),
+    subsistence: r.awayWindows.filter(w=>w.tier>0).map(w=>({from:ENGINE.fmtClock(w.start),to:ENGINE.fmtClock(w.end),tier:w.tier})),
+    cads: input.calls.map(c=>c.cad).filter(Boolean),
+    cadsCleared: false
+  };
+  $('saveShift').style.display='none';
+  renderHistory();
+  // jump to history
+  $('history').scrollIntoView({behavior:'smooth',block:'start'});
+}
+$('saveShift').onclick=saveShift;
+
+function clearWeekCads(weekEnd){
+  for(const date in shiftStore){
+    if(weekEndingSunday(date)===weekEnd){ shiftStore[date].cads=[]; shiftStore[date].cadsCleared=true; }
+  }
+  renderHistory();
+}
+function deleteShift(date){
+  if(confirm('Delete '+fmtDate(date)+' from your record?')){ delete shiftStore[date]; renderHistory(); }
+}
+
+function renderHistory(){
+  const dates = Object.keys(shiftStore).sort().reverse();
+  if(!dates.length){ $('history').innerHTML='<div class="empty">No saved shifts yet. Compute a shift, then save it to your week.</div>'; return; }
+  // group by week-ending Sunday
+  const weeks = {};
+  for(const date of dates){ const w=weekEndingSunday(date); (weeks[w]=weeks[w]||[]).push(date); }
+  const weekKeys = Object.keys(weeks).sort().reverse();
+  $('history').innerHTML = weekKeys.map(wk=>{
+    const days = weeks[wk].sort(); // Mon..Sun within the week
+    const totOT = days.reduce((s,d)=>s+shiftStore[d].otHours,0);
+    const tot5 = days.reduce((s,d)=>s+shiftStore[d].subsistence.filter(x=>x.tier===5).length,0);
+    const tot10 = days.reduce((s,d)=>s+shiftStore[d].subsistence.filter(x=>x.tier===10).length,0);
+    const anyCads = days.some(d=>shiftStore[d].cads.length);
+    const subSum = [tot10?tot10+'x10h':'',tot5?tot5+'x5h':''].filter(Boolean).join(' + ')||'none';
+    return `<div class="week">
+      <div class="weekhead">
+        <div><b>Week ending Sun ${fmtDate(wk)}</b></div>
+        <div class="weektot">${totOT}h OT &middot; ${subSum}</div>
+      </div>
+      ${days.map(d=>renderDayRow(shiftStore[d])).join('')}
+      ${anyCads?`<button class="act ghost small clearcads" data-wk="${wk}">Clear this week's incident numbers (after you've copied them to paper)</button>`:'<div class="locnote" style="padding:8px 2px">Incident numbers cleared for this week.</div>'}
+    </div>`;
+  }).join('');
+  $('history').querySelectorAll('.clearcads').forEach(b=>b.onclick=()=>{
+    if(confirm("Clear incident numbers for the week ending "+fmtDate(b.dataset.wk)+"? Keep the overtime and subsistence totals; only the CAD numbers are removed. Do this once they're on your paper sheet.")) clearWeekCads(b.dataset.wk);
+  });
+  $('history').querySelectorAll('.delday').forEach(b=>b.onclick=()=>deleteShift(b.dataset.date));
+}
+
+function renderDayRow(s){
+  const sub = s.subsistence.length
+    ? s.subsistence.map(x=>`${x.from}-${x.to} <span class="pill ${x.tier===10?'t10':'t5'}">${x.tier}h</span>`).join(' ')
+    : '<span class="locnote">none</span>';
+  const cads = s.cads.length ? s.cads.join(', ') : (s.cadsCleared?'<span class="locnote">cleared</span>':'<span class="locnote">none</span>');
+  return `<div class="dayrow">
+    <div class="dayhead"><b>${fmtDate(s.date)}</b><button class="del delday" data-date="${s.date}" title="delete">&times;</button></div>
+    <div class="daygrid">
+      <div><span class="dl">Actual</span>${s.actualStart}-${s.actualEnd}</div>
+      <div><span class="dl">Station</span>${s.station||'-'}</div>
+      <div><span class="dl">Overtime</span>${s.otHours}h (${s.otFrom}-${s.otTo})</div>
+      <div><span class="dl">Subsistence</span>${sub}</div>
+      <div class="cadcell"><span class="dl">Incident no.</span>${cads}</div>
+    </div>
+  </div>`;
+}
+
 renderPatterns();$('shiftDate').valueAsDate=new Date();
 loadLocations();
+renderHistory();
 </script>
 </body>
 </html>
