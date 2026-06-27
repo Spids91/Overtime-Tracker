@@ -1,0 +1,35 @@
+{
+  "_meta": {
+    "purpose": "Locations (stations + hospitals) and per-route drive-time standards for the shift engine.",
+    "driveTimes_are": "ACCEPTED STANDARD journey times in minutes, NOT live/GPS times. These are the agreed figures a crew would claim, normal-traffic driving (no blue lights on return legs).",
+    "source_status": "confirmed = set by a user who knows the route. estimate = derived from OSM coordinates, road-winding factor applied, UNVERIFIED. seed = placeholder, no data yet.",
+    "per_user": true,
+    "note": "The engine only needs minutes per ordered pair. Coordinates are kept for seeding estimates and for adding new pairs later. Return leg = same as outbound unless a user overrides it."
+  },
+
+  "stations": [
+    {
+      "id": "stn_mullingar",
+      "name": "Mullingar Ambulance Station",
+      "eircode": null,
+      "lat": null,
+      "lng": null,
+      "source": "seed",
+      "_todo": "add eircode + coords; OSM build script will fill coords if matched"
+    }
+  ],
+
+  "hospitals": [
+    { "id": "hosp_mullingar",  "name": "Regional Hospital Mullingar (Midlands Regional, Mullingar)", "eircode": null, "lat": null, "lng": null, "ed": true, "source": "seed" },
+    { "id": "hosp_tullamore",  "name": "Midlands Regional Hospital Tullamore",                          "eircode": null, "lat": null, "lng": null, "ed": true, "source": "seed" },
+    { "id": "hosp_portlaoise", "name": "Midlands Regional Hospital Portlaoise",                         "eircode": null, "lat": null, "lng": null, "ed": true, "source": "seed" },
+    { "id": "hosp_cavan",      "name": "Cavan General Hospital",                                        "eircode": null, "lat": null, "lng": null, "ed": true, "source": "seed" }
+  ],
+
+  "driveTimes": [
+    { "from": "stn_mullingar", "to": "hosp_mullingar",  "minutes": 7,  "source": "confirmed", "by": "user", "confirmedAt": "2026-06-27" },
+    { "from": "stn_mullingar", "to": "hosp_tullamore",  "minutes": 33, "source": "confirmed", "by": "user", "confirmedAt": "2026-06-27" },
+    { "from": "stn_mullingar", "to": "hosp_portlaoise", "minutes": 69, "source": "confirmed", "by": "user", "confirmedAt": "2026-06-27" },
+    { "from": "stn_mullingar", "to": "hosp_cavan",      "minutes": 62, "source": "confirmed", "by": "user", "confirmedAt": "2026-06-27" }
+  ]
+}

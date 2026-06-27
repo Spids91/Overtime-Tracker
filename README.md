@@ -88,6 +88,38 @@ committing.
    routing API for a personal tool). A routing API is only for the wider product.
 5. Eircode list (hospitals) + station locations, to be added.
 
+## Locations &amp; drive-times (`data/`)
+
+Drive-times are **accepted standard journey times** (the agreed figure a crew
+claims, normal-traffic return-leg driving), not GPS times. See `data/README.md`.
+
+- `data/locations.json` — stations, hospitals, per-route standards.
+- `data/overpass-query.txt` — free OSM pull (no API key) to seed the national list.
+- `scripts/build-locations.js` — merges OSM data in, derives **labelled estimate**
+  drive-times, and **never overwrites a `confirmed` route**. User knowledge wins.
+
+A routing API is deliberately NOT used: it costs money and produces precise
+traffic-adjusted times, which is the opposite of the defensible shared standard a
+claim needs. Estimates from coordinates are rough and labelled `unverified`; the
+user corrects them to the real accepted standard.
+
+## CAD number handling (data protection)
+
+A CAD number plus shift date and call times is **personal data** under GDPR (an
+indirect identifier the HSE/NAS can resolve to a specific 999 call and patient),
+even though a member of the public cannot look it up without system access.
+
+Rules this app follows:
+- CAD numbers are shown to the user while they work the shift (they need them for
+  the official timesheet), then **deleted, not retained**. The overtime/subsistence
+  maths never needs the CAD number, only times and locations.
+- No CAD numbers in anything that leaves the device without a lawful basis: no
+  analytics, no logs, no cloud sync. When OCR is added, the photo goes to the
+  vision API with zero server-side retention and is not stored.
+- Releasing to other paramedics makes you a data controller. Get data-protection
+  advice (privacy notice, lawful basis, DPC guidance) BEFORE multi-user launch.
+  Health-adjacent data raises the bar; this is flagged, not yet handled.
+
 ## OCR (not built yet, deliberately)
 
 Manual entry first, to prove the money maths before adding a layer that can misread

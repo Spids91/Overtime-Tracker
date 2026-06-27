@@ -1,0 +1,39 @@
+/*
+  OVERPASS QUERY — National Ambulance Service stations + hospitals, Republic of Ireland
+
+  HOW TO RUN (free, no API key):
+    Option A (easiest):
+      1. Go to https://overpass-turbo.eu
+      2. Paste this whole query into the left panel
+      3. Click "Run"
+      4. Export > "raw OSM data" as GeoJSON, save as data/osm-raw.geojson
+      5. Run: node scripts/build-locations.js data/osm-raw.geojson
+
+    Option B (command line):
+      curl -s -X POST -d @data/overpass-query.txt https://overpass-api.de/api/interpreter > data/osm-raw.json
+      node scripts/build-locations.js data/osm-raw.json
+
+  NOTES
+  - "area" below is Ireland (the island). OSM does not split the border cleanly,
+    so the build script filters out Northern Ireland by longitude/known names if needed.
+  - amenity=ambulance_station is the OSM tag for stations. Coverage is community-
+    maintained and incomplete — this is a SEED, not an authoritative list. You will
+    verify and add missing ones, as agreed.
+  - Hospitals: amenity=hospital with emergency=yes preferred, but we pull all and
+    let you flag which have EDs (most claims are cleared at EDs).
+*/
+
+[out:json][timeout:60];
+area["name"="Ireland"]["admin_level"="2"]->.ie;
+(
+  // Ambulance stations
+  node["amenity"="ambulance_station"](area.ie);
+  way["amenity"="ambulance_station"](area.ie);
+  relation["amenity"="ambulance_station"](area.ie);
+
+  // Hospitals (pull all; ED flagging done after)
+  node["amenity"="hospital"](area.ie);
+  way["amenity"="hospital"](area.ie);
+  relation["amenity"="hospital"](area.ie);
+);
+out center tags;
