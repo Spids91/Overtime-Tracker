@@ -81,57 +81,95 @@
   .subline{margin-top:4px}
   .cadinline{font-family:var(--mono);font-size:12px;word-break:break-word;margin-top:1px}
   .cadinline .dl{display:inline;margin-right:4px}
+  /* tabs */
+  .tabs{position:sticky;top:0;z-index:10;display:flex;gap:2px;background:var(--paper);padding:8px 0 10px;margin-bottom:6px}
+  .tab{flex:1;padding:10px 8px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);font-weight:600;font-size:14px;cursor:pointer;border-radius:9px}
+  .tab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .tab:not(.on):active{background:var(--line-soft)}
+  .panel{display:none;animation:fade .18s ease}
+  .panel.on{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+  @media(prefers-reduced-motion:reduce){.panel{animation:none}}
+  /* banner (station on enter tab, totals on weeks tab) */
+  .banner{font-size:13px;color:var(--ink-soft);padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:14px;background:#fff}
+  .banner.warn{border-color:var(--warn);background:var(--warn-soft);color:var(--warn)}
+  .banner b{color:var(--ink)}
+  .banner .mini{font-family:var(--mono);font-size:12px}
+  .banner a.gotoset{color:var(--ask);cursor:pointer;text-decoration:underline;font-weight:600}
+  /* save toast */
+  .toast{margin-top:10px;padding:11px 13px;border-radius:10px;background:var(--hi-soft);color:var(--hi);font-size:14px;font-weight:600;text-align:center;animation:fade .2s ease}
+  .dttable{width:100%;border-collapse:collapse;font-size:13px}
+  .dttable th,.dttable td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line-soft)}
+  .dttable th{font-family:var(--mono);font-size:11px;color:var(--ink-soft);text-transform:uppercase}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header class="app"><h1>Shift Tracker</h1><span class="tag">engine v1 module</span></header>
+  <header class="app"><h1>Shift Tracker</h1><span class="tag">NAS overtime &amp; subsistence</span></header>
 
-  <h2 class="sec">Your station</h2>
-  <div class="card">
-    <label class="fld"><span>Home station (set once, drive-times are measured from here)</span>
-      <select id="homeStation"><option value="">Loading stations…</option></select></label>
-    <div id="stationNote" class="locnote"></div>
-  </div>
+  <nav class="tabs" role="tablist">
+    <button class="tab on" data-tab="enter" role="tab">Enter shift</button>
+    <button class="tab" data-tab="weeks" role="tab">My weeks</button>
+    <button class="tab" data-tab="settings" role="tab">Settings</button>
+  </nav>
 
-  <h2 class="sec">Rostered shift</h2>
-  <div class="card">
-    <label class="fld"><span>Date</span><input type="date" id="shiftDate"></label>
-    <label class="fld"><span>Pattern</span></label>
-    <div class="chips" id="patternChips"></div>
-    <div class="row2" style="margin-top:12px">
-      <label class="fld"><span>Roster start</span><input type="time" id="rosterStart"></label>
-      <label class="fld"><span>Roster end</span><input type="time" id="rosterEnd"></label>
+  <!-- ENTER SHIFT -->
+  <section class="panel on" data-panel="enter">
+    <div id="stationBanner" class="banner"></div>
+
+    <h2 class="sec">Rostered shift</h2>
+    <div class="card">
+      <label class="fld"><span>Date</span><input type="date" id="shiftDate"></label>
+      <label class="fld"><span>Pattern</span></label>
+      <div class="chips" id="patternChips"></div>
+      <div class="row2" style="margin-top:12px">
+        <label class="fld"><span>Roster start</span><input type="time" id="rosterStart"></label>
+        <label class="fld"><span>Roster end</span><input type="time" id="rosterEnd"></label>
+      </div>
+      <label class="fld"><span>Overtime rounding (always rounded up)</span>
+        <select id="otRound"><option value="0">Exact minutes</option><option value="15">15 min</option><option value="30">30 min</option><option value="60">1 hour</option></select>
+      </label>
     </div>
-    <label class="fld"><span>Overtime rounding (always rounded up)</span>
-      <select id="otRound"><option value="0">Exact minutes</option><option value="15">15 min</option><option value="30">30 min</option><option value="60">1 hour</option></select>
-    </label>
-  </div>
 
-  <h2 class="sec">Calls this shift</h2>
-  <div id="callList"></div>
-  <button class="act ghost" id="addCall">+ Add call</button>
-  <details class="tt"><summary>Drive-times from your station (edit to confirm)</summary>
-    <div class="locnote" style="margin:6px 2px 10px">Confirmed = you set it. Estimate = derived from map coordinates, unverified. Your edits are saved as confirmed.</div>
-    <table><thead><tr><th>Hospital</th><th>Drive time</th><th>Status</th></tr></thead><tbody id="ttBody"></tbody></table>
-    <div style="margin-top:8px"><input type="text" id="newLoc" placeholder="Add a location not in the list"></div>
-    <button class="act ghost small" id="addLoc" style="margin-top:8px">+ Add location</button>
-  </details>
+    <h2 class="sec">Calls this shift</h2>
+    <div id="callList"></div>
+    <button class="act ghost" id="addCall">+ Add call</button>
 
-  <h2 class="sec">End of shift</h2>
-  <div class="card"><label class="fld"><span>Actual back-at-base time (drives overtime, not the last clear)</span><input type="time" id="backAtBase"></label></div>
+    <h2 class="sec">End of shift</h2>
+    <div class="card"><label class="fld"><span>Actual back-at-base time (drives overtime, not the last clear)</span><input type="time" id="backAtBase"></label></div>
 
-  <div id="gapQuestions"></div>
-  <button class="act" id="compute" style="margin-top:6px">Compute shift</button>
-  <div id="output" style="margin-top:18px"></div>
-  <button class="act ghost" id="saveShift" style="margin-top:10px;display:none">Save this shift to my week</button>
+    <div id="gapQuestions"></div>
+    <button class="act" id="compute" style="margin-top:6px">Compute shift</button>
+    <div id="output" style="margin-top:18px"></div>
+    <button class="act ghost" id="saveShift" style="margin-top:10px;display:none">Save this shift to my week</button>
+    <div id="saveToast" class="toast" style="display:none">Saved. Ready for the next day.</div>
+  </section>
 
-  <h2 class="sec">My weeks</h2>
-  <div id="history"></div>
+  <!-- MY WEEKS -->
+  <section class="panel" data-panel="weeks">
+    <div id="weekTotals" class="banner"></div>
+    <div id="history"></div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="panel" data-panel="settings">
+    <h2 class="sec">Your station</h2>
+    <div class="card">
+      <label class="fld"><span>Home station (set once, drive-times are measured from here)</span>
+        <select id="homeStation"><option value="">Loading stations…</option></select></label>
+      <div id="stationNote" class="locnote"></div>
+    </div>
+
+    <h2 class="sec">Drive-times from your station</h2>
+    <div class="card">
+      <div class="locnote" style="margin-bottom:10px">Confirmed = you set it. Estimate = derived from map coordinates, unverified. Editing a value confirms it.</div>
+      <table class="dttable"><thead><tr><th>Hospital</th><th>Drive time</th><th>Status</th></tr></thead><tbody id="ttBody"></tbody></table>
+      <div style="margin-top:10px"><input type="text" id="newLoc" placeholder="Add a location not in the list"></div>
+      <button class="act ghost small" id="addLoc" style="margin-top:8px">+ Add location</button>
+    </div>
+  </section>
 </div>
 
-<script>
-</script>
 <script src="../engine/engine.js"></script>
 <script>
 /* ===== UI: thin skin over ENGINE. Loads locations.json, keys drive-times to a home station. ===== */
@@ -162,7 +200,7 @@ async function loadLocations(){
   });
   $('homeStation').innerHTML='<option value="">Select your station…</option>'+
     stations.map(s=>`<option value="${s.id}">${s.name}${s.likely_not_a_station?' (not a station?)':''}${s.verified===false?' ·unverified':''}</option>`).join('');
-  $('homeStation').onchange=()=>{ homeStationId=$('homeStation').value; buildDriveTimes(); renderTT(); renderCalls(); renderGaps(); saveHome(); };
+  $('homeStation').onchange=()=>{ homeStationId=$('homeStation').value; buildDriveTimes(); renderTT(); renderCalls(); renderGaps(); saveHome(); renderStationBanner(); };
   // restore previous choice
   const saved=getHome();
   if(saved && stations.some(s=>s.id===saved)){ $('homeStation').value=saved; homeStationId=saved; buildDriveTimes(); }
@@ -410,8 +448,10 @@ function saveShift(){
   };
   $('saveShift').style.display='none';
   renderHistory();
-  // jump to history
-  $('history').scrollIntoView({behavior:'smooth',block:'start'});
+  // stay on Enter, show a brief confirmation, ready for the next day
+  const toast=$('saveToast');
+  toast.style.display='';
+  setTimeout(()=>{ toast.style.display='none'; }, 2600);
 }
 $('saveShift').onclick=saveShift;
 
@@ -489,9 +529,48 @@ function renderDayRow(s){
   </div>`;
 }
 
+/* ===== TABS ===== */
+function showTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on', t.dataset.tab===name));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on', p.dataset.panel===name));
+  if(name==='enter') renderStationBanner();
+  if(name==='weeks') renderWeekTotals();
+  window.scrollTo({top:0,behavior:'instant'});
+}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>showTab(t.dataset.tab));
+
+/* Station banner on the Enter tab: shows current station, or nudges to Settings. */
+function renderStationBanner(){
+  const el=$('stationBanner'); if(!el) return;
+  if(LOC && homeStationId){
+    const stn=LOC.stations.find(s=>s.id===homeStationId);
+    el.className='banner';
+    el.innerHTML=`Station: <b>${stn?stn.name:'?'}</b>. <span class="mini">Drive-times measured from here.</span>`;
+  } else {
+    el.className='banner warn';
+    el.innerHTML=`No station set. <a class="gotoset">Choose your station in Settings</a> so drive-times work.`;
+    el.querySelector('.gotoset').onclick=()=>showTab('settings');
+  }
+}
+
+/* Running totals across all saved weeks, shown atop My weeks. */
+function renderWeekTotals(){
+  const el=$('weekTotals'); if(!el) return;
+  const all=Object.values(shiftStore);
+  if(!all.length){ el.style.display='none'; return; }
+  el.style.display='';
+  const ot=all.reduce((s,d)=>s+d.otHours,0);
+  const t5=all.reduce((s,d)=>s+d.subsistence.filter(x=>x.tier===5).length,0);
+  const t10=all.reduce((s,d)=>s+d.subsistence.filter(x=>x.tier===10).length,0);
+  const sub=[t10?t10+'×10h':'',t5?t5+'×5h':''].filter(Boolean).join(' + ')||'none';
+  el.className='banner';
+  el.innerHTML=`Totals so far: <b>${ot}h</b> overtime &middot; <b>${sub}</b> subsistence <span class="mini">across ${all.length} day${all.length>1?'s':''}</span>`;
+}
+
 renderPatterns();$('shiftDate').valueAsDate=new Date();
 loadLocations();
 renderHistory();
+renderStationBanner();
 </script>
 </body>
 </html>
