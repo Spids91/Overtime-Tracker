@@ -210,12 +210,37 @@ function renderTT(){
 $('addLoc').onclick=()=>{const n=$('newLoc').value.trim();if(!n)return;if(!(n in driveTimes)){driveTimes[n]=20;dtMeta[n]='estimate';}$('newLoc').value='';renderTT();renderCalls();};
 
 /* ---- calls ---- */
-function addCall(){calls.push({cad:'',start:'',clear:'',loc:Object.keys(driveTimes)[0]||''});renderCalls();}
+// Build county-grouped <optgroup> options of ALL hospitals, plus station + Other.
+// Drive-time still comes from the station table; a hospital with no set time uses Other-style fallback.
+function locationOptions(selected){
+  if(!LOC) return `<option>Other / custom</option>`;
+  const stn=LOC.stations.find(s=>s.id===homeStationId);
+  const stnName=stn?stn.name+' (station)':null;
+  // group hospitals by county
+  const byCounty={};
+  for(const h of LOC.hospitals){
+    const c=h.county||'Unknown';
+    (byCounty[c]=byCounty[c]||[]).push(h);
+  }
+  const counties=Object.keys(byCounty).sort((a,b)=> a==='Unknown'?1 : b==='Unknown'?-1 : a.localeCompare(b));
+  let html='';
+  // station + Other at top for quick access
+  html+=`<optgroup label="Quick">`;
+  if(stnName) html+=`<option ${selected===stnName?'selected':''}>${stnName}</option>`;
+  html+=`<option ${selected==='Other / custom'?'selected':''}>Other / custom</option></optgroup>`;
+  for(const c of counties){
+    html+=`<optgroup label="${c}">`+byCounty[c]
+      .sort((a,b)=>(a.name||'').localeCompare(b.name||''))
+      .map(h=>`<option ${selected===h.name?'selected':''}>${h.name}</option>`).join('')+`</optgroup>`;
+  }
+  return html;
+}
+function addCall(){calls.push({cad:'',start:'',clear:'',loc:''});renderCalls();}
 function renderCalls(){
   if(!calls.length){$('callList').innerHTML='<div class="empty">No calls yet. Add the first call from the MDT.</div>';return;}
-  const opts=Object.keys(driveTimes);
-  const locField = opts.length
-    ? (i,c)=>`<label class="fld"><span>Cleared at</span><select data-f="loc" data-i="${i}">${opts.map(l=>`<option ${l===c.loc?'selected':''}>${l}</option>`).join('')}</select></label>`
+  const ready = LOC && homeStationId;
+  const locField = ready
+    ? (i,c)=>`<label class="fld"><span>Cleared at</span><select data-f="loc" data-i="${i}">${locationOptions(c.loc)}</select></label>`
     : (i,c)=>`<label class="fld"><span>Cleared at</span><div class="locnote">Pick your home station at the top first, then locations appear here.</div></label>`;
   $('callList').innerHTML=calls.map((c,i)=>`<div class="call"><div class="top"><span class="cad">CALL ${i+1}</span><button class="del" data-del="${i}">&times;</button></div>
     <label class="fld"><span>CAD / incident #</span><input type="text" inputmode="numeric" data-f="cad" data-i="${i}" value="${c.cad}" placeholder="5886259"></label>

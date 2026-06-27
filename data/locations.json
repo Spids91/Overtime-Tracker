@@ -14,7 +14,9 @@
       "lat": null,
       "lng": null,
       "source": "seed",
-      "_todo": "add eircode + coords; OSM build script will fill coords if matched"
+      "_todo": "add eircode + coords; OSM build script will fill coords if matched",
+      "county": null,
+      "county_confidence": "none"
     },
     {
       "id": "stn_hsenationalambulanceserv",
@@ -24,7 +26,9 @@
       "lng": -7.0804,
       "osm_id": "way/44021155",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Waterford",
+      "county_confidence": "ok"
     },
     {
       "id": "stn_ambulancecentre",
@@ -34,7 +38,9 @@
       "lng": -7.797,
       "osm_id": "way/71858360",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Laois",
+      "county_confidence": "ok"
     },
     {
       "id": "stn_way71858369",
@@ -44,7 +50,9 @@
       "lng": -7.797,
       "osm_id": "way/71858369",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Laois",
+      "county_confidence": "ok"
     },
     {
       "id": "stn_ambulancestation",
@@ -54,7 +62,9 @@
       "lng": -6.6421,
       "osm_id": "way/87609153",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Kildare",
+      "county_confidence": "ok"
     },
     {
       "id": "stn_way170962666",
@@ -64,7 +74,9 @@
       "lng": -7.4868,
       "osm_id": "way/170962666",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Offaly",
+      "county_confidence": "ok"
     },
     {
       "id": "stn_nationalambulanceservice",
@@ -74,7 +86,9 @@
       "lng": -7.5065,
       "osm_id": "way/172597174",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Offaly",
+      "county_confidence": "ok"
     },
     {
       "id": "stn_athyambulancestation",
@@ -84,7 +98,9 @@
       "lng": -6.9943,
       "osm_id": "way/206292560",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Kildare",
+      "county_confidence": "ok"
     },
     {
       "id": "stn_dingleambulancestation",
@@ -94,7 +110,9 @@
       "lng": -10.2657,
       "osm_id": "way/221248586",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Kerry",
+      "county_confidence": "low"
     },
     {
       "id": "stn_way396784589",
@@ -104,7 +122,9 @@
       "lng": -7.0903,
       "osm_id": "way/396784589",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Cavan",
+      "county_confidence": "ok"
     },
     {
       "id": "stn_way556869850",
@@ -114,7 +134,9 @@
       "lng": -9.0015,
       "osm_id": "way/556869850",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Mayo",
+      "county_confidence": "ok"
     },
     {
       "id": "stn_dublinsouthcentralambula",
@@ -124,7 +146,9 @@
       "lng": -6.3233,
       "osm_id": "way/579902434",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "stn_regionalambulancecontrol",
@@ -135,7 +159,9 @@
       "osm_id": "way/627291598",
       "source": "osm",
       "verified": false,
-      "likely_not_a_station": true
+      "likely_not_a_station": true,
+      "county": "Limerick",
+      "county_confidence": "ok"
     },
     {
       "id": "stn_tuamambulancestation",
@@ -145,7 +171,9 @@
       "lng": -8.8505,
       "osm_id": "way/729219925",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Galway",
+      "county_confidence": "ok"
     },
     {
       "id": "stn_listowelambulancestation",
@@ -155,7 +183,9 @@
       "lng": -9.4973,
       "osm_id": "way/840549168",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Kerry",
+      "county_confidence": "ok"
     },
     {
       "id": "stn_killarneyambulancestatio",
@@ -165,7 +195,9 @@
       "lng": -9.4826,
       "osm_id": "way/840549175",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Kerry",
+      "county_confidence": "ok"
     },
     {
       "id": "stn_thurlesambulancestation",
@@ -175,7 +207,9 @@
       "lng": -7.8239,
       "osm_id": "way/861130421",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Tipperary",
+      "county_confidence": "ok"
     },
     {
       "id": "stn_ambulance",
@@ -185,7 +219,9 @@
       "lng": -9.4504,
       "osm_id": "way/1152246040",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Kerry",
+      "county_confidence": "low"
     },
     {
       "id": "stn_way1174246655",
@@ -195,7 +231,9 @@
       "lng": -6.9619,
       "osm_id": "way/1174246655",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Monaghan",
+      "county_confidence": "ok"
     },
     {
       "id": "stn_way1237143165",
@@ -205,7 +243,9 @@
       "lng": -6.2093,
       "osm_id": "way/1237143165",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "stn_nasambulancebase",
@@ -215,7 +255,9 @@
       "lng": -9.2976,
       "osm_id": "way/1239416515",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Mayo",
+      "county_confidence": "ok"
     },
     {
       "id": "stn_way1262537459",
@@ -225,7 +267,9 @@
       "lng": -6.3761,
       "osm_id": "way/1262537459",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "stn_way1285971326",
@@ -235,7 +279,9 @@
       "lng": -6.265,
       "osm_id": "way/1285971326",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "stn_way1473924066",
@@ -245,7 +291,9 @@
       "lng": -8.5082,
       "osm_id": "way/1473924066",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Cork",
+      "county_confidence": "ok"
     },
     {
       "id": "stn_fermoyambulancestation",
@@ -255,7 +303,9 @@
       "lng": -8.2558,
       "osm_id": "node/5839650026",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Cork",
+      "county_confidence": "ok"
     },
     {
       "id": "stn_node6061571706",
@@ -265,7 +315,9 @@
       "lng": -8.6263,
       "osm_id": "node/6061571706",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Limerick",
+      "county_confidence": "ok"
     },
     {
       "id": "stn_droghedaambulancestation",
@@ -275,7 +327,9 @@
       "lng": -6.3441,
       "osm_id": "node/7948160379",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Meath",
+      "county_confidence": "ok"
     },
     {
       "id": "stn_dunshaughlinambulancesta",
@@ -285,7 +339,9 @@
       "lng": -6.5434,
       "osm_id": "node/10548561120",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Meath",
+      "county_confidence": "ok"
     },
     {
       "id": "stn_castleblayneyambulancest",
@@ -295,7 +351,9 @@
       "lng": -6.743,
       "osm_id": "node/11627674464",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Monaghan",
+      "county_confidence": "ok"
     },
     {
       "id": "stn_node12755491990",
@@ -305,7 +363,9 @@
       "lng": -9.9858,
       "osm_id": "node/12755491990",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Mayo",
+      "county_confidence": "low"
     },
     {
       "id": "stn_dungloeambulancestation",
@@ -315,7 +375,9 @@
       "lng": -8.3612,
       "osm_id": "node/13918278471",
       "source": "osm",
-      "verified": false
+      "verified": false,
+      "county": "Donegal",
+      "county_confidence": "ok"
     }
   ],
   "hospitals": [
@@ -326,7 +388,9 @@
       "lat": 53.53442,
       "lng": -7.349,
       "ed": true,
-      "source": "osm-matched"
+      "source": "osm-matched",
+      "county": "Westmeath",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_tullamore",
@@ -335,7 +399,9 @@
       "lat": 53.283,
       "lng": -7.48881,
       "ed": true,
-      "source": "osm-matched"
+      "source": "osm-matched",
+      "county": "Offaly",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_portlaoise",
@@ -344,7 +410,9 @@
       "lat": 53.03755,
       "lng": -7.27536,
       "ed": true,
-      "source": "osm-matched"
+      "source": "osm-matched",
+      "county": "Laois",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_cavan",
@@ -353,7 +421,9 @@
       "lat": 54.00107,
       "lng": -7.37173,
       "ed": true,
-      "source": "osm-matched"
+      "source": "osm-matched",
+      "county": "Cavan",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_upmckildarehospital",
@@ -361,7 +431,9 @@
       "eircode": null,
       "lat": 53.28958,
       "lng": -6.70076,
-      "source": "osm"
+      "source": "osm",
+      "county": "Kildare",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_saintdympnashospital",
@@ -369,7 +441,9 @@
       "eircode": null,
       "lat": 52.84306,
       "lng": -6.92842,
-      "source": "osm"
+      "source": "osm",
+      "county": "Carlow",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_stjohnscommunityhospital",
@@ -377,7 +451,9 @@
       "eircode": null,
       "lat": 54.27954,
       "lng": -8.46902,
-      "source": "osm"
+      "source": "osm",
+      "county": "Sligo",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_sligouniversityhospital",
@@ -386,7 +462,9 @@
       "lat": 54.27503,
       "lng": -8.46398,
       "source": "osm",
-      "ed": true
+      "ed": true,
+      "county": "Sligo",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_kingsbridgeprivatehospit",
@@ -394,7 +472,9 @@
       "eircode": null,
       "lat": 54.26851,
       "lng": -8.48166,
-      "source": "osm"
+      "source": "osm",
+      "county": "Sligo",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_upmcsportssurgeryclinic",
@@ -402,7 +482,9 @@
       "eircode": "D09 C523",
       "lat": 53.40461,
       "lng": -6.25382,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_straphaelshospital",
@@ -410,7 +492,9 @@
       "eircode": null,
       "lat": 53.33735,
       "lng": -6.54525,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_sacredhearthospital",
@@ -418,7 +502,9 @@
       "eircode": null,
       "lat": 53.62297,
       "lng": -8.18388,
-      "source": "osm"
+      "source": "osm",
+      "county": "Roscommon",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_louthcountyhospital",
@@ -426,7 +512,9 @@
       "eircode": null,
       "lat": 53.98785,
       "lng": -6.40087,
-      "source": "osm"
+      "source": "osm",
+      "county": "Louth",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_saintpatrickscommunityho",
@@ -434,7 +522,9 @@
       "eircode": null,
       "lat": 53.95099,
       "lng": -8.08516,
-      "source": "osm"
+      "source": "osm",
+      "county": "Leitrim",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_letterkennyuniversityhos",
@@ -442,7 +532,9 @@
       "eircode": null,
       "lat": 54.96012,
       "lng": -7.73483,
-      "source": "osm"
+      "source": "osm",
+      "county": "Donegal",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_swinforddistricthospital",
@@ -450,7 +542,9 @@
       "eircode": null,
       "lat": 53.94316,
       "lng": -8.94556,
-      "source": "osm"
+      "source": "osm",
+      "county": "Mayo",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_skibbereenhospital",
@@ -458,7 +552,9 @@
       "eircode": null,
       "lat": 51.56318,
       "lng": -9.26225,
-      "source": "osm"
+      "source": "osm",
+      "county": "Cork",
+      "county_confidence": "low"
     },
     {
       "id": "hosp_sligoleitrimmentalhealth",
@@ -466,7 +562,9 @@
       "eircode": "F91 CD34",
       "lat": 54.28159,
       "lng": -8.45737,
-      "source": "osm"
+      "source": "osm",
+      "county": "Sligo",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_jamesconnollymemorialhos",
@@ -474,7 +572,9 @@
       "eircode": null,
       "lat": 55.24573,
       "lng": -7.26814,
-      "source": "osm"
+      "source": "osm",
+      "county": "Donegal",
+      "county_confidence": "low"
     },
     {
       "id": "hosp_stvincentsuniversityhosp",
@@ -483,7 +583,9 @@
       "lat": 53.31682,
       "lng": -6.21273,
       "source": "osm",
-      "ed": true
+      "ed": true,
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_connollyhospital",
@@ -492,7 +594,9 @@
       "lat": 53.38916,
       "lng": -6.36751,
       "source": "osm",
-      "ed": true
+      "ed": true,
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_saintbrigidshospitalshae",
@@ -500,7 +604,9 @@
       "eircode": null,
       "lat": 53.07799,
       "lng": -7.24988,
-      "source": "osm"
+      "source": "osm",
+      "county": "Laois",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_stjosephshospital",
@@ -508,7 +614,9 @@
       "eircode": "D05 E261",
       "lat": 53.38286,
       "lng": -6.18179,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_buncranacommunityhospita",
@@ -516,7 +624,9 @@
       "eircode": null,
       "lat": 55.13372,
       "lng": -7.44926,
-      "source": "osm"
+      "source": "osm",
+      "county": "Donegal",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_stvincentshospital",
@@ -524,7 +634,9 @@
       "eircode": null,
       "lat": 53.42696,
       "lng": -7.94183,
-      "source": "osm"
+      "source": "osm",
+      "county": "Offaly",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_dublindentaluniversityho",
@@ -532,7 +644,9 @@
       "eircode": null,
       "lat": 53.34225,
       "lng": -6.25204,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_beaumonthospital",
@@ -541,7 +655,9 @@
       "lat": 53.38926,
       "lng": -6.22406,
       "source": "osm",
-      "ed": true
+      "ed": true,
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_royalhospitaldonnybrook",
@@ -549,7 +665,9 @@
       "eircode": null,
       "lat": 53.32507,
       "lng": -6.24804,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_stlukeshospital",
@@ -557,7 +675,9 @@
       "eircode": null,
       "lat": 53.30924,
       "lng": -6.26742,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_lucenaclinicstpetersscho",
@@ -565,7 +685,9 @@
       "eircode": null,
       "lat": 53.31027,
       "lng": -6.27103,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_clonskeaghhospital",
@@ -573,7 +695,9 @@
       "eircode": null,
       "lat": 53.31538,
       "lng": -6.24008,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_saintjosephshospital",
@@ -581,7 +705,9 @@
       "eircode": null,
       "lat": 53.38777,
       "lng": -6.43192,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_universityhospitalgalway",
@@ -590,7 +716,9 @@
       "lat": 53.27706,
       "lng": -9.06686,
       "source": "osm",
-      "ed": true
+      "ed": true,
+      "county": "Galway",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_merlinparkuniversityhosp",
@@ -598,7 +726,9 @@
       "eircode": "H91 N973",
       "lat": 53.27755,
       "lng": -8.99526,
-      "source": "osm"
+      "source": "osm",
+      "county": "Galway",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_cherryorchardhospital",
@@ -606,7 +736,9 @@
       "eircode": null,
       "lat": 53.34306,
       "lng": -6.37792,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_stjamesshospital",
@@ -615,7 +747,9 @@
       "lat": 53.34011,
       "lng": -6.29577,
       "source": "osm",
-      "ed": true
+      "ed": true,
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_childrenshealthirelandat",
@@ -624,7 +758,9 @@
       "lat": 53.32615,
       "lng": -6.31889,
       "source": "osm",
-      "ed": true
+      "ed": true,
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_universityhospitalwaterf",
@@ -633,7 +769,9 @@
       "lat": 52.24896,
       "lng": -7.07886,
       "source": "osm",
-      "ed": true
+      "ed": true,
+      "county": "Waterford",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_southinfirmaryvictoriaun",
@@ -641,7 +779,9 @@
       "eircode": "T12 X23H",
       "lat": 51.89354,
       "lng": -8.46415,
-      "source": "osm"
+      "source": "osm",
+      "county": "Cork",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_matermisericordiaeuniver",
@@ -650,7 +790,9 @@
       "lat": 53.35926,
       "lng": -6.2671,
       "source": "osm",
-      "ed": true
+      "ed": true,
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_materprivatehospital",
@@ -658,7 +800,9 @@
       "eircode": "D07 WKW8",
       "lat": 53.35811,
       "lng": -6.26447,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_centralremedialclinic",
@@ -666,7 +810,9 @@
       "eircode": null,
       "lat": 53.36902,
       "lng": -6.2014,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_nenaghgeneralhospital",
@@ -674,7 +820,9 @@
       "eircode": null,
       "lat": 52.85812,
       "lng": -8.19106,
-      "source": "osm"
+      "source": "osm",
+      "county": "Tipperary",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_upmcwhitfield",
@@ -682,7 +830,9 @@
       "eircode": null,
       "lat": 52.24023,
       "lng": -7.17231,
-      "source": "osm"
+      "source": "osm",
+      "county": "Waterford",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_abbeyleixdistricthospita",
@@ -690,7 +840,9 @@
       "eircode": null,
       "lat": 52.91154,
       "lng": -7.3427,
-      "source": "osm"
+      "source": "osm",
+      "county": "Laois",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_cappaghnationalorthopaed",
@@ -698,7 +850,9 @@
       "eircode": null,
       "lat": 53.3939,
       "lng": -6.32711,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_bonsecourshospital",
@@ -706,7 +860,9 @@
       "eircode": "D09 YN97",
       "lat": 53.37575,
       "lng": -6.26742,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_universityhospitallimeri",
@@ -714,7 +870,9 @@
       "eircode": null,
       "lat": 52.63428,
       "lng": -8.65274,
-      "source": "osm"
+      "source": "osm",
+      "county": "Limerick",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_themeathprimarycarecentr",
@@ -722,7 +880,9 @@
       "eircode": null,
       "lat": 53.33573,
       "lng": -6.2702,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_saintlomanshospital",
@@ -730,7 +890,9 @@
       "eircode": null,
       "lat": 53.53261,
       "lng": -7.32217,
-      "source": "osm"
+      "source": "osm",
+      "county": "Westmeath",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_stfrancisprivatehospital",
@@ -738,7 +900,9 @@
       "eircode": "N91 FE40",
       "lat": 53.51426,
       "lng": -7.33489,
-      "source": "osm"
+      "source": "osm",
+      "county": "Westmeath",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_tallaghtuniversityhospit",
@@ -747,7 +911,9 @@
       "lat": 53.2912,
       "lng": -6.37884,
       "source": "osm",
-      "ed": true
+      "ed": true,
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_hermitageclinic",
@@ -755,7 +921,9 @@
       "eircode": "D20 W722",
       "lat": 53.35924,
       "lng": -6.40577,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_stcolumcilleshospital",
@@ -763,7 +931,9 @@
       "eircode": "D18 E365",
       "lat": 53.24236,
       "lng": -6.1329,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_stmichaelshospital",
@@ -772,7 +942,9 @@
       "lat": 53.29413,
       "lng": -6.13803,
       "source": "osm",
-      "ed": true
+      "ed": true,
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_nationalrehabilitationho",
@@ -780,7 +952,9 @@
       "eircode": null,
       "lat": 53.27556,
       "lng": -6.15276,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_saintitaspsychiatrichosp",
@@ -788,7 +962,9 @@
       "eircode": null,
       "lat": 53.48749,
       "lng": -6.11316,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_saintmaryshealthcampus",
@@ -796,7 +972,9 @@
       "eircode": null,
       "lat": 51.90475,
       "lng": -8.49966,
-      "source": "osm"
+      "source": "osm",
+      "county": "Cork",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_saintfinbarrshospital",
@@ -804,7 +982,9 @@
       "eircode": "T12 XH60",
       "lat": 51.88761,
       "lng": -8.46104,
-      "source": "osm"
+      "source": "osm",
+      "county": "Cork",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_rotundahospital",
@@ -812,7 +992,9 @@
       "eircode": "D01 P5W9",
       "lat": 53.35298,
       "lng": -6.26334,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_phoenixcarecentre",
@@ -820,7 +1002,9 @@
       "eircode": "D07 VPT0",
       "lat": 53.35728,
       "lng": -6.28514,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_blackrockclinic",
@@ -829,7 +1013,9 @@
       "lat": 53.3038,
       "lng": -6.18864,
       "source": "osm",
-      "ed": true
+      "ed": true,
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_leopardstownparkhospital",
@@ -837,7 +1023,9 @@
       "eircode": null,
       "lat": 53.26834,
       "lng": -6.20271,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_saintcamillushospital",
@@ -845,7 +1033,9 @@
       "eircode": null,
       "lat": 52.66877,
       "lng": -8.64244,
-      "source": "osm"
+      "source": "osm",
+      "county": "Limerick",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_materprivatecork",
@@ -853,7 +1043,9 @@
       "eircode": null,
       "lat": 51.88632,
       "lng": -8.40598,
-      "source": "osm"
+      "source": "osm",
+      "county": "Cork",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_mountcarmelcommunityhosp",
@@ -861,7 +1053,9 @@
       "eircode": null,
       "lat": 53.30449,
       "lng": -6.26531,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_barringtonshospital",
@@ -869,7 +1063,9 @@
       "eircode": "V94 HE2T",
       "lat": 52.66679,
       "lng": -8.62121,
-      "source": "osm"
+      "source": "osm",
+      "county": "Limerick",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_universityhospitalkerry",
@@ -878,7 +1074,9 @@
       "lat": 52.26583,
       "lng": -9.6875,
       "source": "osm",
-      "ed": true
+      "ed": true,
+      "county": "Kerry",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_corkuniversityhospital",
@@ -887,7 +1085,9 @@
       "lat": 51.88335,
       "lng": -8.51207,
       "source": "osm",
-      "ed": true
+      "ed": true,
+      "county": "Cork",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_saintmaryshospital",
@@ -895,7 +1095,9 @@
       "eircode": null,
       "lat": 53.35091,
       "lng": -6.33728,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_stlukesgeneralhospital",
@@ -904,7 +1106,9 @@
       "lat": 52.66647,
       "lng": -7.26285,
       "source": "osm",
-      "ed": true
+      "ed": true,
+      "county": "Kilkenny",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_saintjohnofgodhospital",
@@ -912,7 +1116,9 @@
       "eircode": null,
       "lat": 53.28537,
       "lng": -6.19111,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_hillsidefarm",
@@ -920,7 +1126,9 @@
       "eircode": null,
       "lat": 53.38063,
       "lng": -6.25547,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_coombewomeninfantsuniver",
@@ -928,7 +1136,9 @@
       "eircode": null,
       "lat": 53.33468,
       "lng": -6.28826,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_highfieldhealthcare",
@@ -936,7 +1146,9 @@
       "eircode": null,
       "lat": 53.37855,
       "lng": -6.24533,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_childrenshealthirelandat",
@@ -944,7 +1156,9 @@
       "eircode": "D01 XD99",
       "lat": 53.35709,
       "lng": -6.26153,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_goreydistricthospital",
@@ -952,7 +1166,9 @@
       "eircode": null,
       "lat": 52.67436,
       "lng": -6.30012,
-      "source": "osm"
+      "source": "osm",
+      "county": "Wexford",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_saintvincentshospital",
@@ -960,7 +1176,9 @@
       "eircode": null,
       "lat": 52.99847,
       "lng": -6.9951,
-      "source": "osm"
+      "source": "osm",
+      "county": "Kildare",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_midwesternregionalorthop",
@@ -968,7 +1186,9 @@
       "eircode": null,
       "lat": 52.52711,
       "lng": -8.71223,
-      "source": "osm"
+      "source": "osm",
+      "county": "Limerick",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_youghalcommunityhospital",
@@ -976,15 +1196,19 @@
       "eircode": null,
       "lat": 51.95756,
       "lng": -7.86009,
-      "source": "osm"
+      "source": "osm",
+      "county": "Waterford",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_ourladyshospital",
-      "name": "Our Lady’s Hospital",
+      "name": "Our Lady\u2019s Hospital",
       "eircode": null,
       "lat": 53.6502,
       "lng": -6.69748,
-      "source": "osm"
+      "source": "osm",
+      "county": "Meath",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_gheelautismservices",
@@ -992,7 +1216,9 @@
       "eircode": null,
       "lat": 53.36766,
       "lng": -6.24152,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_saintcanicespsychiatrich",
@@ -1000,7 +1226,9 @@
       "eircode": null,
       "lat": 52.64855,
       "lng": -7.23205,
-      "source": "osm"
+      "source": "osm",
+      "county": "Kilkenny",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_kilcreenehospital",
@@ -1008,7 +1236,9 @@
       "eircode": null,
       "lat": 52.65243,
       "lng": -7.27489,
-      "source": "osm"
+      "source": "osm",
+      "county": "Kilkenny",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_fairviewcommunityunitmat",
@@ -1016,7 +1246,9 @@
       "eircode": null,
       "lat": 53.36778,
       "lng": -6.24328,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_autevenhospital",
@@ -1024,7 +1256,9 @@
       "eircode": null,
       "lat": 52.67657,
       "lng": -7.27028,
-      "source": "osm"
+      "source": "osm",
+      "county": "Kilkenny",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_ststephenshospitalsarsfi",
@@ -1032,7 +1266,9 @@
       "eircode": "T45 VK40",
       "lat": 51.95373,
       "lng": -8.4037,
-      "source": "osm"
+      "source": "osm",
+      "county": "Cork",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_mallowgeneralhospital",
@@ -1040,7 +1276,9 @@
       "eircode": null,
       "lat": 52.15165,
       "lng": -8.66377,
-      "source": "osm"
+      "source": "osm",
+      "county": "Cork",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_bantrygeneralhospital",
@@ -1048,7 +1286,9 @@
       "eircode": null,
       "lat": 51.67622,
       "lng": -9.45007,
-      "source": "osm"
+      "source": "osm",
+      "county": "Kerry",
+      "county_confidence": "low"
     },
     {
       "id": "hosp_cloonamahonlearningdisab",
@@ -1056,7 +1296,9 @@
       "eircode": null,
       "lat": 54.15572,
       "lng": -8.48553,
-      "source": "osm"
+      "source": "osm",
+      "county": "Sligo",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_portiunculauniversityhos",
@@ -1065,7 +1307,9 @@
       "lat": 53.32709,
       "lng": -8.23553,
       "source": "osm",
-      "ed": true
+      "ed": true,
+      "county": "Offaly",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_birrcommunityhospitaland",
@@ -1073,7 +1317,9 @@
       "eircode": null,
       "lat": 53.09814,
       "lng": -7.89971,
-      "source": "osm"
+      "source": "osm",
+      "county": "Offaly",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_dungarvancommunityhospit",
@@ -1081,7 +1327,9 @@
       "eircode": null,
       "lat": 52.0873,
       "lng": -7.63668,
-      "source": "osm"
+      "source": "osm",
+      "county": "Waterford",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_stmaryshospital",
@@ -1089,7 +1337,9 @@
       "eircode": null,
       "lat": 53.53574,
       "lng": -7.351,
-      "source": "osm"
+      "source": "osm",
+      "county": "Westmeath",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_macroomcommunityhospital",
@@ -1097,7 +1347,9 @@
       "eircode": null,
       "lat": 51.90746,
       "lng": -8.96756,
-      "source": "osm"
+      "source": "osm",
+      "county": "Cork",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_roscommonhospital",
@@ -1105,7 +1357,9 @@
       "eircode": null,
       "lat": 53.62451,
       "lng": -8.17541,
-      "source": "osm"
+      "source": "osm",
+      "county": "Roscommon",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_stvincentsprivatehospita",
@@ -1113,7 +1367,9 @@
       "eircode": null,
       "lat": 53.31557,
       "lng": -6.20927,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_cahercallahospital",
@@ -1121,7 +1377,9 @@
       "eircode": null,
       "lat": 52.83256,
       "lng": -9.0042,
-      "source": "osm"
+      "source": "osm",
+      "county": "Clare",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_irishwheelchairassociati",
@@ -1129,7 +1387,9 @@
       "eircode": null,
       "lat": 53.36807,
       "lng": -6.19986,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_stbricinsmilitaryhospita",
@@ -1137,7 +1397,9 @@
       "eircode": null,
       "lat": 53.35179,
       "lng": -6.29112,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_killarneycommunityhospit",
@@ -1145,15 +1407,19 @@
       "eircode": null,
       "lat": 52.06553,
       "lng": -9.51733,
-      "source": "osm"
+      "source": "osm",
+      "county": "Kerry",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_saintpatricksuniversityh",
-      "name": "Saint Patrick’s University Hospital",
+      "name": "Saint Patrick\u2019s University Hospital",
       "eircode": null,
       "lat": 53.3442,
       "lng": -6.29342,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_saintannes",
@@ -1161,7 +1427,9 @@
       "eircode": null,
       "lat": 51.94213,
       "lng": -10.23417,
-      "source": "osm"
+      "source": "osm",
+      "county": "Kerry",
+      "county_confidence": "low"
     },
     {
       "id": "hosp_stfinanshospital",
@@ -1169,7 +1437,9 @@
       "eircode": null,
       "lat": 52.06761,
       "lng": -9.51131,
-      "source": "osm"
+      "source": "osm",
+      "county": "Kerry",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_ourladyoflourdeshospital",
@@ -1178,7 +1448,9 @@
       "lat": 53.72216,
       "lng": -6.35391,
       "source": "osm",
-      "ed": true
+      "ed": true,
+      "county": "Meath",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_saintfintanshospital",
@@ -1186,7 +1458,9 @@
       "eircode": null,
       "lat": 53.03572,
       "lng": -7.28452,
-      "source": "osm"
+      "source": "osm",
+      "county": "Laois",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_midletoncommunityhospita",
@@ -1194,7 +1468,9 @@
       "eircode": null,
       "lat": 51.91808,
       "lng": -8.17188,
-      "source": "osm"
+      "source": "osm",
+      "county": "Cork",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_royalvictoriaeyeandearho",
@@ -1202,7 +1478,9 @@
       "eircode": null,
       "lat": 53.33282,
       "lng": -6.25566,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_carlowdistricthospital",
@@ -1210,7 +1488,9 @@
       "eircode": null,
       "lat": 52.84262,
       "lng": -6.92882,
-      "source": "osm"
+      "source": "osm",
+      "county": "Carlow",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_castlecomerdistricthospi",
@@ -1218,7 +1498,9 @@
       "eircode": null,
       "lat": 52.79945,
       "lng": -7.21401,
-      "source": "osm"
+      "source": "osm",
+      "county": "Kilkenny",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_bloomfieldhealthservices",
@@ -1226,7 +1508,9 @@
       "eircode": "D16 C6T4",
       "lat": 53.27223,
       "lng": -6.3043,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_mercyuniversityhospital",
@@ -1235,7 +1519,9 @@
       "lat": 51.89894,
       "lng": -8.48245,
       "source": "osm",
-      "ed": true
+      "ed": true,
+      "county": "Cork",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_stjohnshospitallimerick",
@@ -1243,7 +1529,9 @@
       "eircode": null,
       "lat": 52.66335,
       "lng": -8.6168,
-      "source": "osm"
+      "source": "osm",
+      "county": "Limerick",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_naasgeneralhospital",
@@ -1251,7 +1539,9 @@
       "eircode": "W91 AE76",
       "lat": 53.21139,
       "lng": -6.66097,
-      "source": "osm"
+      "source": "osm",
+      "county": "Kildare",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_wexfordgeneralhospital",
@@ -1260,7 +1550,9 @@
       "lat": 52.34317,
       "lng": -6.48184,
       "source": "osm",
-      "ed": true
+      "ed": true,
+      "county": "Wexford",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_ennishospital",
@@ -1268,7 +1560,9 @@
       "eircode": null,
       "lat": 52.85109,
       "lng": -8.98328,
-      "source": "osm"
+      "source": "osm",
+      "county": "Clare",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_southtipperarygeneralhos",
@@ -1276,7 +1570,9 @@
       "eircode": null,
       "lat": 52.35571,
       "lng": -7.71572,
-      "source": "osm"
+      "source": "osm",
+      "county": "Waterford",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_saintfelimshospital",
@@ -1284,7 +1580,9 @@
       "eircode": null,
       "lat": 54.00472,
       "lng": -7.35805,
-      "source": "osm"
+      "source": "osm",
+      "county": "Cavan",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_saintitascommunityhospit",
@@ -1292,7 +1590,9 @@
       "eircode": null,
       "lat": 52.45564,
       "lng": -9.05451,
-      "source": "osm"
+      "source": "osm",
+      "county": "Limerick",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_thenationalmaternityhosp",
@@ -1301,7 +1601,9 @@
       "lat": 53.34015,
       "lng": -6.24579,
       "source": "osm",
-      "ed": true
+      "ed": true,
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_cluainlircarecentre",
@@ -1309,7 +1611,9 @@
       "eircode": "N91 T267",
       "lat": 53.53602,
       "lng": -7.35213,
-      "source": "osm"
+      "source": "osm",
+      "county": "Westmeath",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_falcarraghmedicalcentre",
@@ -1317,7 +1621,9 @@
       "eircode": null,
       "lat": 55.13765,
       "lng": -8.10069,
-      "source": "osm"
+      "source": "osm",
+      "county": "Donegal",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_mayouniversityhospital",
@@ -1326,7 +1632,9 @@
       "lat": 53.85076,
       "lng": -9.30404,
       "source": "osm",
-      "ed": true
+      "ed": true,
+      "county": "Mayo",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_barretstowngangcamp",
@@ -1334,7 +1642,9 @@
       "eircode": "W91 RDX6",
       "lat": 53.15273,
       "lng": -6.59769,
-      "source": "osm"
+      "source": "osm",
+      "county": "Kildare",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_ballinadistricthospital",
@@ -1342,7 +1652,9 @@
       "eircode": null,
       "lat": 54.11457,
       "lng": -9.16533,
-      "source": "osm"
+      "source": "osm",
+      "county": "Mayo",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_saintjohnscommunityhospi",
@@ -1350,7 +1662,9 @@
       "eircode": null,
       "lat": 52.49569,
       "lng": -6.57587,
-      "source": "osm"
+      "source": "osm",
+      "county": "Wexford",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_hospitalgroundsnewross",
@@ -1358,7 +1672,9 @@
       "eircode": null,
       "lat": 52.38936,
       "lng": -6.93891,
-      "source": "osm"
+      "source": "osm",
+      "county": "Wexford",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_monaghangeneralhospital",
@@ -1366,7 +1682,9 @@
       "eircode": "H18 NV91",
       "lat": 54.24982,
       "lng": -6.97412,
-      "source": "osm"
+      "source": "osm",
+      "county": "Monaghan",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_elyhospital",
@@ -1374,7 +1692,9 @@
       "eircode": null,
       "lat": 52.34576,
       "lng": -6.45485,
-      "source": "osm"
+      "source": "osm",
+      "county": "Wexford",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_hampsteadprivatehospital",
@@ -1382,7 +1702,9 @@
       "eircode": null,
       "lat": 53.38166,
       "lng": -6.25974,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_kanturkcommunityhospital",
@@ -1390,7 +1712,9 @@
       "eircode": null,
       "lat": 52.17615,
       "lng": -8.91634,
-      "source": "osm"
+      "source": "osm",
+      "county": "Limerick",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_incorporatedorthopaedich",
@@ -1398,7 +1722,9 @@
       "eircode": null,
       "lat": 53.36729,
       "lng": -6.20225,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_newcastlehospital",
@@ -1406,7 +1732,9 @@
       "eircode": null,
       "lat": 53.0803,
       "lng": -6.09774,
-      "source": "osm"
+      "source": "osm",
+      "county": "Wicklow",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_stlomanshospital",
@@ -1414,7 +1742,9 @@
       "eircode": "D20 HK69",
       "lat": 53.35669,
       "lng": -6.40763,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_nationalforensicmentalhe",
@@ -1422,7 +1752,9 @@
       "eircode": null,
       "lat": 53.48918,
       "lng": -6.12005,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_fermoycommunityhospital",
@@ -1430,7 +1762,9 @@
       "eircode": null,
       "lat": 52.13871,
       "lng": -8.25665,
-      "source": "osm"
+      "source": "osm",
+      "county": "Cork",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_kilrockhouse",
@@ -1438,7 +1772,9 @@
       "eircode": null,
       "lat": 53.3852,
       "lng": -6.05944,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_stjosephscommunityhospit",
@@ -1447,7 +1783,9 @@
       "lat": 51.65204,
       "lng": -9.90094,
       "source": "osm",
-      "ed": true
+      "ed": true,
+      "county": "Kerry",
+      "county_confidence": "low"
     },
     {
       "id": "hosp_stedmundsburyhospital",
@@ -1455,7 +1793,9 @@
       "eircode": null,
       "lat": 53.36281,
       "lng": -6.43748,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_waterfordresidentialcare",
@@ -1463,7 +1803,9 @@
       "eircode": null,
       "lat": 52.25013,
       "lng": -7.10273,
-      "source": "osm"
+      "source": "osm",
+      "county": "Waterford",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_donegaldistricthospital",
@@ -1471,7 +1813,9 @@
       "eircode": null,
       "lat": 54.65558,
       "lng": -8.09909,
-      "source": "osm"
+      "source": "osm",
+      "county": "Donegal",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_universitymaternityhospi",
@@ -1479,7 +1823,9 @@
       "eircode": null,
       "lat": 52.66744,
       "lng": -8.63347,
-      "source": "osm"
+      "source": "osm",
+      "county": "Limerick",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_stcolumbashospital",
@@ -1487,7 +1833,9 @@
       "eircode": null,
       "lat": 52.52941,
       "lng": -7.13181,
-      "source": "osm"
+      "source": "osm",
+      "county": "Kilkenny",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_galwayclinic",
@@ -1495,7 +1843,9 @@
       "eircode": "H91 HHT0",
       "lat": 53.28194,
       "lng": -8.97363,
-      "source": "osm"
+      "source": "osm",
+      "county": "Galway",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_saintdavnetshospital",
@@ -1503,7 +1853,9 @@
       "eircode": null,
       "lat": 54.25165,
       "lng": -6.96126,
-      "source": "osm"
+      "source": "osm",
+      "county": "Monaghan",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_stanthonyshospital",
@@ -1511,7 +1863,9 @@
       "eircode": null,
       "lat": 51.72953,
       "lng": -9.0893,
-      "source": "osm"
+      "source": "osm",
+      "county": "Cork",
+      "county_confidence": "low"
     },
     {
       "id": "hosp_bushyparkhouse",
@@ -1519,7 +1873,9 @@
       "eircode": null,
       "lat": 52.85247,
       "lng": -9.04174,
-      "source": "osm"
+      "source": "osm",
+      "county": "Clare",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_baltinglassdistricthospi",
@@ -1527,7 +1883,9 @@
       "eircode": null,
       "lat": 52.93148,
       "lng": -6.68005,
-      "source": "osm"
+      "source": "osm",
+      "county": "Wicklow",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_stbrigidshospital",
@@ -1535,7 +1893,9 @@
       "eircode": null,
       "lat": 52.34762,
       "lng": -7.40371,
-      "source": "osm"
+      "source": "osm",
+      "county": "Waterford",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_deerlodge",
@@ -1543,7 +1903,9 @@
       "eircode": "V93NH63",
       "lat": 52.06743,
       "lng": -9.51857,
-      "source": "osm"
+      "source": "osm",
+      "county": "Kerry",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_saintbrigidscomplex",
@@ -1551,7 +1913,9 @@
       "eircode": null,
       "lat": 53.85707,
       "lng": -6.54925,
-      "source": "osm"
+      "source": "osm",
+      "county": "Louth",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_raheencommunityhostpital",
@@ -1559,7 +1923,9 @@
       "eircode": null,
       "lat": 52.89407,
       "lng": -8.50766,
-      "source": "osm"
+      "source": "osm",
+      "county": "Clare",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_hsestconallshospital",
@@ -1567,7 +1933,9 @@
       "eircode": null,
       "lat": 54.95988,
       "lng": -7.73025,
-      "source": "osm"
+      "source": "osm",
+      "county": "Donegal",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_ballyshannoncommunityhos",
@@ -1575,7 +1943,9 @@
       "eircode": null,
       "lat": 54.50125,
       "lng": -8.18457,
-      "source": "osm"
+      "source": "osm",
+      "county": "Leitrim",
+      "county_confidence": "low"
     },
     {
       "id": "hosp_stjosephscommunityunit",
@@ -1583,7 +1953,9 @@
       "eircode": null,
       "lat": 53.55121,
       "lng": -6.78992,
-      "source": "osm"
+      "source": "osm",
+      "county": "Meath",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_belmulletcommunityhospit",
@@ -1591,7 +1963,9 @@
       "eircode": null,
       "lat": 54.22852,
       "lng": -9.98592,
-      "source": "osm"
+      "source": "osm",
+      "county": "Mayo",
+      "county_confidence": "low"
     },
     {
       "id": "hosp_limericksurgicalhub",
@@ -1599,7 +1973,9 @@
       "eircode": null,
       "lat": 52.65149,
       "lng": -8.63694,
-      "source": "osm"
+      "source": "osm",
+      "county": "Limerick",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_beaumontlodgetransitiona",
@@ -1607,7 +1983,9 @@
       "eircode": "D05X038",
       "lat": 53.3903,
       "lng": -6.21613,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_ennistymoncommunityhospi",
@@ -1615,7 +1993,9 @@
       "eircode": null,
       "lat": 52.9359,
       "lng": -9.31614,
-      "source": "osm"
+      "source": "osm",
+      "county": "Clare",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_thurlescommunityhospital",
@@ -1623,7 +2003,9 @@
       "eircode": "E41 YN59",
       "lat": 52.68554,
       "lng": -7.82264,
-      "source": "osm"
+      "source": "osm",
+      "county": "Tipperary",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_thomastownprimarycarecen",
@@ -1631,7 +2013,9 @@
       "eircode": null,
       "lat": 52.52681,
       "lng": -7.14364,
-      "source": "osm"
+      "source": "osm",
+      "county": "Kilkenny",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_beaconhospital",
@@ -1640,7 +2024,9 @@
       "lat": 53.2767,
       "lng": -6.21887,
       "source": "osm",
-      "ed": true
+      "ed": true,
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_liffordcommunityhospital",
@@ -1648,7 +2034,9 @@
       "eircode": null,
       "lat": 54.83127,
       "lng": -7.48323,
-      "source": "osm"
+      "source": "osm",
+      "county": "Donegal",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_schullcommunityhospital",
@@ -1656,7 +2044,9 @@
       "eircode": null,
       "lat": 51.52128,
       "lng": -9.54592,
-      "source": "osm"
+      "source": "osm",
+      "county": "Kerry",
+      "county_confidence": "low"
     },
     {
       "id": "hosp_therotundamossehouse",
@@ -1664,7 +2054,9 @@
       "eircode": null,
       "lat": 53.35287,
       "lng": -6.26125,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_covid19testcentre",
@@ -1672,7 +2064,9 @@
       "eircode": null,
       "lat": 51.92286,
       "lng": -8.48472,
-      "source": "osm"
+      "source": "osm",
+      "county": "Cork",
+      "county_confidence": "ok"
     },
     {
       "id": "hosp_materprivatenetworkdayho",
@@ -1680,7 +2074,9 @@
       "eircode": "D18 DH50",
       "lat": 53.24162,
       "lng": -6.14061,
-      "source": "osm"
+      "source": "osm",
+      "county": "Dublin",
+      "county_confidence": "ok"
     }
   ],
   "driveTimes": [
