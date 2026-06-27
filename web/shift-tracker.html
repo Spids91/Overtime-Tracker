@@ -89,7 +89,7 @@
       <label class="fld"><span>Roster start</span><input type="time" id="rosterStart"></label>
       <label class="fld"><span>Roster end</span><input type="time" id="rosterEnd"></label>
     </div>
-    <label class="fld"><span>Overtime rounding (station setting, always up)</span>
+    <label class="fld"><span>Overtime rounding (always rounded up)</span>
       <select id="otRound"><option value="0">Exact minutes</option><option value="15">15 min</option><option value="30">30 min</option><option value="60">1 hour</option></select>
     </label>
   </div>
@@ -182,7 +182,7 @@ function renderPatterns(){
   $('patternChips').innerHTML=PATTERNS.map(p=>`<div class="chip" data-p="${p}">${p}</div>`).join('')+`<div class="chip" data-p="custom">custom</div>`;
   $('patternChips').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
     $('patternChips').querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');
-    const p=c.dataset.p;if(p!=='custom'){const[s,e]=p.split('-');$('rosterStart').value=s+':00';$('rosterEnd').value=e+':00';}
+    const p=c.dataset.p;if(p!=='custom'){const[s,e]=p.split('-');$('rosterStart').value=s+':00';$('rosterEnd').value=e+':00';}else{$('rosterStart').value='';$('rosterEnd').value='';}
   });
 }
 
