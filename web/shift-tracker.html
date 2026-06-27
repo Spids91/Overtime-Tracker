@@ -101,6 +101,15 @@
   .dttable{width:100%;border-collapse:collapse;font-size:13px}
   .dttable th,.dttable td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line-soft)}
   .dttable th{font-family:var(--mono);font-size:11px;color:var(--ink-soft);text-transform:uppercase}
+  .addloc{margin-top:12px;position:relative}
+  .locresults{margin-top:4px}
+  .locopt{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--line);border-top:none;background:#fff;cursor:pointer;font-size:14px}
+  .locopt:first-child{border-top:1px solid var(--line);border-radius:8px 8px 0 0}
+  .locopt:last-child{border-radius:0 0 8px 8px}
+  .locopt:active{background:var(--line-soft)}
+  .locopt .loccty{font-family:var(--mono);font-size:11px;color:var(--ink-soft);white-space:nowrap}
+  .locopt.locnew{color:var(--ask);font-weight:600}
+  .locopt.locnew .loccty{color:var(--ask)}
 </style>
 </head>
 <body>
@@ -164,8 +173,10 @@
     <div class="card">
       <div class="locnote" style="margin-bottom:10px">Confirmed = you set it. Estimate = derived from map coordinates, unverified. Editing a value confirms it.</div>
       <table class="dttable"><thead><tr><th>Hospital</th><th>Drive time</th><th>Status</th></tr></thead><tbody id="ttBody"></tbody></table>
-      <div style="margin-top:10px"><input type="text" id="newLoc" placeholder="Add a location not in the list"></div>
-      <button class="act ghost small" id="addLoc" style="margin-top:8px">+ Add location</button>
+      <div class="addloc">
+        <input type="text" id="newLoc" placeholder="Add a hospital — type to search" autocomplete="off">
+        <div id="locResults" class="locresults"></div>
+      </div>
     </div>
   </section>
 </div>
@@ -222,8 +233,6 @@ function buildDriveTimes(){
     driveTimes[h.name]=dt.minutes;
     dtMeta[h.name]=dt.source==='confirmed'?'confirmed':'estimate';
   }
-  // always offer an "Other" fallback
-  if(!('Other / custom' in driveTimes)){ driveTimes['Other / custom']=20; dtMeta['Other / custom']='estimate'; }
 }
 
 /* ---- persist home station + user-confirmed overrides (in-memory + a tiny URL-free store) ---- */
@@ -264,7 +273,53 @@ function renderTT(){
     renderTT(); renderCalls(); renderGaps();
   });
 }
-$('addLoc').onclick=()=>{const n=$('newLoc').value.trim();if(!n)return;if(!(n in driveTimes)){driveTimes[n]=20;dtMeta[n]='estimate';}$('newLoc').value='';renderTT();renderCalls();};
+/* ---- add-location autocomplete: searches the hospital list as you type ---- */
+function renderLocResults(){
+  const box=$('locResults'); const q=$('newLoc').value.trim().toLowerCase();
+  if(!LOC || !homeStationId){ box.innerHTML=''; return; }
+  if(q.length<2){ box.innerHTML=''; return; }
+  // hospitals not already in the table, matching the query
+  const inTable=new Set(Object.keys(driveTimes));
+  const matches=LOC.hospitals
+    .filter(h=>h.name.toLowerCase().includes(q) && !inTable.has(h.name))
+    .sort((a,b)=>{
+      // prioritise names that START with the query
+      const as=a.name.toLowerCase().startsWith(q)?0:1, bs=b.name.toLowerCase().startsWith(q)?0:1;
+      return as-bs || a.name.localeCompare(b.name);
+    })
+    .slice(0,8);
+  let html=matches.map(h=>`<div class="locopt" data-hid="${h.id}"><span>${h.name}</span><span class="loccty">${h.county||'?'}</span></div>`).join('');
+  // offer a "create new" row if the typed text isn't an exact existing match
+  const exact=LOC.hospitals.some(h=>h.name.toLowerCase()===q);
+  if(!exact && $('newLoc').value.trim().length>=2){
+    html+=`<div class="locopt locnew" data-new="1"><span>Add &ldquo;${$('newLoc').value.trim()}&rdquo; as a new location</span><span class="loccty">new</span></div>`;
+  }
+  box.innerHTML=html;
+  box.querySelectorAll('.locopt').forEach(el=>el.onclick=()=>{
+    if(el.dataset.new){ addExistingOrNew(null, $('newLoc').value.trim()); }
+    else { const h=LOC.hospitals.find(x=>x.id===el.dataset.hid); addExistingOrNew(h); }
+  });
+}
+// Add a hospital (existing or brand-new) to the drive-time table, default 20 min, ready to edit.
+function addExistingOrNew(hosp, newName){
+  if(hosp){
+    driveTimes[hosp.name]=20; dtMeta[hosp.name]='estimate';
+    // record a route so it persists in LOC for this station
+    if(!LOC.driveTimes.some(d=>d.from===homeStationId&&d.to===hosp.id))
+      LOC.driveTimes.push({from:homeStationId,to:hosp.id,minutes:20,source:'estimate',flag:'unverified'});
+  } else if(newName){
+    // brand-new place not in the list: create it (county Unknown, user can't geocode here)
+    const id='hosp_custom_'+newName.toLowerCase().replace(/[^a-z0-9]+/g,'').slice(0,20);
+    if(!LOC.hospitals.some(h=>h.id===id))
+      LOC.hospitals.push({id,name:newName,eircode:null,lat:null,lng:null,county:'Unknown',county_confidence:'user',source:'user',verified:true});
+    driveTimes[newName]=20; dtMeta[newName]='estimate';
+    if(!LOC.driveTimes.some(d=>d.from===homeStationId&&d.to===id))
+      LOC.driveTimes.push({from:homeStationId,to:id,minutes:20,source:'estimate',by:'user'});
+  }
+  $('newLoc').value=''; $('locResults').innerHTML='';
+  renderTT(); renderCalls();
+}
+$('newLoc').oninput=renderLocResults;
 
 /* ---- calls ---- */
 // Build county-grouped <optgroup> options of ALL hospitals, plus station + Other.
