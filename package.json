@@ -1,0 +1,10 @@
+{
+  "name": "ambulance-ot-subsistence-tracker",
+  "version": "0.1.0",
+  "description": "Overtime and subsistence tracker for NAS paramedics. Engine-first, portable to native.",
+  "private": true,
+  "scripts": {
+    "test": "node engine/engine.test.js"
+  },
+  "license": "UNLICENSED"
+}
