@@ -77,6 +77,10 @@
   .daygrid .cadcell{grid-column:1/-1;border-top:1px dashed var(--line-soft);padding-top:7px;font-family:var(--mono);word-break:break-word}
   .dl{display:block;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);margin-bottom:2px}
   .clearcads{margin:10px 13px 13px}
+  .section-ot,.section-sub{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line-soft);font-size:13px}
+  .subline{margin-top:4px}
+  .cadinline{font-family:var(--mono);font-size:12px;word-break:break-word;margin-top:1px}
+  .cadinline .dl{display:inline;margin-right:4px}
 </style>
 </head>
 <body>
@@ -373,6 +377,22 @@ function saveShift(){
   if(!date){ alert('Set the shift date first.'); return; }
   const { r, input } = lastComputed;
   const stn = LOC && homeStationId ? (LOC.stations.find(s=>s.id===homeStationId)||{}).name : '';
+
+  // Match each call's CAD to the periods it overlaps. A call counts if any part of
+  // it falls in the period (started inside OR ran into it). The engine's events
+  // carry startM/clearM (unwrapped minutes) and cad. overlap(a,b,x,y) = a<y && b>x.
+  const overlap = (s,e,x,y) => s < y && e > x;
+  const evs = r.events; // {cad,startM,clearM}
+  const otFromM = r.overtime.rosterEndM, otToM = r.overtime.backM;
+  const otCads = (r.overtime.roundedMin>0)
+    ? evs.filter(ev => overlap(ev.startM, ev.clearM, otFromM, otToM) && ev.cad).map(ev=>ev.cad)
+    : [];
+
+  const subsistence = r.awayWindows.filter(w=>w.tier>0).map(w=>({
+    from: ENGINE.fmtClock(w.start), to: ENGINE.fmtClock(w.end), tier: w.tier,
+    cads: evs.filter(ev => overlap(ev.startM, ev.clearM, w.start, w.end) && ev.cad).map(ev=>ev.cad)
+  }));
+
   // capture exactly what the paysheet row needs
   shiftStore[date] = {
     date,
@@ -383,8 +403,9 @@ function saveShift(){
     otFrom: ENGINE.fmtClock(r.overtime.rosterEndM),
     otTo: ENGINE.fmtClock(r.overtime.backM),
     otHours: +(r.overtime.roundedMin/60).toFixed(2),
-    subsistence: r.awayWindows.filter(w=>w.tier>0).map(w=>({from:ENGINE.fmtClock(w.start),to:ENGINE.fmtClock(w.end),tier:w.tier})),
-    cads: input.calls.map(c=>c.cad).filter(Boolean),
+    otCads,
+    subsistence,
+    allCads: evs.map(ev=>ev.cad).filter(Boolean),
     cadsCleared: false
   };
   $('saveShift').style.display='none';
@@ -396,7 +417,12 @@ $('saveShift').onclick=saveShift;
 
 function clearWeekCads(weekEnd){
   for(const date in shiftStore){
-    if(weekEndingSunday(date)===weekEnd){ shiftStore[date].cads=[]; shiftStore[date].cadsCleared=true; }
+    if(weekEndingSunday(date)===weekEnd){
+      const s=shiftStore[date];
+      s.otCads=[]; s.allCads=[];
+      s.subsistence=s.subsistence.map(w=>({...w,cads:[]}));
+      s.cadsCleared=true;
+    }
   }
   renderHistory();
 }
@@ -416,7 +442,7 @@ function renderHistory(){
     const totOT = days.reduce((s,d)=>s+shiftStore[d].otHours,0);
     const tot5 = days.reduce((s,d)=>s+shiftStore[d].subsistence.filter(x=>x.tier===5).length,0);
     const tot10 = days.reduce((s,d)=>s+shiftStore[d].subsistence.filter(x=>x.tier===10).length,0);
-    const anyCads = days.some(d=>shiftStore[d].cads.length);
+    const anyCads = days.some(d=>shiftStore[d].otCads.length || shiftStore[d].subsistence.some(w=>w.cads.length));
     const subSum = [tot10?tot10+'x10h':'',tot5?tot5+'x5h':''].filter(Boolean).join(' + ')||'none';
     return `<div class="week">
       <div class="weekhead">
@@ -434,18 +460,31 @@ function renderHistory(){
 }
 
 function renderDayRow(s){
-  const sub = s.subsistence.length
-    ? s.subsistence.map(x=>`${x.from}-${x.to} <span class="pill ${x.tier===10?'t10':'t5'}">${x.tier}h</span>`).join(' ')
+  const cleared = s.cadsCleared;
+  const noneOrCleared = cleared ? '<span class="locnote">cleared</span>' : '<span class="locnote">none</span>';
+  // subsistence: each qualifying window with its own incident numbers
+  const subBlocks = s.subsistence.length
+    ? s.subsistence.map(x=>{
+        const cads = x.cads.length ? x.cads.join(', ') : noneOrCleared;
+        return `<div class="subline">${x.from}-${x.to} <span class="pill ${x.tier===10?'t10':'t5'}">${x.tier}h</span>
+          <div class="cadinline"><span class="dl">Incident no.</span>${cads}</div></div>`;
+      }).join('')
     : '<span class="locnote">none</span>';
-  const cads = s.cads.length ? s.cads.join(', ') : (s.cadsCleared?'<span class="locnote">cleared</span>':'<span class="locnote">none</span>');
+  // overtime incidents
+  const otCadStr = s.otCads && s.otCads.length ? s.otCads.join(', ') : noneOrCleared;
   return `<div class="dayrow">
     <div class="dayhead"><b>${fmtDate(s.date)}</b><button class="del delday" data-date="${s.date}" title="delete">&times;</button></div>
     <div class="daygrid">
       <div><span class="dl">Actual</span>${s.actualStart}-${s.actualEnd}</div>
       <div><span class="dl">Station</span>${s.station||'-'}</div>
-      <div><span class="dl">Overtime</span>${s.otHours}h (${s.otFrom}-${s.otTo})</div>
-      <div><span class="dl">Subsistence</span>${sub}</div>
-      <div class="cadcell"><span class="dl">Incident no.</span>${cads}</div>
+    </div>
+    <div class="section-ot">
+      <div class="dl">Overtime</div>
+      <div>${s.otHours}h (${s.otFrom}-${s.otTo})${s.otHours>0?` &middot; incident no. ${otCadStr}`:''}</div>
+    </div>
+    <div class="section-sub">
+      <div class="dl">Subsistence</div>
+      ${subBlocks}
     </div>
   </div>`;
 }
