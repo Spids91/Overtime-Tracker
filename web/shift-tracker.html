@@ -63,6 +63,9 @@
   .stat.confirmed{background:var(--hi-soft);color:var(--hi)}
   .stat.estimate{background:var(--warn-soft);color:var(--warn)}
   .tt td input[type=number]{width:64px}
+  .hm{display:inline-flex;align-items:center;gap:3px}
+  .hm input[type=number]{width:46px;text-align:center}
+  .hmlab{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-right:4px}
 </style>
 </head>
 <body>
@@ -95,7 +98,7 @@
   <button class="act ghost" id="addCall">+ Add call</button>
   <details class="tt"><summary>Drive-times from your station (edit to confirm)</summary>
     <div class="locnote" style="margin:6px 2px 10px">Confirmed = you set it. Estimate = derived from map coordinates, unverified. Your edits are saved as confirmed.</div>
-    <table><thead><tr><th>Hospital</th><th>Min</th><th>Status</th></tr></thead><tbody id="ttBody"></tbody></table>
+    <table><thead><tr><th>Hospital</th><th>Drive time</th><th>Status</th></tr></thead><tbody id="ttBody"></tbody></table>
     <div style="margin-top:8px"><input type="text" id="newLoc" placeholder="Add a location not in the list"></div>
     <button class="act ghost small" id="addLoc" style="margin-top:8px">+ Add location</button>
   </details>
@@ -188,13 +191,18 @@ function renderTT(){
   if(!rows.length){ $('ttBody').innerHTML='<tr><td colspan="3" class="locnote">Pick your station above to see drive-times.</td></tr>'; return; }
   $('ttBody').innerHTML=rows.map(name=>{
     const status=dtMeta[name]||'estimate';
+    const total=driveTimes[name]||0;
+    const hh=Math.floor(total/60), mm=total%60;
     return `<tr><td>${name}</td>
-      <td><input type="number" min="0" value="${driveTimes[name]}" data-loc="${name}"></td>
+      <td><span class="hm"><input type="number" min="0" max="23" value="${hh}" data-loc="${name}" data-part="h"><label class="hmlab">h</label><input type="number" min="0" max="59" value="${mm}" data-loc="${name}" data-part="m"><label class="hmlab">m</label></span></td>
       <td><span class="stat ${status}">${status}</span></td></tr>`;
   }).join('');
   $('ttBody').querySelectorAll('input').forEach(i=>i.onchange=()=>{
     const name=i.dataset.loc;
-    driveTimes[name]=Number(i.value)||0;
+    const row=i.closest('tr');
+    const h=Number(row.querySelector('[data-part="h"]').value)||0;
+    const m=Number(row.querySelector('[data-part="m"]').value)||0;
+    driveTimes[name]=h*60+m;
     dtMeta[name]='confirmed';      // a user edit is, by definition, a confirmation
     renderTT(); renderCalls(); renderGaps();
   });
@@ -208,8 +216,8 @@ function renderCalls(){
   const opts=Object.keys(driveTimes);
   $('callList').innerHTML=calls.map((c,i)=>`<div class="call"><div class="top"><span class="cad">CALL ${i+1}</span><button class="del" data-del="${i}">&times;</button></div>
     <label class="fld"><span>CAD / incident #</span><input type="text" inputmode="numeric" data-f="cad" data-i="${i}" value="${c.cad}" placeholder="5886259"></label>
-    <div class="row2"><label class="fld"><span>Start</span><input type="time" step="1" data-f="start" data-i="${i}" value="${c.start}"></label>
-    <label class="fld"><span>Clear</span><input type="time" step="1" data-f="clear" data-i="${i}" value="${c.clear}"></label></div>
+    <div class="row2"><label class="fld"><span>Start</span><input type="time" data-f="start" data-i="${i}" value="${c.start}"></label>
+    <label class="fld"><span>Clear</span><input type="time" data-f="clear" data-i="${i}" value="${c.clear}"></label></div>
     <label class="fld"><span>Cleared at</span><select data-f="loc" data-i="${i}">${opts.map(l=>`<option ${l===c.loc?'selected':''}>${l}</option>`).join('')}</select></label></div>`).join('');
   $('callList').querySelectorAll('[data-f]').forEach(el=>el.oninput=el.onchange=()=>{calls[el.dataset.i][el.dataset.f]=el.value;renderGaps();});
   $('callList').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{calls.splice(+b.dataset.del,1);gapAnswers={};renderCalls();renderGaps();});

@@ -103,5 +103,27 @@ function check(name, got, want) {
   check('unwrap handles midnight', E.unwrap([23 * 60 + 50, 20]), [1430, 1460]);
 })();
 
+/* ----------------------------------------------------------------------------
+   CASE 4 — minute-precision input (seconds dropped for manual entry).
+   A call starting the same minute the previous one cleared must NOT create a
+   negative gap or a phantom overnight jump. Tier logic only cares about 5h/10h,
+   so minute precision is sufficient.
+---------------------------------------------------------------------------- */
+(function minutePrecision() {
+  console.log('\nCASE 4: minute-precision boundaries');
+  const r = E.computeShift({
+    rosterStart: '07:00', rosterEnd: '19:00', otRoundInc: 60, backAtBase: '11:30',
+    driveTimes: { A: 20 }, gapAnswers: {},
+    calls: [
+      { cad: '1', start: '09:42', clear: '11:23', loc: 'A' },
+      { cad: '2', start: '11:23', clear: '11:25', loc: 'A' }, // same minute as prev clear
+    ],
+  });
+  check('computes ok with same-minute boundary', r.ok, true);
+  check('no phantom overnight jump', r.awayWindows[0].durMin < 1440, true);
+  check('same-minute gap is zero, not negative', r.gaps[0].gap, 0);
+  check('zero gap is not a possible return', r.gaps[0].possible, false);
+})();
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
