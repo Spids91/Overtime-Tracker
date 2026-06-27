@@ -38,8 +38,13 @@ function check(name, got, want) {
     ],
     gapAnswers: {},
   };
-  const r = E.computeShift(input);
-  check('computes without needing gap answers', r.ok, true);
+  const r0 = E.computeShift(input);
+  // With the wider "ask when plausible" rule, the engine now surfaces gaps it used
+  // to silently assume. For image 3 the real answer is "stayed out" (continuous away
+  // periods), and answering so must reproduce the verified pay outcome.
+  const ga = {}; r0.needAnswers.forEach(g => ga[g.index] = 'no');
+  const r = E.computeShift({ ...input, gapAnswers: ga });
+  check('computes after answering gaps', r.ok, true);
   check('one away window', r.awayWindows.length, 1);
   check('away window duration ~9h32m', Math.round(r.awayWindows[0].durMin), 572); // seconds carried through
   check('subsistence tier', r.awayWindows[0].tier, 5);
@@ -123,6 +128,57 @@ function check(name, got, want) {
   check('no phantom overnight jump', r.awayWindows[0].durMin < 1440, true);
   check('same-minute gap is zero, not negative', r.gaps[0].gap, 0);
   check('zero gap is not a possible return', r.gaps[0].possible, false);
+})();
+
+/* ----------------------------------------------------------------------------
+   CASE 5 — wider gap detection. A real return that the OLD rule missed because
+   it subtracted a speculative drive-out. Now: gap - driveBack >= 10 => ASK.
+---------------------------------------------------------------------------- */
+(function widerGap() {
+  console.log('\nCASE 5: ask when a return is plausible');
+  // 30-min gap, 15-min drive back. Old rule: 30-15-15=0 -> never asked (wrong).
+  // New rule: 30-15=15 >=10 -> asks.
+  const input = {
+    rosterStart: '07:00', rosterEnd: '22:00', otRoundInc: 0, backAtBase: '21:00',
+    driveTimes: { A: 15 }, gapAnswers: {},
+    calls: [
+      { cad: '1', start: '08:00', clear: '13:30', loc: 'A' },
+      { cad: '2', start: '14:00', clear: '19:30', loc: 'A' },
+    ],
+  };
+  const r0 = E.computeShift(input);
+  check('now asks about the 30-min gap', r0.needAnswers.length, 1);
+  // answer "returned" -> two windows, 2x5h
+  const yes = E.computeShift({ ...input, gapAnswers: { 0: 'yes' } });
+  check('confirmed return splits to 2x5h', yes.subsistence.summary, '2x5h');
+  // answer "stayed out" -> one continuous window, 1x10h
+  const no = E.computeShift({ ...input, gapAnswers: { 0: 'no' } });
+  check('stayed out merges to 1x10h', no.subsistence.summary, '1x10h');
+})();
+
+/* ----------------------------------------------------------------------------
+   CASE 6 — out-of-order calls are sorted by start time, not taken as-given.
+---------------------------------------------------------------------------- */
+(function ordering() {
+  console.log('\nCASE 6: out-of-order calls');
+  const inOrder = E.computeShift({
+    rosterStart: '07:00', rosterEnd: '19:00', otRoundInc: 0, backAtBase: '19:00',
+    driveTimes: { A: 10 }, gapAnswers: {},
+    calls: [
+      { cad: '1', start: '08:00', clear: '12:00', loc: 'A' },
+      { cad: '2', start: '14:00', clear: '17:00', loc: 'A' },
+    ],
+  });
+  const scrambled = E.computeShift({
+    rosterStart: '07:00', rosterEnd: '19:00', otRoundInc: 0, backAtBase: '19:00',
+    driveTimes: { A: 10 }, gapAnswers: {},
+    calls: [
+      { cad: '2', start: '14:00', clear: '17:00', loc: 'A' }, // out of order
+      { cad: '1', start: '08:00', clear: '12:00', loc: 'A' },
+    ],
+  });
+  check('scrambled first window starts at 08:00 not 14:00',
+    Math.round(scrambled.events[0].startM), Math.round(inOrder.events[0].startM));
 })();
 
 console.log(`\n${passed} passed, ${failed} failed`);

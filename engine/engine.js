@@ -45,9 +45,13 @@ function roundUp(min, inc) { return inc ? Math.ceil(min / inc) * inc : min; }
 
 /* ---- gap analysis --------------------------------------------------------- */
 // For each consecutive pair of calls, decide whether a 10+ min base return was
-// POSSIBLE: gap - driveBack - driveOut >= GRACE. driveOut is approximated as the
-// cleared-location's drive-to-base (we don't know where the next call originates).
-// Returns one record per inter-call gap.
+// PLAUSIBLE, and if so surface it as a question. The honest test for subsistence
+// is "did they get back to base and stand down 10+ min?". We know driveBack (from
+// the cleared location), but we do NOT know driveOut to the next call (it may have
+// started right at base, needing no drive). So we must not assume driveOut eats the
+// gap. We ask whenever gap - driveBack >= GRACE: they had time to get back and
+// stand down. Erring toward asking fits "app assists, user asserts" — when unsure,
+// put it to the user rather than silently deciding the money.
 function analyzeGaps(events, driveTimes) {
   const gaps = [];
   for (let i = 0; i < events.length - 1; i++) {
@@ -55,8 +59,9 @@ function analyzeGaps(events, driveTimes) {
     const nextStart = events[i + 1].startM;
     const gap = nextStart - clearAt;
     const driveBack = driveTimes[events[i].loc] ?? 20;
-    const driveOut = driveTimes[events[i].loc] ?? 20;
-    const possible = (gap - driveBack - driveOut) >= GRACE_MIN;
+    const driveOut = driveTimes[events[i].loc] ?? 20; // kept for display/info only
+    // plausible if there was time to drive back AND stand down 10+ min
+    const possible = (gap - driveBack) >= GRACE_MIN;
     gaps.push({ index: i, clearAt, nextStart, gap, driveBack, driveOut, possible });
   }
   return gaps;
@@ -96,11 +101,21 @@ function computeShift(input) {
   const dt = input.driveTimes || {};
   const ga = input.gapAnswers || {};
 
+  // Sort calls into chronological order before processing, so the engine is
+  // order-independent (OCR or a late-added call can arrive out of sequence).
+  // We sort by raw start-minute. For a normal day this is the true order. For an
+  // overnight shift the user enters calls in order and the unwrap step below
+  // restores the rollover; to avoid mis-sorting a genuine overnight sequence, we
+  // only reorder when doing so does not break an already-ascending sequence.
+  const startMin = c => parseTime(c.start);
+  const alreadyOrdered = valid.every((c, i) => i === 0 || startMin(valid[i - 1]) <= startMin(c));
+  const ordered = alreadyOrdered ? valid : [...valid].sort((a, b) => startMin(a) - startMin(b));
+
   // normalize + unwrap all call times together (handles overnight)
   const flat = [];
-  valid.forEach(c => { flat.push(parseTime(c.start)); flat.push(parseTime(c.clear)); });
+  ordered.forEach(c => { flat.push(parseTime(c.start)); flat.push(parseTime(c.clear)); });
   const uw = unwrap(flat);
-  const events = valid.map((c, i) => ({
+  const events = ordered.map((c, i) => ({
     cad: c.cad, loc: c.loc, startM: uw[i * 2], clearM: uw[i * 2 + 1]
   }));
 
