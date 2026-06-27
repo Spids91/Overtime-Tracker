@@ -214,11 +214,14 @@ function addCall(){calls.push({cad:'',start:'',clear:'',loc:Object.keys(driveTim
 function renderCalls(){
   if(!calls.length){$('callList').innerHTML='<div class="empty">No calls yet. Add the first call from the MDT.</div>';return;}
   const opts=Object.keys(driveTimes);
+  const locField = opts.length
+    ? (i,c)=>`<label class="fld"><span>Cleared at</span><select data-f="loc" data-i="${i}">${opts.map(l=>`<option ${l===c.loc?'selected':''}>${l}</option>`).join('')}</select></label>`
+    : (i,c)=>`<label class="fld"><span>Cleared at</span><div class="locnote">Pick your home station at the top first, then locations appear here.</div></label>`;
   $('callList').innerHTML=calls.map((c,i)=>`<div class="call"><div class="top"><span class="cad">CALL ${i+1}</span><button class="del" data-del="${i}">&times;</button></div>
     <label class="fld"><span>CAD / incident #</span><input type="text" inputmode="numeric" data-f="cad" data-i="${i}" value="${c.cad}" placeholder="5886259"></label>
     <div class="row2"><label class="fld"><span>Start</span><input type="time" data-f="start" data-i="${i}" value="${c.start}"></label>
     <label class="fld"><span>Clear</span><input type="time" data-f="clear" data-i="${i}" value="${c.clear}"></label></div>
-    <label class="fld"><span>Cleared at</span><select data-f="loc" data-i="${i}">${opts.map(l=>`<option ${l===c.loc?'selected':''}>${l}</option>`).join('')}</select></label></div>`).join('');
+    ${locField(i,c)}</div>`).join('');
   $('callList').querySelectorAll('[data-f]').forEach(el=>el.oninput=el.onchange=()=>{calls[el.dataset.i][el.dataset.f]=el.value;renderGaps();});
   $('callList').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{calls.splice(+b.dataset.del,1);gapAnswers={};renderCalls();renderGaps();});
 }
