@@ -460,12 +460,17 @@ $('compute').onclick=compute;
 let lastComputed = null;
 let shiftStore = {};   // keyed by date 'YYYY-MM-DD'
 
+// Build YYYY-MM-DD from local date parts (never via toISOString, which shifts to UTC
+// and can roll the date back a day in positive-offset timezones like Ireland in summer).
+function ymd(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
 function weekEndingSunday(dateStr){
   const d = new Date(dateStr+'T00:00:00');
   const day = d.getDay();                 // 0=Sun..6=Sat
   const add = (7 - day) % 7;              // days to next Sunday (0 if already Sun)
   d.setDate(d.getDate()+add);
-  return d.toISOString().slice(0,10);
+  return ymd(d);
 }
 function fmtDate(dateStr){
   return new Date(dateStr+'T00:00:00').toLocaleDateString('en-IE',{weekday:'short',day:'numeric',month:'short'});
@@ -548,7 +553,7 @@ function renderHistory(){
     const subSum = [tot10?tot10+'x10h':'',tot5?tot5+'x5h':''].filter(Boolean).join(' + ')||'none';
     return `<div class="week">
       <div class="weekhead">
-        <div><b>Week ending Sun ${fmtDate(wk)}</b></div>
+        <div><b>Week ending ${fmtDate(wk)}</b></div>
         <div class="weektot">${totOT}h OT &middot; ${subSum}</div>
       </div>
       ${days.map(d=>renderDayRow(shiftStore[d])).join('')}
