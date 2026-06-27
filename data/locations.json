@@ -437,7 +437,7 @@
     },
     {
       "id": "hosp_saintdympnashospital",
-      "name": "Saint Dympna's Hospital",
+      "name": "St. Dympna's Hospital",
       "eircode": null,
       "lat": 52.84306,
       "lng": -6.92842,
@@ -518,7 +518,7 @@
     },
     {
       "id": "hosp_saintpatrickscommunityho",
-      "name": "Saint Patricks Community Hospital",
+      "name": "St. Patricks Community Hospital",
       "eircode": null,
       "lat": 53.95099,
       "lng": -8.08516,
@@ -578,7 +578,7 @@
     },
     {
       "id": "hosp_stvincentsuniversityhosp",
-      "name": "St Vincent's University Hospital",
+      "name": "St. Vincent's University Hospital",
       "eircode": "D04 T6F4",
       "lat": 53.31682,
       "lng": -6.21273,
@@ -600,7 +600,7 @@
     },
     {
       "id": "hosp_saintbrigidshospitalshae",
-      "name": "Saint Brigid's Hospital, Shaen",
+      "name": "St. Brigid's Hospital, Shaen",
       "eircode": null,
       "lat": 53.07799,
       "lng": -7.24988,
@@ -610,7 +610,7 @@
     },
     {
       "id": "hosp_stjosephshospital",
-      "name": "St Joseph's Hospital",
+      "name": "St. Joseph's Hospital",
       "eircode": "D05 E261",
       "lat": 53.38286,
       "lng": -6.18179,
@@ -630,7 +630,7 @@
     },
     {
       "id": "hosp_stvincentshospital",
-      "name": "St Vincent's Hospital",
+      "name": "St. Vincent's Hospital",
       "eircode": null,
       "lat": 53.42696,
       "lng": -7.94183,
@@ -671,7 +671,7 @@
     },
     {
       "id": "hosp_stlukeshospital",
-      "name": "St Luke's Hospital",
+      "name": "St. Luke's Hospital",
       "eircode": null,
       "lat": 53.30924,
       "lng": -6.26742,
@@ -681,7 +681,7 @@
     },
     {
       "id": "hosp_lucenaclinicstpetersscho",
-      "name": "Lucena Clinic & St Peter's School",
+      "name": "Lucena Clinic & St. Peter's School",
       "eircode": null,
       "lat": 53.31027,
       "lng": -6.27103,
@@ -701,7 +701,7 @@
     },
     {
       "id": "hosp_saintjosephshospital",
-      "name": "Saint Joseph's Hospital",
+      "name": "St. Joseph's Hospital",
       "eircode": null,
       "lat": 53.38777,
       "lng": -6.43192,
@@ -886,7 +886,7 @@
     },
     {
       "id": "hosp_saintlomanshospital",
-      "name": "Saint Loman's Hospital",
+      "name": "St. Loman's Hospital",
       "eircode": null,
       "lat": 53.53261,
       "lng": -7.32217,
@@ -958,7 +958,7 @@
     },
     {
       "id": "hosp_saintitaspsychiatrichosp",
-      "name": "Saint Ita's Psychiatric Hospital",
+      "name": "St. Ita's Psychiatric Hospital",
       "eircode": null,
       "lat": 53.48749,
       "lng": -6.11316,
@@ -968,7 +968,7 @@
     },
     {
       "id": "hosp_saintmaryshealthcampus",
-      "name": "Saint Mary's Health Campus",
+      "name": "St. Mary's Health Campus",
       "eircode": null,
       "lat": 51.90475,
       "lng": -8.49966,
@@ -978,7 +978,7 @@
     },
     {
       "id": "hosp_saintfinbarrshospital",
-      "name": "Saint Finbarr's Hospital",
+      "name": "St. Finbarr's Hospital",
       "eircode": "T12 XH60",
       "lat": 51.88761,
       "lng": -8.46104,
@@ -1029,7 +1029,7 @@
     },
     {
       "id": "hosp_saintcamillushospital",
-      "name": "Saint Camillus Hospital",
+      "name": "St. Camillus Hospital",
       "eircode": null,
       "lat": 52.66877,
       "lng": -8.64244,
@@ -1091,7 +1091,7 @@
     },
     {
       "id": "hosp_saintmaryshospital",
-      "name": "Saint Mary's Hospital",
+      "name": "St. Mary's Hospital",
       "eircode": null,
       "lat": 53.35091,
       "lng": -6.33728,
@@ -1112,7 +1112,7 @@
     },
     {
       "id": "hosp_saintjohnofgodhospital",
-      "name": "Saint John of God Hospital",
+      "name": "St. John of God Hospital",
       "eircode": null,
       "lat": 53.28537,
       "lng": -6.19111,
@@ -1172,7 +1172,7 @@
     },
     {
       "id": "hosp_saintvincentshospital",
-      "name": "Saint Vincent's Hospital",
+      "name": "St. Vincent's Hospital",
       "eircode": null,
       "lat": 52.99847,
       "lng": -6.9951,
@@ -1222,7 +1222,7 @@
     },
     {
       "id": "hosp_saintcanicespsychiatrich",
-      "name": "Saint Canice's Psychiatric Hospital",
+      "name": "St. Canice's Psychiatric Hospital",
       "eircode": null,
       "lat": 52.64855,
       "lng": -7.23205,
@@ -1262,7 +1262,7 @@
     },
     {
       "id": "hosp_ststephenshospitalsarsfi",
-      "name": "St Stephen's Hospital, Sarsfield Court",
+      "name": "St. Stephen's Hospital, Sarsfield Court",
       "eircode": "T45 VK40",
       "lat": 51.95373,
       "lng": -8.4037,
@@ -1393,7 +1393,7 @@
     },
     {
       "id": "hosp_stbricinsmilitaryhospita",
-      "name": "St Bricin's Military Hospital",
+      "name": "St. Bricin's Military Hospital",
       "eircode": null,
       "lat": 53.35179,
       "lng": -6.29112,
@@ -1413,7 +1413,7 @@
     },
     {
       "id": "hosp_saintpatricksuniversityh",
-      "name": "Saint Patrick\u2019s University Hospital",
+      "name": "St. Patrick\u2019s University Hospital",
       "eircode": null,
       "lat": 53.3442,
       "lng": -6.29342,
@@ -1423,7 +1423,7 @@
     },
     {
       "id": "hosp_saintannes",
-      "name": "Saint Anne's",
+      "name": "St. Anne's",
       "eircode": null,
       "lat": 51.94213,
       "lng": -10.23417,
@@ -1454,7 +1454,7 @@
     },
     {
       "id": "hosp_saintfintanshospital",
-      "name": "Saint Fintan's Hospital",
+      "name": "St. Fintan's Hospital",
       "eircode": null,
       "lat": 53.03572,
       "lng": -7.28452,
@@ -1576,7 +1576,7 @@
     },
     {
       "id": "hosp_saintfelimshospital",
-      "name": "Saint Felim's Hospital",
+      "name": "St. Felim's Hospital",
       "eircode": null,
       "lat": 54.00472,
       "lng": -7.35805,
@@ -1586,7 +1586,7 @@
     },
     {
       "id": "hosp_saintitascommunityhospit",
-      "name": "Saint Ita's Community Hospital",
+      "name": "St. Ita's Community Hospital",
       "eircode": null,
       "lat": 52.45564,
       "lng": -9.05451,
@@ -1658,7 +1658,7 @@
     },
     {
       "id": "hosp_saintjohnscommunityhospi",
-      "name": "Saint John's Community Hospital and Community Service",
+      "name": "St. John's Community Hospital and Community Service",
       "eircode": null,
       "lat": 52.49569,
       "lng": -6.57587,
@@ -1778,7 +1778,7 @@
     },
     {
       "id": "hosp_stjosephscommunityhospit",
-      "name": "St Joseph's Community Hospital",
+      "name": "St. Joseph's Community Hospital",
       "eircode": null,
       "lat": 51.65204,
       "lng": -9.90094,
@@ -1849,7 +1849,7 @@
     },
     {
       "id": "hosp_saintdavnetshospital",
-      "name": "Saint Davnet's Hospital",
+      "name": "St. Davnet's Hospital",
       "eircode": null,
       "lat": 54.25165,
       "lng": -6.96126,
@@ -1909,7 +1909,7 @@
     },
     {
       "id": "hosp_saintbrigidscomplex",
-      "name": "Saint Brigid's Complex",
+      "name": "St. Brigid's Complex",
       "eircode": null,
       "lat": 53.85707,
       "lng": -6.54925,
@@ -1929,7 +1929,7 @@
     },
     {
       "id": "hosp_hsestconallshospital",
-      "name": "HSE St Conalls Hospital",
+      "name": "HSE St. Conalls Hospital",
       "eircode": null,
       "lat": 54.95988,
       "lng": -7.73025,
@@ -1949,7 +1949,7 @@
     },
     {
       "id": "hosp_stjosephscommunityunit",
-      "name": "St Joseph's Community Unit",
+      "name": "St. Joseph's Community Unit",
       "eircode": null,
       "lat": 53.55121,
       "lng": -6.78992,

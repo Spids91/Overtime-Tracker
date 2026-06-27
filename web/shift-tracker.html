@@ -281,23 +281,34 @@ function renderTT(){
   });
 }
 /* ---- add-location autocomplete: searches the hospital list as you type ---- */
+// Normalise a name for searching: lowercase, unify saint/st variants, drop punctuation.
+// So "saint james", "st james", "st. james's" all match "St. James's Hospital".
+function normName(s){
+  return s.toLowerCase()
+    .replace(/\bsaint\b/g,'st')
+    .replace(/\bst\.?\b/g,'st')
+    .replace(/[^a-z0-9 ]/g,'')   // drop apostrophes, periods, commas
+    .replace(/\s+/g,' ')
+    .trim();
+}
 function renderLocResults(){
-  const box=$('locResults'); const q=$('newLoc').value.trim().toLowerCase();
+  const box=$('locResults'); const raw=$('newLoc').value.trim();
   if(!LOC || !homeStationId){ box.innerHTML=''; return; }
-  if(q.length<2){ box.innerHTML=''; return; }
-  // hospitals not already in the table, matching the query
+  if(raw.length<2){ box.innerHTML=''; return; }
+  const q=normName(raw);
+  // hospitals not already in the table, matching the normalised query
   const inTable=new Set(Object.keys(driveTimes));
   const matches=LOC.hospitals
-    .filter(h=>h.name.toLowerCase().includes(q) && !inTable.has(h.name))
+    .filter(h=>normName(h.name).includes(q) && !inTable.has(h.name))
     .sort((a,b)=>{
       // prioritise names that START with the query
-      const as=a.name.toLowerCase().startsWith(q)?0:1, bs=b.name.toLowerCase().startsWith(q)?0:1;
+      const as=normName(a.name).startsWith(q)?0:1, bs=normName(b.name).startsWith(q)?0:1;
       return as-bs || a.name.localeCompare(b.name);
     })
     .slice(0,8);
   let html=matches.map(h=>`<div class="locopt" data-hid="${h.id}"><span>${h.name}</span><span class="loccty">${h.county||'?'}</span></div>`).join('');
   // offer a "create new" row if the typed text isn't an exact existing match
-  const exact=LOC.hospitals.some(h=>h.name.toLowerCase()===q);
+  const exact=LOC.hospitals.some(h=>normName(h.name)===q);
   if(!exact && $('newLoc').value.trim().length>=2){
     html+=`<div class="locopt locnew" data-new="1"><span>Add &ldquo;${$('newLoc').value.trim()}&rdquo; as a new location</span><span class="loccty">new</span></div>`;
   }
