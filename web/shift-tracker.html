@@ -58,11 +58,23 @@
   .tt th,.tt td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--line-soft)}
   .tt th{font-family:var(--mono);font-size:11px;color:var(--ink-soft);text-transform:uppercase}
   .warnline{color:var(--bad);font-size:13px;padding:8px 0}
+  .locnote{font-size:12px;color:var(--ink-soft)}
+  .stat{font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:999px;text-transform:uppercase;letter-spacing:.04em}
+  .stat.confirmed{background:var(--hi-soft);color:var(--hi)}
+  .stat.estimate{background:var(--warn-soft);color:var(--warn)}
+  .tt td input[type=number]{width:64px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="app"><h1>Shift Tracker</h1><span class="tag">engine v1 module</span></header>
+
+  <h2 class="sec">Your station</h2>
+  <div class="card">
+    <label class="fld"><span>Home station (set once, drive-times are measured from here)</span>
+      <select id="homeStation"><option value="">Loading stations…</option></select></label>
+    <div id="stationNote" class="locnote"></div>
+  </div>
 
   <h2 class="sec">Rostered shift</h2>
   <div class="card">
@@ -81,9 +93,10 @@
   <h2 class="sec">Calls this shift</h2>
   <div id="callList"></div>
   <button class="act ghost" id="addCall">+ Add call</button>
-  <details class="tt"><summary>Drive-time lookup (minutes to base)</summary>
-    <table><thead><tr><th>Location</th><th>Min to base</th></tr></thead><tbody id="ttBody"></tbody></table>
-    <div style="margin-top:8px"><input type="text" id="newLoc" placeholder="Add location name"></div>
+  <details class="tt"><summary>Drive-times from your station (edit to confirm)</summary>
+    <div class="locnote" style="margin:6px 2px 10px">Confirmed = you set it. Estimate = derived from map coordinates, unverified. Your edits are saved as confirmed.</div>
+    <table><thead><tr><th>Hospital</th><th>Min</th><th>Status</th></tr></thead><tbody id="ttBody"></tbody></table>
+    <div style="margin-top:8px"><input type="text" id="newLoc" placeholder="Add a location not in the list"></div>
     <button class="act ghost small" id="addLoc" style="margin-top:8px">+ Add location</button>
   </details>
 
@@ -99,12 +112,68 @@
 </script>
 <script src="../engine/engine.js"></script>
 <script>
-/* ===== UI: a thin skin that only gathers inputs and renders ENGINE output ===== */
+/* ===== UI: thin skin over ENGINE. Loads locations.json, keys drive-times to a home station. ===== */
 const PATTERNS=["07-19","08-20","19-07","20-08","07-17","08-17"];
-let driveTimes={"Mullingar base":0,"Mullingar RH":5,"Tullamore RH":35,"Portlaoise RH":50,"Other / custom":20};
+let LOC=null;                 // full locations.json
+let homeStationId=null;       // chosen station id
+let driveTimes={};            // {hospitalName: minutes}  — built per station, fed to ENGINE
+let dtMeta={};                // {hospitalName: 'confirmed'|'estimate'} — for labelling only
 let calls=[]; let gapAnswers={};
 const $=id=>document.getElementById(id);
 
+/* ---- load data ---- */
+async function loadLocations(){
+  try{
+    const res=await fetch('../data/locations.json');
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    LOC=await res.json();
+  }catch(e){
+    $('homeStation').innerHTML='<option value="">Could not load locations.json</option>';
+    $('stationNote').textContent='locations.json did not load. If opening the file directly, serve it instead (a browser blocks local file fetches). On GitHub Pages it works.';
+    return;
+  }
+  // populate station picker: real stations first, flagged ones last
+  const stations=[...LOC.stations].sort((a,b)=>{
+    const af=a.likely_not_a_station?1:0, bf=b.likely_not_a_station?1:0;
+    if(af!==bf) return af-bf;
+    return (a.name||'').localeCompare(b.name||'');
+  });
+  $('homeStation').innerHTML='<option value="">Select your station…</option>'+
+    stations.map(s=>`<option value="${s.id}">${s.name}${s.likely_not_a_station?' (not a station?)':''}${s.verified===false?' ·unverified':''}</option>`).join('');
+  $('homeStation').onchange=()=>{ homeStationId=$('homeStation').value; buildDriveTimes(); renderTT(); renderCalls(); renderGaps(); saveHome(); };
+  // restore previous choice
+  const saved=getHome();
+  if(saved && stations.some(s=>s.id===saved)){ $('homeStation').value=saved; homeStationId=saved; buildDriveTimes(); }
+  renderTT(); renderCalls();
+}
+
+/* ---- build the flat driveTimes map ENGINE expects, from chosen station's routes ---- */
+function buildDriveTimes(){
+  driveTimes={}; dtMeta={};
+  if(!LOC||!homeStationId){ $('stationNote').textContent=''; return; }
+  const stn=LOC.stations.find(s=>s.id===homeStationId);
+  $('stationNote').textContent=stn? `Drive-times below are from ${stn.name}. Returning to station = same as outbound.`:'';
+  // base itself is 0
+  driveTimes[stn.name+' (station)']=0; dtMeta[stn.name+' (station)']='confirmed';
+  const hospById={}; LOC.hospitals.forEach(h=>hospById[h.id]=h);
+  for(const dt of LOC.driveTimes){
+    if(dt.from!==homeStationId) continue;
+    const h=hospById[dt.to]; if(!h) continue;
+    driveTimes[h.name]=dt.minutes;
+    dtMeta[h.name]=dt.source==='confirmed'?'confirmed':'estimate';
+  }
+  // always offer an "Other" fallback
+  if(!('Other / custom' in driveTimes)){ driveTimes['Other / custom']=20; dtMeta['Other / custom']='estimate'; }
+}
+
+/* ---- persist home station + user-confirmed overrides (in-memory + a tiny URL-free store) ---- */
+// NOTE: artifacts can't use localStorage; we keep a module variable. On a real deploy this
+// would persist. For now the choice lives for the session.
+let _home=null, _overrides={};
+function saveHome(){ _home=homeStationId; }
+function getHome(){ return _home; }
+
+/* ---- patterns ---- */
 function renderPatterns(){
   $('patternChips').innerHTML=PATTERNS.map(p=>`<div class="chip" data-p="${p}">${p}</div>`).join('')+`<div class="chip" data-p="custom">custom</div>`;
   $('patternChips').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
@@ -112,19 +181,36 @@ function renderPatterns(){
     const p=c.dataset.p;if(p!=='custom'){const[s,e]=p.split('-');$('rosterStart').value=s+':00';$('rosterEnd').value=e+':00';}
   });
 }
+
+/* ---- drive-time table with confirmed/estimate labels and editing ---- */
 function renderTT(){
-  $('ttBody').innerHTML=Object.entries(driveTimes).map(([l,m])=>`<tr><td>${l}</td><td><input type="number" min="0" value="${m}" data-loc="${l}" style="width:80px"></td></tr>`).join('');
-  $('ttBody').querySelectorAll('input').forEach(i=>i.onchange=()=>{driveTimes[i.dataset.loc]=Number(i.value)||0;renderCalls();renderGaps();});
+  const rows=Object.keys(driveTimes);
+  if(!rows.length){ $('ttBody').innerHTML='<tr><td colspan="3" class="locnote">Pick your station above to see drive-times.</td></tr>'; return; }
+  $('ttBody').innerHTML=rows.map(name=>{
+    const status=dtMeta[name]||'estimate';
+    return `<tr><td>${name}</td>
+      <td><input type="number" min="0" value="${driveTimes[name]}" data-loc="${name}"></td>
+      <td><span class="stat ${status}">${status}</span></td></tr>`;
+  }).join('');
+  $('ttBody').querySelectorAll('input').forEach(i=>i.onchange=()=>{
+    const name=i.dataset.loc;
+    driveTimes[name]=Number(i.value)||0;
+    dtMeta[name]='confirmed';      // a user edit is, by definition, a confirmation
+    renderTT(); renderCalls(); renderGaps();
+  });
 }
-$('addLoc').onclick=()=>{const n=$('newLoc').value.trim();if(!n)return;if(!(n in driveTimes))driveTimes[n]=20;$('newLoc').value='';renderTT();renderCalls();};
-function addCall(){calls.push({cad:'',start:'',clear:'',loc:Object.keys(driveTimes)[0]});renderCalls();}
+$('addLoc').onclick=()=>{const n=$('newLoc').value.trim();if(!n)return;if(!(n in driveTimes)){driveTimes[n]=20;dtMeta[n]='estimate';}$('newLoc').value='';renderTT();renderCalls();};
+
+/* ---- calls ---- */
+function addCall(){calls.push({cad:'',start:'',clear:'',loc:Object.keys(driveTimes)[0]||''});renderCalls();}
 function renderCalls(){
   if(!calls.length){$('callList').innerHTML='<div class="empty">No calls yet. Add the first call from the MDT.</div>';return;}
+  const opts=Object.keys(driveTimes);
   $('callList').innerHTML=calls.map((c,i)=>`<div class="call"><div class="top"><span class="cad">CALL ${i+1}</span><button class="del" data-del="${i}">&times;</button></div>
     <label class="fld"><span>CAD / incident #</span><input type="text" inputmode="numeric" data-f="cad" data-i="${i}" value="${c.cad}" placeholder="5886259"></label>
     <div class="row2"><label class="fld"><span>Start</span><input type="time" step="1" data-f="start" data-i="${i}" value="${c.start}"></label>
     <label class="fld"><span>Clear</span><input type="time" step="1" data-f="clear" data-i="${i}" value="${c.clear}"></label></div>
-    <label class="fld"><span>Cleared at</span><select data-f="loc" data-i="${i}">${Object.keys(driveTimes).map(l=>`<option ${l===c.loc?'selected':''}>${l}</option>`).join('')}</select></label></div>`).join('');
+    <label class="fld"><span>Cleared at</span><select data-f="loc" data-i="${i}">${opts.map(l=>`<option ${l===c.loc?'selected':''}>${l}</option>`).join('')}</select></label></div>`).join('');
   $('callList').querySelectorAll('[data-f]').forEach(el=>el.oninput=el.onchange=()=>{calls[el.dataset.i][el.dataset.f]=el.value;renderGaps();});
   $('callList').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{calls.splice(+b.dataset.del,1);gapAnswers={};renderCalls();renderGaps();});
 }
@@ -154,7 +240,8 @@ function compute(){
     <div class="note">App assists, you assert. These figures rest on the locations and gap answers you confirmed, the record you stand behind for the claim.</div></div>`;
 }
 $('compute').onclick=compute;
-renderPatterns();renderTT();renderCalls();$('shiftDate').valueAsDate=new Date();
+renderPatterns();$('shiftDate').valueAsDate=new Date();
+loadLocations();
 </script>
 </body>
 </html>
