@@ -66,6 +66,7 @@
   .hm{display:inline-flex;align-items:center;gap:3px}
   .hm input[type=number]{width:46px;text-align:center}
   .hmlab{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-right:4px}
+  .custombox{margin-top:10px;padding:12px;border:1px dashed var(--ask);border-radius:10px;background:var(--ask-soft)}
 </style>
 </head>
 <body>
@@ -236,18 +237,74 @@ function locationOptions(selected){
   return html;
 }
 function addCall(){calls.push({cad:'',start:'',clear:'',loc:''});renderCalls();}
+
+const COUNTIES=['Carlow','Cavan','Clare','Cork','Donegal','Dublin','Galway','Kerry','Kildare','Kilkenny','Laois','Leitrim','Limerick','Longford','Louth','Mayo','Meath','Monaghan','Offaly','Roscommon','Sligo','Tipperary','Waterford','Westmeath','Wexford','Wicklow','Unknown'];
+
+// Add a user-named location to LOC + driveTimes as a CONFIRMED route from the home station.
+// It then appears in the county-grouped dropdown and the drive-time table like any other.
+function saveCustomLocation(name, county, minutes){
+  name=(name||'').trim(); if(!name) return false;
+  county=county||'Unknown';
+  // de-dupe by name
+  let h=LOC.hospitals.find(x=>x.name.toLowerCase()===name.toLowerCase());
+  if(!h){
+    h={ id:'hosp_custom_'+name.toLowerCase().replace(/[^a-z0-9]+/g,'').slice(0,20),
+        name, eircode:null, lat:null, lng:null, county, county_confidence:'user',
+        source:'user', verified:true };
+    LOC.hospitals.push(h);
+  } else { h.county=county; }
+  // confirmed drive-time from current station
+  const ex=LOC.driveTimes.find(d=>d.from===homeStationId && d.to===h.id);
+  if(ex){ ex.minutes=minutes; ex.source='confirmed'; }
+  else LOC.driveTimes.push({ from:homeStationId, to:h.id, minutes, source:'confirmed', by:'user' });
+  // reflect into the live driveTimes map used by the engine
+  driveTimes[name]=minutes; dtMeta[name]='confirmed';
+  return h.name;
+}
+
 function renderCalls(){
   if(!calls.length){$('callList').innerHTML='<div class="empty">No calls yet. Add the first call from the MDT.</div>';return;}
   const ready = LOC && homeStationId;
   const locField = ready
-    ? (i,c)=>`<label class="fld"><span>Cleared at</span><select data-f="loc" data-i="${i}">${locationOptions(c.loc)}</select></label>`
+    ? (i,c)=>{
+        const isOther = c.loc==='Other / custom';
+        const custom = isOther ? `
+          <div class="custombox" data-ci="${i}">
+            <div class="locnote" style="margin-bottom:8px">Name where you cleared, set the drive-time back to base, then save it to reuse next time.</div>
+            <label class="fld"><span>Location name</span><input type="text" data-cf="cname" data-i="${i}" value="${c.customName||''}" placeholder="e.g. Navan injury unit"></label>
+            <label class="fld"><span>County</span><select data-cf="ccounty" data-i="${i}">${COUNTIES.map(co=>`<option ${ (c.customCounty||'Unknown')===co?'selected':''}>${co}</option>`).join('')}</select></label>
+            <label class="fld"><span>Drive-time back to base</span>
+              <span class="hm"><input type="number" min="0" max="23" data-cf="ch" data-i="${i}" value="${Math.floor((c.customMin||0)/60)}"><label class="hmlab">h</label><input type="number" min="0" max="59" data-cf="cm" data-i="${i}" value="${(c.customMin||0)%60}"><label class="hmlab">m</label></span>
+            </label>
+            <button class="act ghost small" data-savecustom="${i}">Save location to my list</button>
+          </div>` : '';
+        return `<label class="fld"><span>Cleared at</span><select data-f="loc" data-i="${i}">${locationOptions(c.loc)}</select></label>${custom}`;
+      }
     : (i,c)=>`<label class="fld"><span>Cleared at</span><div class="locnote">Pick your home station at the top first, then locations appear here.</div></label>`;
   $('callList').innerHTML=calls.map((c,i)=>`<div class="call"><div class="top"><span class="cad">CALL ${i+1}</span><button class="del" data-del="${i}">&times;</button></div>
     <label class="fld"><span>CAD / incident #</span><input type="text" inputmode="numeric" data-f="cad" data-i="${i}" value="${c.cad}" placeholder="5886259"></label>
     <div class="row2"><label class="fld"><span>Start</span><input type="time" data-f="start" data-i="${i}" value="${c.start}"></label>
     <label class="fld"><span>Clear</span><input type="time" data-f="clear" data-i="${i}" value="${c.clear}"></label></div>
     ${locField(i,c)}</div>`).join('');
-  $('callList').querySelectorAll('[data-f]').forEach(el=>el.oninput=el.onchange=()=>{calls[el.dataset.i][el.dataset.f]=el.value;renderGaps();});
+  $('callList').querySelectorAll('[data-f]').forEach(el=>el.oninput=el.onchange=()=>{
+    calls[el.dataset.i][el.dataset.f]=el.value;
+    if(el.dataset.f==='loc') renderCalls();  // only re-render to toggle the custom box
+    renderGaps();
+  });
+  // custom-field handlers (store on the call object as we type)
+  $('callList').querySelectorAll('[data-cf]').forEach(el=>el.oninput=el.onchange=()=>{
+    const i=el.dataset.i, k=el.dataset.cf, c=calls[i];
+    if(k==='cname') c.customName=el.value;
+    else if(k==='ccounty') c.customCounty=el.value;
+    else { const row=el.closest('.custombox'); const h=Number(row.querySelector('[data-cf="ch"]').value)||0; const m=Number(row.querySelector('[data-cf="cm"]').value)||0; c.customMin=h*60+m; }
+  });
+  $('callList').querySelectorAll('[data-savecustom]').forEach(b=>b.onclick=()=>{
+    const i=b.dataset.savecustom, c=calls[i];
+    const saved=saveCustomLocation(c.customName, c.customCounty, c.customMin||0);
+    if(!saved){ alert('Give the location a name first.'); return; }
+    c.loc=saved; delete c.customName; delete c.customCounty; delete c.customMin;
+    renderTT(); renderCalls(); renderGaps();
+  });
   $('callList').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{calls.splice(+b.dataset.del,1);gapAnswers={};renderCalls();renderGaps();});
 }
 $('addCall').onclick=addCall;
