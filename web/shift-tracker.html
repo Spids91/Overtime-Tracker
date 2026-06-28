@@ -77,6 +77,9 @@
   .daygrid .cadcell{grid-column:1/-1;border-top:1px dashed var(--line-soft);padding-top:7px;font-family:var(--mono);word-break:break-word}
   .dl{display:block;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);margin-bottom:2px}
   .clearcads{margin:10px 13px 13px}
+  .copyweek{margin:10px 13px 4px}
+  .dayactions{display:flex;align-items:center;gap:8px}
+  button.xsmall{width:auto;padding:5px 10px;font-size:12px;border-radius:7px}
   .section-ot,.section-sub{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line-soft);font-size:13px}
   .subline{margin-top:4px}
   .cadinline{font-family:var(--mono);font-size:12px;word-break:break-word;margin-top:1px}
@@ -621,6 +624,7 @@ function renderHistory(){
         <div><b>Week ending ${fmtDate(wk)}</b></div>
         <div class="weektot">${totOT}h OT &middot; ${subSum}</div>
       </div>
+      <button class="act ghost small copyweek" data-wk="${wk}">Copy whole week</button>
       ${days.map(d=>renderDayRow(shiftStore[d])).join('')}
       ${anyCads?`<button class="act ghost small clearcads" data-wk="${wk}">Clear this week's incident numbers (after you've copied them to paper)</button>`:'<div class="locnote" style="padding:8px 2px">Incident numbers cleared for this week.</div>'}
     </div>`;
@@ -629,6 +633,40 @@ function renderHistory(){
     if(confirm("Clear incident numbers for the week ending "+fmtDate(b.dataset.wk)+"? Keep the overtime and subsistence totals; only the CAD numbers are removed. Do this once they're on your paper sheet.")) clearWeekCads(b.dataset.wk);
   });
   $('history').querySelectorAll('.delday').forEach(b=>b.onclick=()=>deleteShift(b.dataset.date));
+  $('history').querySelectorAll('.copyday').forEach(b=>b.onclick=()=>copyText(buildDayText(shiftStore[b.dataset.date]), b));
+  $('history').querySelectorAll('.copyweek').forEach(b=>b.onclick=()=>{
+    const days=weeks[b.dataset.wk].sort();
+    const txt='WEEK ENDING '+fmtDate(b.dataset.wk)+'\n\n'+days.map(d=>buildDayText(shiftStore[d])).join('\n\n');
+    copyText(txt, b);
+  });
+}
+
+// Build the plain-text block for one day, laid out for transcribing to the paysheet.
+function buildDayText(s){
+  const L=[];
+  L.push(fmtDate(s.date)+(s.station?'  ('+s.station+')':''));
+  L.push('Actual: '+s.actualStart+'-'+s.actualEnd);
+  if(s.otHours>0){
+    L.push('Overtime: '+s.otHours+'h  '+s.otFrom+'-'+s.otTo+(s.otCads&&s.otCads.length?'  incident '+s.otCads.join(', '):''));
+  } else L.push('Overtime: none');
+  if(s.subsistence.length){
+    s.subsistence.forEach(x=>L.push('Subsistence: '+x.from+'-'+x.to+'  '+x.tier+'h'+(x.cads.length?'  incident '+x.cads.join(', '):'')));
+  } else L.push('Subsistence: none');
+  return L.join('\n');
+}
+
+// Copy to clipboard with a brief "Copied" confirmation on the button.
+function copyText(text, btn){
+  const done=()=>{ const o=btn.textContent; btn.textContent='Copied'; setTimeout(()=>btn.textContent=o,1500); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text,done));
+  } else fallbackCopy(text,done);
+}
+function fallbackCopy(text,done){
+  const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); done(); }catch(e){}
+  document.body.removeChild(ta);
 }
 
 function renderDayRow(s){
@@ -645,7 +683,7 @@ function renderDayRow(s){
   // overtime incidents
   const otCadStr = s.otCads && s.otCads.length ? s.otCads.join(', ') : noneOrCleared;
   return `<div class="dayrow">
-    <div class="dayhead"><b>${fmtDate(s.date)}</b><button class="del delday" data-date="${s.date}" title="delete">&times;</button></div>
+    <div class="dayhead"><b>${fmtDate(s.date)}</b><span class="dayactions"><button class="act ghost xsmall copyday" data-date="${s.date}">Copy</button><button class="del delday" data-date="${s.date}" title="delete">&times;</button></span></div>
     <div class="daygrid">
       <div><span class="dl">Actual</span>${s.actualStart}-${s.actualEnd}</div>
       <div><span class="dl">Station</span>${s.station||'-'}</div>
