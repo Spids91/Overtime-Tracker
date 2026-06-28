@@ -5,29 +5,48 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Shift Tracker</title>
 <style>
-  :root{--ink:#14171c;--ink-soft:#4a525e;--line:#d8dde4;--line-soft:#e9edf2;--paper:#f6f7f9;--card:#fff;--hi:#1f6f54;--hi-soft:#e4f1ec;--warn:#b25a1e;--warn-soft:#f6ebe0;--ask:#2d5a8a;--ask-soft:#e4edf6;--bad:#a23b3b;--radius:12px;--mono:ui-monospace,"SF Mono","Roboto Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif}
+  @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+  :root{
+    --ink:#0f1622;--ink-soft:#5a6473;--line:#dde2ea;--line-soft:#eceff4;
+    --paper:#f4f6f9;--card:#ffffff;
+    --hi:#1f7a55;--hi-soft:#e3f1ea;          /* subsistence / confirmed green */
+    --warn:#c2660f;--warn-soft:#f8ecdf;       /* overtime amber */
+    --ask:#28507e;--ask-soft:#e5edf6;         /* prompts blue */
+    --bad:#b03a3a;
+    /* day/night shift identity */
+    --day:#f2b705;--day-ink:#3a2c00;--day-soft:#fdf3d2;   /* hi-vis amber */
+    --night:#1a2740;--night-ink:#dfe6f2;--night-soft:#e6e9f1; /* deep navy */
+    --radius:14px;
+    --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+    --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+    --display:"Archivo","Inter",sans-serif;
+  }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--paper);font-size:16px;line-height:1.45;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
   .wrap{max-width:560px;margin:0 auto;padding:16px 16px 96px}
-  header.app{display:flex;align-items:baseline;justify-content:space-between;padding:6px 2px 14px;border-bottom:2px solid var(--ink);margin-bottom:18px}
-  header.app h1{font-size:18px;margin:0;letter-spacing:-.01em}
-  header.app .tag{font-family:var(--mono);font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.08em}
-  h2.sec{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-soft);font-family:var(--mono);font-weight:600;margin:24px 2px 10px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:12px}
+  header.app{display:flex;align-items:center;justify-content:space-between;padding:10px 4px 16px;border-bottom:2px solid var(--ink);margin-bottom:18px}
+  header.app h1{font-family:var(--display);font-size:21px;font-weight:800;margin:0;letter-spacing:-.02em}
+  header.app .tag{font-family:var(--mono);font-size:10px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.1em}
+  h2.sec{font-family:var(--display);font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);font-weight:700;margin:24px 2px 10px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:15px;margin-bottom:12px;box-shadow:0 1px 2px rgba(15,22,34,.03)}
   label.fld{display:block;margin-bottom:12px}label.fld:last-child{margin-bottom:0}
   label.fld>span{display:block;font-size:13px;color:var(--ink-soft);margin-bottom:5px}
   input,select,button{font-family:var(--sans);font-size:16px}
-  input[type=time],input[type=date],input[type=text],select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);appearance:none}
-  input:focus,select:focus{outline:2px solid var(--hi);outline-offset:1px;border-color:var(--hi)}
+  input[type=time],input[type=date],input[type=text],input[type=number],select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);appearance:none}
+  input:focus,select:focus{outline:2px solid var(--ask);outline-offset:1px;border-color:var(--ask)}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .chips{display:flex;flex-wrap:wrap;gap:7px}
-  .chip{padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:14px;cursor:pointer;font-family:var(--mono)}
+  .chip{padding:8px 13px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:13px;cursor:pointer;font-family:var(--mono);font-weight:500;transition:transform .08s}
+  .chip:active{transform:scale(.96)}
   .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
-  button.act{width:100%;padding:13px;border:none;border-radius:10px;background:var(--ink);color:#fff;font-weight:600;cursor:pointer;letter-spacing:.01em}
-  button.act.ghost{background:#fff;color:var(--ink);border:1px solid var(--line);font-weight:500}
+  /* day/night-aware chips: a day pattern chip glows amber when on, night chip goes navy */
+  .chip.on.day{background:var(--day);color:var(--day-ink);border-color:var(--day)}
+  .chip.on.night{background:var(--night);color:var(--night-ink);border-color:var(--night)}
+  button.act{width:100%;padding:14px;border:none;border-radius:11px;background:var(--ink);color:#fff;font-weight:600;cursor:pointer;letter-spacing:.01em;font-family:var(--display);transition:transform .08s}
+  button.act.ghost{background:#fff;color:var(--ink);border:1px solid var(--line);font-weight:600}
   button.act:active{transform:translateY(1px)}
-  button.small{width:auto;padding:7px 12px;font-size:13px;border-radius:8px}
-  .call{border:1px solid var(--line);border-radius:10px;padding:11px;margin-bottom:9px;background:#fff}
+  button.small{width:auto;padding:8px 13px;font-size:13px;border-radius:9px}
+  .call{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:9px;background:#fff}
   .call .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
   .call .cad{font-family:var(--mono);font-size:13px;color:var(--ink-soft)}
   .call .del{background:none;border:none;color:var(--bad);font-size:18px;cursor:pointer;padding:0 4px;line-height:1}
@@ -42,7 +61,7 @@
   .metrics{display:grid;grid-template-columns:1fr 1fr}
   .metric{padding:16px 14px;border-top:1px solid var(--line)}
   .metric:nth-child(odd){border-right:1px solid var(--line)}
-  .metric .big{font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+  .metric .big{font-family:var(--display);font-size:34px;font-weight:800;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
   .metric .lbl{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);margin-top:6px}
   .metric.ot .big{color:var(--warn)}.metric.sub .big{color:var(--hi)}
   .ledger{padding:12px 14px;border-top:1px solid var(--line);background:var(--paper)}
@@ -98,21 +117,27 @@
   .calnav:active{background:var(--line-soft)}
   .callegend{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--ink-soft);margin-bottom:10px}
   .callegend span{display:flex;align-items:center;gap:4px}
-  .callegend .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
-  .dot.work{background:var(--ink)}.dot.logged{background:var(--hi)}.dot.notlogged{background:var(--warn)}.dot.offday{background:var(--line)}
-  .calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
-  .caldow{font-family:var(--mono);font-size:10px;color:var(--ink-soft);text-align:center;padding-bottom:3px}
-  .calcell{aspect-ratio:1;border:1px solid var(--line-soft);border-radius:7px;padding:3px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;cursor:pointer;position:relative;background:#fff;min-height:0}
+  .callegend .dot{width:10px;height:10px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.1)}
+  .dot.day{background:var(--day)}.dot.night{background:var(--night)}.dot.logged{background:var(--hi)}.dot.notlogged{background:var(--bad)}
+  .calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .caldow{font-family:var(--mono);font-size:10px;color:var(--ink-soft);text-align:center;padding-bottom:4px;font-weight:500}
+  .calcell{aspect-ratio:1;border:1px solid var(--line-soft);border-radius:9px;padding:4px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;cursor:pointer;position:relative;background:#fff;min-height:0;transition:transform .08s}
+  .calcell:active{transform:scale(.95)}
   .calcell.empty{border:none;background:none;cursor:default}
-  .calcell .cnum{font-size:12px;color:var(--ink-soft)}
-  .calcell.work{background:var(--ink);border-color:var(--ink)}
-  .calcell.work .cnum{color:#fff;font-weight:600}
-  .calcell .cpat{font-family:var(--mono);font-size:8px;color:#fff;opacity:.85;margin-top:1px}
-  .calcell.today{outline:2px solid var(--ask);outline-offset:1px}
-  .calcell .cflag{width:6px;height:6px;border-radius:50%;position:absolute;bottom:3px}
+  .calcell .cnum{font-size:12px;color:var(--ink-soft);font-weight:500}
+  /* day shift = hi-vis amber, night shift = deep navy */
+  .calcell.day{background:var(--day);border-color:#d9a300}
+  .calcell.day .cnum{color:var(--day-ink);font-weight:700}
+  .calcell.day .cpat{color:var(--day-ink);opacity:.75}
+  .calcell.night{background:var(--night);border-color:#0e1729}
+  .calcell.night .cnum{color:#fff;font-weight:700}
+  .calcell.night .cpat{color:var(--night-ink);opacity:.85}
+  .calcell .cpat{font-family:var(--mono);font-size:8px;margin-top:1px;letter-spacing:-.02em}
+  .calcell.today{outline:2.5px solid var(--ask);outline-offset:1px}
+  .calcell .cflag{width:7px;height:7px;border-radius:50%;position:absolute;bottom:4px;border:1.5px solid #fff}
   .calcell .cflag.logged{background:var(--hi)}
-  .calcell .cflag.notlogged{background:var(--warn)}
-  .caldetail{margin-top:12px}
+  .calcell .cflag.notlogged{background:var(--bad)}
+  .caldetail{margin-top:14px}
   .section-ot,.section-sub{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line-soft);font-size:13px}
   .subline{margin-top:4px}
   .cadinline{font-family:var(--mono);font-size:12px;word-break:break-word;margin-top:1px}
@@ -220,10 +245,10 @@
         <button class="calnav" id="calNext" aria-label="next month">&rsaquo;</button>
       </div>
       <div class="callegend">
-        <span><i class="dot work"></i>working</span>
+        <span><i class="dot day"></i>day shift</span>
+        <span><i class="dot night"></i>night shift</span>
         <span><i class="dot logged"></i>logged</span>
-        <span><i class="dot notlogged"></i>not logged yet</span>
-        <span><i class="dot offday"></i>off</span>
+        <span><i class="dot notlogged"></i>not logged</span>
       </div>
       <div id="calGrid" class="calgrid"></div>
       <div id="calDetail" class="caldetail"></div>
@@ -392,8 +417,14 @@ function applyPersistedToLOC(saved){
 }
 
 /* ---- patterns ---- */
+function isNightPattern(p){
+  // a night shift starts in the evening (hour >= 18). 19-07, 20-08 are nights.
+  if(!p || p==='custom' || p==='off') return false;
+  const startH=parseInt(p.split('-')[0],10);
+  return startH>=18;
+}
 function renderPatterns(){
-  $('patternChips').innerHTML=PATTERNS.map(p=>`<div class="chip" data-p="${p}">${p}</div>`).join('')+`<div class="chip" data-p="custom">custom</div>`;
+  $('patternChips').innerHTML=PATTERNS.map(p=>`<div class="chip ${isNightPattern(p)?'night':'day'}" data-p="${p}">${p}</div>`).join('')+`<div class="chip" data-p="custom">custom</div>`;
   $('patternChips').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
     $('patternChips').querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');
     const p=c.dataset.p;if(p!=='custom'){const[s,e]=p.split('-');$('rosterStart').value=s+':00';$('rosterEnd').value=e+':00';$('actualStart').value=s+':00';}else{$('rosterStart').value='';$('rosterEnd').value='';$('actualStart').value='';}
@@ -941,9 +972,7 @@ function renderCalendar(){
     const logged = !!shiftStore[ds];
     const past = ds < todayStr;
     let cls='calcell';
-    if(working) cls+=' work';
-    if(logged) cls+=' logged';
-    else if(working && past) cls+=' notlogged';
+    if(working) cls+= isNightPattern(rf.pattern) ? ' night' : ' day';
     if(ds===todayStr) cls+=' today';
     cells+=`<div class="${cls}" data-date="${ds}">
       <span class="cnum">${day}</span>
