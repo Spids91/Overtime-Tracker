@@ -101,23 +101,31 @@ function computeShift(input) {
   const dt = input.driveTimes || {};
   const ga = input.gapAnswers || {};
 
-  // Sort calls into chronological order before processing, so the engine is
-  // order-independent (OCR or a late-added call can arrive out of sequence).
-  // We sort by raw start-minute. For a normal day this is the true order. For an
-  // overnight shift the user enters calls in order and the unwrap step below
-  // restores the rollover; to avoid mis-sorting a genuine overnight sequence, we
-  // only reorder when doing so does not break an already-ascending sequence.
-  const startMin = c => parseTime(c.start);
-  const alreadyOrdered = valid.every((c, i) => i === 0 || startMin(valid[i - 1]) <= startMin(c));
-  const ordered = alreadyOrdered ? valid : [...valid].sort((a, b) => startMin(a) - startMin(b));
+  // Anchor every call to the shift's roster start so overnight shifts work.
+  // A call whose clock time is before the roster start belongs to the NEXT day
+  // (past midnight), so we add 1440 to it. This gives each call a true
+  // "minutes since shift start" value, which sorts correctly even when calls
+  // span midnight (e.g. 20:30, 23:40, 01:20, 03:10). Without an anchor, a naive
+  // clock sort would place 01:20 before 20:30 and scramble the night.
+  const anchor = input.rosterStart ? parseTime(input.rosterStart) : 0;
+  const dayAdjusted = c => {
+    let s = parseTime(c.start);
+    if (s < anchor) s += 1440;          // before roster start => next calendar day
+    return s;
+  };
+  const ordered = [...valid].sort((a, b) => dayAdjusted(a) - dayAdjusted(b));
 
-  // normalize + unwrap all call times together (handles overnight)
-  const flat = [];
-  ordered.forEach(c => { flat.push(parseTime(c.start)); flat.push(parseTime(c.clear)); });
-  const uw = unwrap(flat);
-  const events = ordered.map((c, i) => ({
-    cad: c.cad, loc: c.loc, startM: uw[i * 2], clearM: uw[i * 2 + 1]
-  }));
+  // Build unwrapped event times. We compute each call's start/clear relative to the
+  // anchor: both get +1440 if before the roster start. A call that STRADDLES midnight
+  // (starts 23:40, clears 01:20) gets its clear pushed to the next day too.
+  const events = ordered.map(c => {
+    let startM = parseTime(c.start);
+    let clearM = parseTime(c.clear);
+    if (startM < anchor) startM += 1440;
+    if (clearM < anchor) clearM += 1440;
+    if (clearM < startM) clearM += 1440;   // clear after midnight relative to its start
+    return { cad: c.cad, loc: c.loc, startM, clearM };
+  });
 
   const gaps = analyzeGaps(events, dt);
   const needAnswers = gaps.filter(g => g.possible && !ga[g.index]);

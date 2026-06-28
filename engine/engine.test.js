@@ -96,8 +96,34 @@ function check(name, got, want) {
 })();
 
 /* ----------------------------------------------------------------------------
-   CASE 3 — unit rules in isolation
+   CASE 7 — overnight shift with calls before, across, and after midnight.
+   The anchor-to-roster-start logic must keep them in true time order and not
+   produce impossible multi-day windows.
 ---------------------------------------------------------------------------- */
+(function overnight() {
+  console.log('\nCASE 7: overnight shift across midnight');
+  const input = {
+    rosterStart: '19:00', rosterEnd: '07:00', otRoundInc: 30, backAtBase: '07:30',
+    driveTimes: { A: 15 }, gapAnswers: {},
+    calls: [
+      { cad: 'N1', start: '20:30', clear: '22:15', loc: 'A' },
+      { cad: 'N2', start: '23:40', clear: '01:20', loc: 'A' }, // straddles midnight
+      { cad: 'N3', start: '03:10', clear: '05:45', loc: 'A' },
+    ],
+  };
+  let r = E.computeShift(input);
+  if (!r.ok && r.needAnswers.length) { const ga = {}; r.needAnswers.forEach(g => ga[g.index] = 'no'); r = E.computeShift({ ...input, gapAnswers: ga }); }
+  check('events stay in time order', r.events.map(e => e.cad).join(','), 'N1,N2,N3');
+  check('one sane away window (<24h)', r.awayWindows.length === 1 && r.awayWindows[0].durMin < 1440, true);
+  check('away window is 11h', Math.round(r.awayWindows[0].durMin), 660);
+  check('overnight tier is 10h', r.awayWindows[0].tier, 10);
+  check('overnight overtime 30m', r.overtime.roundedMin, 30);
+
+  // even if entered out of order, anchor sort fixes it
+  const scrambled = E.computeShift({ ...input, gapAnswers: { 0:'no',1:'no' },
+    calls: [input.calls[2], input.calls[0], input.calls[1]] });
+  check('scrambled overnight still orders N1,N2,N3', scrambled.events.map(e=>e.cad).join(','), 'N1,N2,N3');
+})();
 (function units() {
   console.log('\nCASE 3: unit rules');
   check('roundUp 8min to 60', E.roundUp(8, 60), 60);
