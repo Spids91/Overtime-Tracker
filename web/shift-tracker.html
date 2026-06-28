@@ -210,6 +210,11 @@ async function loadLocations(){
     $('stationNote').textContent='locations.json did not load. If opening the file directly, serve it instead (a browser blocks local file fetches). On GitHub Pages it works.';
     return;
   }
+  // re-apply any saved user changes (custom locations, confirmed drive-times)
+  const savedData = loadPersisted();
+  applyPersistedToLOC(savedData);
+  // restore saved shifts
+  if(savedData && savedData.shiftStore) shiftStore = savedData.shiftStore;
   // populate station picker: real stations first, flagged ones last
   const stations=[...LOC.stations].sort((a,b)=>{
     const af=a.likely_not_a_station?1:0, bf=b.likely_not_a_station?1:0;
@@ -218,11 +223,11 @@ async function loadLocations(){
   });
   $('homeStation').innerHTML='<option value="">Select your station…</option>'+
     stations.map(s=>`<option value="${s.id}">${s.name}${s.likely_not_a_station?' (not a station?)':''}${s.verified===false?' ·unverified':''}</option>`).join('');
-  $('homeStation').onchange=()=>{ homeStationId=$('homeStation').value; buildDriveTimes(); renderTT(); renderCalls(); renderGaps(); saveHome(); renderStationBanner(); };
-  // restore previous choice
-  const saved=getHome();
-  if(saved && stations.some(s=>s.id===saved)){ $('homeStation').value=saved; homeStationId=saved; buildDriveTimes(); }
-  renderTT(); renderCalls();
+  $('homeStation').onchange=()=>{ homeStationId=$('homeStation').value; buildDriveTimes(); renderTT(); renderCalls(); renderGaps(); renderStationBanner(); persist(); };
+  // restore previous station choice
+  const savedHome = savedData ? savedData.homeStationId : null;
+  if(savedHome && stations.some(s=>s.id===savedHome)){ $('homeStation').value=savedHome; homeStationId=savedHome; buildDriveTimes(); }
+  renderTT(); renderCalls(); renderHistory(); renderStationBanner();
 }
 
 /* ---- build the flat driveTimes map ENGINE expects, from chosen station's routes ---- */
@@ -245,9 +250,48 @@ function buildDriveTimes(){
 /* ---- persist home station + user-confirmed overrides (in-memory + a tiny URL-free store) ---- */
 // NOTE: artifacts can't use localStorage; we keep a module variable. On a real deploy this
 // would persist. For now the choice lives for the session.
-let _home=null, _overrides={};
-function saveHome(){ _home=homeStationId; }
-function getHome(){ return _home; }
+/* ===== PERSISTENCE (localStorage) =====
+   Saves everything to the device so it survives closing/reopening the app.
+   Device-local: data lives in this browser only, not synced across devices.
+   Gracefully no-ops if storage is unavailable (e.g. artifact preview). */
+const STORE_KEY = 'shiftTracker.v1';
+let storageOK = (()=>{ try{ const k='__t'; localStorage.setItem(k,'1'); localStorage.removeItem(k); return true; }catch(e){ return false; } })();
+
+function persist(){
+  if(!storageOK) return;
+  try{
+    // only persist USER changes to locations: custom-added hospitals + confirmed/edited drive-times
+    const userHospitals = LOC ? LOC.hospitals.filter(h=>h.source==='user') : [];
+    const userDriveTimes = LOC ? LOC.driveTimes.filter(d=>d.source==='confirmed' || d.by==='user') : [];
+    const data = {
+      v: 1,
+      homeStationId,
+      shiftStore,
+      userHospitals,
+      userDriveTimes
+    };
+    localStorage.setItem(STORE_KEY, JSON.stringify(data));
+  }catch(e){ /* quota or serialization issue: fail quietly, app still works in-session */ }
+}
+
+function loadPersisted(){
+  if(!storageOK) return null;
+  try{ const raw=localStorage.getItem(STORE_KEY); return raw?JSON.parse(raw):null; }
+  catch(e){ return null; }
+}
+
+// Re-apply saved user changes onto a freshly-loaded LOC (called after locations.json loads).
+function applyPersistedToLOC(saved){
+  if(!saved || !LOC) return;
+  // add back custom hospitals the user created
+  (saved.userHospitals||[]).forEach(h=>{ if(!LOC.hospitals.some(x=>x.id===h.id)) LOC.hospitals.push(h); });
+  // re-apply user drive-times (confirmed overrides + custom routes)
+  (saved.userDriveTimes||[]).forEach(d=>{
+    const ex=LOC.driveTimes.find(x=>x.from===d.from && x.to===d.to);
+    if(ex){ ex.minutes=d.minutes; ex.source=d.source; if(d.by) ex.by=d.by; }
+    else LOC.driveTimes.push(d);
+  });
+}
 
 /* ---- patterns ---- */
 function renderPatterns(){
@@ -277,7 +321,16 @@ function renderTT(){
     const m=Number(row.querySelector('[data-part="m"]').value)||0;
     driveTimes[name]=h*60+m;
     dtMeta[name]='confirmed';      // a user edit is, by definition, a confirmation
-    renderTT(); renderCalls(); renderGaps();
+    // write the confirmed time back into LOC so it persists
+    if(LOC && homeStationId){
+      const hosp=LOC.hospitals.find(x=>x.name===name);
+      if(hosp){
+        const ex=LOC.driveTimes.find(d=>d.from===homeStationId && d.to===hosp.id);
+        if(ex){ ex.minutes=driveTimes[name]; ex.source='confirmed'; ex.by='user'; }
+        else LOC.driveTimes.push({from:homeStationId,to:hosp.id,minutes:driveTimes[name],source:'confirmed',by:'user'});
+      }
+    }
+    renderTT(); renderCalls(); renderGaps(); persist();
   });
 }
 /* ---- add-location autocomplete: searches the hospital list as you type ---- */
@@ -335,7 +388,7 @@ function addExistingOrNew(hosp, newName){
       LOC.driveTimes.push({from:homeStationId,to:id,minutes:20,source:'estimate',by:'user'});
   }
   $('newLoc').value=''; $('locResults').innerHTML='';
-  renderTT(); renderCalls();
+  renderTT(); renderCalls(); persist();
 }
 $('newLoc').oninput=renderLocResults;
 
@@ -432,7 +485,7 @@ function renderCalls(){
     const saved=saveCustomLocation(c.customName, c.customCounty, c.customMin||0);
     if(!saved){ alert('Give the location a name first.'); return; }
     c.loc=saved; delete c.customName; delete c.customCounty; delete c.customMin;
-    renderTT(); renderCalls(); renderGaps();
+    renderTT(); renderCalls(); renderGaps(); persist();
   });
   $('callList').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{calls.splice(+b.dataset.del,1);gapAnswers={};renderCalls();renderGaps();});
 }
@@ -526,6 +579,7 @@ function saveShift(){
   };
   $('saveShift').style.display='none';
   renderHistory();
+  persist();
   // stay on Enter, show a brief confirmation, ready for the next day
   const toast=$('saveToast');
   toast.style.display='';
@@ -542,10 +596,10 @@ function clearWeekCads(weekEnd){
       s.cadsCleared=true;
     }
   }
-  renderHistory();
+  renderHistory(); persist();
 }
 function deleteShift(date){
-  if(confirm('Delete '+fmtDate(date)+' from your record?')){ delete shiftStore[date]; renderHistory(); }
+  if(confirm('Delete '+fmtDate(date)+' from your record?')){ delete shiftStore[date]; renderHistory(); persist(); }
 }
 
 function renderHistory(){
