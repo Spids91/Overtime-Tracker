@@ -20,6 +20,7 @@
 const GRACE_MIN = 10;       // minimum minutes at base to count as a return
 const TIER5_MIN = 300;      // 5h
 const TIER10_MIN = 600;     // 10h
+const MAX_CALL_MIN = 480;   // 8h: a single call longer than this is almost certainly a mistyped time
 
 /* ---- time helpers --------------------------------------------------------- */
 // "HH:MM:SS" or "HH:MM" -> minutes from midnight (float, seconds preserved)
@@ -126,6 +127,15 @@ function computeShift(input) {
     if (clearM < startM) clearM += 1440;   // clear after midnight relative to its start
     return { cad: c.cad, loc: c.loc, startM, clearM };
   });
+
+  // Sanity guard: a single call running longer than MAX_CALL_MIN is almost certainly
+  // a mistyped time, not a real incident. Flag it rather than silently computing a
+  // huge subsistence window. This protects a user from a fat-fingered clear time
+  // producing a wildly wrong claim.
+  const badCall = events.find(e => (e.clearM - e.startM) > MAX_CALL_MIN);
+  if (badCall) {
+    return fail(`Call ${badCall.cad || ''} has start ${fmtClock(badCall.startM)} and clear ${fmtClock(badCall.clearM)}, which is over ${Math.round(MAX_CALL_MIN/60)} hours. Check the times.`);
+  }
 
   const gaps = analyzeGaps(events, dt);
   const needAnswers = gaps.filter(g => g.possible && !ga[g.index]);

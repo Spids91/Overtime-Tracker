@@ -124,6 +124,31 @@ function check(name, got, want) {
     calls: [input.calls[2], input.calls[0], input.calls[1]] });
   check('scrambled overnight still orders N1,N2,N3', scrambled.events.map(e=>e.cad).join(','), 'N1,N2,N3');
 })();
+
+/* ----------------------------------------------------------------------------
+   CASE 8 — sanity guard: an impossibly long call (mistyped time) is flagged,
+   not silently turned into a huge subsistence window.
+---------------------------------------------------------------------------- */
+(function badCallGuard() {
+  console.log('\nCASE 8: implausible call duration guard');
+  const r = E.computeShift({
+    rosterStart: '08:00', rosterEnd: '17:00', otRoundInc: 0, backAtBase: '17:30',
+    driveTimes: { A: 20 }, gapAnswers: {},
+    calls: [
+      { cad: '1', start: '09:00', clear: '11:00', loc: 'A' },
+      { cad: '2', start: '14:00', clear: '02:30', loc: 'A' }, // 12.5h: mistyped
+    ],
+  });
+  check('flags the bad call instead of computing', r.ok, false);
+  check('returns an error message', !!r.error, true);
+  // a legitimately long-ish call (under 8h) still computes
+  const ok = E.computeShift({
+    rosterStart: '08:00', rosterEnd: '20:00', otRoundInc: 0, backAtBase: '20:00',
+    driveTimes: { A: 20 }, gapAnswers: {},
+    calls: [{ cad: '1', start: '09:00', clear: '16:00', loc: 'A' }], // 7h, allowed
+  });
+  check('7h call still computes', ok.ok, true);
+})();
 (function units() {
   console.log('\nCASE 3: unit rules');
   check('roundUp 8min to 60', E.roundUp(8, 60), 60);
