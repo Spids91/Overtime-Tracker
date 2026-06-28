@@ -80,6 +80,14 @@
   .copyweek{margin:10px 13px 4px}
   .dayactions{display:flex;align-items:center;gap:8px}
   button.xsmall{width:auto;padding:5px 10px;font-size:12px;border-radius:7px}
+  .rweek{border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden}
+  .rweekhead{background:var(--paper);padding:7px 11px;font-family:var(--mono);font-size:12px;font-weight:600;border-bottom:1px solid var(--line)}
+  .rdays{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:8px}
+  .rday{display:flex;flex-direction:column;gap:3px;min-width:0}
+  .rdow{font-family:var(--mono);font-size:10px;color:var(--ink-soft);text-align:center}
+  .rday select{padding:6px 2px;font-size:11px;border:1px solid var(--line);border-radius:6px;text-align:center;min-width:0;width:100%}
+  .rday select.ron{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:600}
+  .rday select.roff{background:#fff;color:var(--ink-soft)}
   .section-ot,.section-sub{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line-soft);font-size:13px}
   .subline{margin-top:4px}
   .cadinline{font-family:var(--mono);font-size:12px;word-break:break-word;margin-top:1px}
@@ -122,6 +130,7 @@
   <nav class="tabs" role="tablist">
     <button class="tab on" data-tab="enter" role="tab">Enter shift</button>
     <button class="tab" data-tab="weeks" role="tab">My weeks</button>
+    <button class="tab" data-tab="roster" role="tab">Roster</button>
     <button class="tab" data-tab="settings" role="tab">Settings</button>
   </nav>
 
@@ -170,6 +179,28 @@
     <div id="history"></div>
   </section>
 
+  <!-- ROSTER -->
+  <section class="panel" data-panel="roster">
+    <div class="banner">Set your repeating roster once. The app then knows your rostered pattern for any date and fills it in automatically when you enter a shift. Everything stays editable, this is a starting point, not a lock.</div>
+
+    <h2 class="sec">Cycle length &amp; anchor</h2>
+    <div class="card">
+      <label class="fld"><span>How many weeks in your roster cycle?</span>
+        <input type="number" id="rosterWeeks" min="1" max="26" value="9"></label>
+      <label class="fld"><span>Anchor: pick a date you know, then say which cycle week it falls in</span>
+        <input type="date" id="rosterAnchorDate"></label>
+      <label class="fld"><span>That date was in cycle week…</span>
+        <select id="rosterAnchorWeek"></select></label>
+      <div class="locnote">Example: if last Monday was the first Monday of your cycle, pick it and choose "Week 1". The app counts from there.</div>
+    </div>
+
+    <h2 class="sec">Your cycle</h2>
+    <div class="locnote" style="margin:0 2px 10px">Every day defaults to OFF. Set only the days you work. Tap a day to choose its pattern.</div>
+    <div id="rosterGrid"></div>
+    <button class="act" id="saveRoster" style="margin-top:10px">Save roster</button>
+    <div id="rosterToast" class="toast" style="display:none">Roster saved.</div>
+  </section>
+
   <!-- SETTINGS -->
   <section class="panel" data-panel="settings">
     <h2 class="sec">Your station</h2>
@@ -199,6 +230,8 @@ let LOC=null;                 // full locations.json
 let homeStationId=null;       // chosen station id
 let driveTimes={};            // {hospitalName: minutes}  — built per station, fed to ENGINE
 let dtMeta={};                // {hospitalName: 'confirmed'|'estimate'} — for labelling only
+// roster: a repeating cycle. cycle[w][d] = pattern string or 'off' (w=0..weeks-1, d=0..6 Mon..Sun)
+let roster = { weeks:9, cycle:null, anchorDate:null, anchorWeek:0 };
 let calls=[]; let gapAnswers={};
 const $=id=>document.getElementById(id);
 
@@ -218,6 +251,8 @@ async function loadLocations(){
   applyPersistedToLOC(savedData);
   // restore saved shifts
   if(savedData && savedData.shiftStore) shiftStore = savedData.shiftStore;
+  // restore roster
+  if(savedData && savedData.roster && savedData.roster.cycle) roster = savedData.roster;
   // populate station picker: real stations first, flagged ones last
   const stations=[...LOC.stations].sort((a,b)=>{
     const af=a.likely_not_a_station?1:0, bf=b.likely_not_a_station?1:0;
@@ -231,6 +266,11 @@ async function loadLocations(){
   const savedHome = savedData ? savedData.homeStationId : null;
   if(savedHome && stations.some(s=>s.id===savedHome)){ $('homeStation').value=savedHome; homeStationId=savedHome; buildDriveTimes(); }
   renderTT(); renderCalls(); renderHistory(); renderStationBanner();
+  // reflect restored roster into its UI
+  $('rosterWeeks').value=roster.weeks;
+  if(roster.anchorDate) $('rosterAnchorDate').value=roster.anchorDate;
+  renderAnchorWeekOptions();
+  renderRosterGrid();
 }
 
 /* ---- build the flat driveTimes map ENGINE expects, from chosen station's routes ---- */
@@ -271,7 +311,8 @@ function persist(){
       homeStationId,
       shiftStore,
       userHospitals,
-      userDriveTimes
+      userDriveTimes,
+      roster
     };
     localStorage.setItem(STORE_KEY, JSON.stringify(data));
   }catch(e){ /* quota or serialization issue: fail quietly, app still works in-session */ }
@@ -737,12 +778,94 @@ function renderWeekTotals(){
   el.innerHTML=`Totals so far: <b>${ot}h</b> overtime &middot; <b>${sub}</b> subsistence <span class="mini">across ${all.length} day${all.length>1?'s':''}</span>`;
 }
 
+/* ===== ROSTER SYSTEM ===== */
+const DOW=['Mon','Tue','Wed','Thu','Fri','Sat','Sun']; // Mon..Sun
+const ROSTER_CHOICES=['off',...PATTERNS];
+
+function blankCycle(weeks){
+  return Array.from({length:weeks},()=>Array.from({length:7},()=>'off'));
+}
+function ensureCycle(){
+  if(!roster.cycle || roster.cycle.length!==roster.weeks){
+    const old=roster.cycle||[];
+    roster.cycle=blankCycle(roster.weeks);
+    // preserve overlap if resizing
+    for(let w=0;w<Math.min(old.length,roster.weeks);w++) roster.cycle[w]=old[w].slice(0,7);
+  }
+}
+function renderRosterGrid(){
+  ensureCycle();
+  const grid=$('rosterGrid');
+  grid.innerHTML=roster.cycle.map((week,w)=>`
+    <div class="rweek">
+      <div class="rweekhead">Week ${w+1}</div>
+      <div class="rdays">
+        ${week.map((val,d)=>`
+          <div class="rday">
+            <div class="rdow">${DOW[d]}</div>
+            <select data-w="${w}" data-d="${d}" class="${val==='off'?'roff':'ron'}">
+              ${ROSTER_CHOICES.map(c=>`<option ${c===val?'selected':''}>${c}</option>`).join('')}
+            </select>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+  grid.querySelectorAll('select').forEach(sel=>sel.onchange=()=>{
+    roster.cycle[sel.dataset.w][sel.dataset.d]=sel.value;
+    sel.className = sel.value==='off'?'roff':'ron';
+  });
+}
+function renderAnchorWeekOptions(){
+  const sel=$('rosterAnchorWeek');
+  sel.innerHTML=Array.from({length:roster.weeks},(_,i)=>`<option value="${i}" ${i===roster.anchorWeek?'selected':''}>Week ${i+1}</option>`).join('');
+}
+
+// Which cycle week+day does a given date fall on? Counts whole weeks from the anchor.
+function rosterForDate(dateStr){
+  if(!roster.cycle || !roster.anchorDate) return null;
+  const anchor=new Date(roster.anchorDate+'T00:00:00');
+  const target=new Date(dateStr+'T00:00:00');
+  // align anchor to the Monday of its week so day-of-week maps cleanly
+  const anchorDow=(anchor.getDay()+6)%7;            // 0=Mon..6=Sun
+  const anchorMonday=new Date(anchor); anchorMonday.setDate(anchor.getDate()-anchorDow);
+  const targetDow=(target.getDay()+6)%7;
+  const targetMonday=new Date(target); targetMonday.setDate(target.getDate()-targetDow);
+  const weeksBetween=Math.round((targetMonday-anchorMonday)/(7*86400000));
+  // cycle week index, wrapping, offset by anchorWeek
+  let wi=((roster.anchorWeek + weeksBetween) % roster.weeks + roster.weeks) % roster.weeks;
+  return { pattern: roster.cycle[wi][targetDow], week:wi, dow:targetDow };
+}
+
+$('rosterWeeks').onchange=()=>{ roster.weeks=Math.max(1,Math.min(26,Number($('rosterWeeks').value)||9)); ensureCycle(); renderRosterGrid(); renderAnchorWeekOptions(); };
+$('rosterAnchorDate').onchange=()=>{ roster.anchorDate=$('rosterAnchorDate').value||null; };
+$('rosterAnchorWeek').onchange=()=>{ roster.anchorWeek=Number($('rosterAnchorWeek').value)||0; };
+$('saveRoster').onclick=()=>{
+  roster.anchorDate=$('rosterAnchorDate').value||null;
+  roster.anchorWeek=Number($('rosterAnchorWeek').value)||0;
+  persist();
+  const t=$('rosterToast'); t.style.display=''; setTimeout(()=>t.style.display='none',2000);
+};
+
+// Auto-fill the Enter tab's roster pattern when the date changes, if a roster exists.
+function applyRosterToDate(){
+  const date=$('shiftDate').value; if(!date) return;
+  const rf=rosterForDate(date);
+  if(!rf || rf.pattern==='off') return;          // no roster, or a day off: leave as-is
+  const [s,e]=rf.pattern.split('-');
+  $('rosterStart').value=s+':00'; $('rosterEnd').value=e+':00';
+  if(!$('actualStart').value) $('actualStart').value=s+':00';
+  // highlight the matching quick-pick chip
+  document.querySelectorAll('#patternChips .chip').forEach(c=>c.classList.toggle('on', c.dataset.p===rf.pattern));
+}
+
 renderPatterns();$('shiftDate').valueAsDate=new Date();
 // when roster start is typed manually, mirror it to actual start if actual is still blank
 $('rosterStart').addEventListener('change',()=>{ if(!$('actualStart').value) $('actualStart').value=$('rosterStart').value; });
+$('shiftDate').addEventListener('change', applyRosterToDate);
 loadLocations();
 renderHistory();
 renderStationBanner();
+renderRosterGrid();
+renderAnchorWeekOptions();
 </script>
 </body>
 </html>
