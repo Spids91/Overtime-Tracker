@@ -88,6 +88,31 @@
   .rday select{padding:6px 2px;font-size:11px;border:1px solid var(--line);border-radius:6px;text-align:center;min-width:0;width:100%}
   .rday select.ron{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:600}
   .rday select.roff{background:#fff;color:var(--ink-soft)}
+  .subtabs{display:flex;gap:2px;margin-bottom:14px}
+  .subtab{flex:1;padding:9px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);font-weight:600;font-size:13px;cursor:pointer;border-radius:8px}
+  .subtab.on{background:var(--ink-soft);color:#fff;border-color:var(--ink-soft)}
+  .subpanel{display:none}.subpanel.on{display:block}
+  .calhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .calmonth{font-weight:700;font-size:16px}
+  .calnav{width:40px;height:40px;border:1px solid var(--line);background:#fff;border-radius:9px;font-size:20px;cursor:pointer;color:var(--ink)}
+  .calnav:active{background:var(--line-soft)}
+  .callegend{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--ink-soft);margin-bottom:10px}
+  .callegend span{display:flex;align-items:center;gap:4px}
+  .callegend .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+  .dot.work{background:var(--ink)}.dot.logged{background:var(--hi)}.dot.notlogged{background:var(--warn)}.dot.offday{background:var(--line)}
+  .calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+  .caldow{font-family:var(--mono);font-size:10px;color:var(--ink-soft);text-align:center;padding-bottom:3px}
+  .calcell{aspect-ratio:1;border:1px solid var(--line-soft);border-radius:7px;padding:3px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;cursor:pointer;position:relative;background:#fff;min-height:0}
+  .calcell.empty{border:none;background:none;cursor:default}
+  .calcell .cnum{font-size:12px;color:var(--ink-soft)}
+  .calcell.work{background:var(--ink);border-color:var(--ink)}
+  .calcell.work .cnum{color:#fff;font-weight:600}
+  .calcell .cpat{font-family:var(--mono);font-size:8px;color:#fff;opacity:.85;margin-top:1px}
+  .calcell.today{outline:2px solid var(--ask);outline-offset:1px}
+  .calcell .cflag{width:6px;height:6px;border-radius:50%;position:absolute;bottom:3px}
+  .calcell .cflag.logged{background:var(--hi)}
+  .calcell .cflag.notlogged{background:var(--warn)}
+  .caldetail{margin-top:12px}
   .section-ot,.section-sub{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line-soft);font-size:13px}
   .subline{margin-top:4px}
   .cadinline{font-family:var(--mono);font-size:12px;word-break:break-word;margin-top:1px}
@@ -181,24 +206,53 @@
 
   <!-- ROSTER -->
   <section class="panel" data-panel="roster">
-    <div class="banner">Set your repeating roster once. The app then knows your rostered pattern for any date and fills it in automatically when you enter a shift. Everything stays editable, this is a starting point, not a lock.</div>
+    <nav class="subtabs">
+      <button class="subtab on" data-sub="view">View roster</button>
+      <button class="subtab" data-sub="edit">Edit cycle</button>
+    </nav>
 
-    <h2 class="sec">Cycle length &amp; anchor</h2>
-    <div class="card">
-      <label class="fld"><span>How many weeks in your roster cycle?</span>
-        <input type="number" id="rosterWeeks" min="1" max="26" value="9"></label>
-      <label class="fld"><span>Anchor: pick a date you know, then say which cycle week it falls in</span>
-        <input type="date" id="rosterAnchorDate"></label>
-      <label class="fld"><span>That date was in cycle week…</span>
-        <select id="rosterAnchorWeek"></select></label>
-      <div class="locnote">Example: if last Monday was the first Monday of your cycle, pick it and choose "Week 1". The app counts from there.</div>
+    <!-- VIEW: month calendar -->
+    <div class="subpanel on" data-subpanel="view">
+      <div class="banner" id="rosterViewBanner"></div>
+      <div class="calhead">
+        <button class="calnav" id="calPrev" aria-label="previous month">&lsaquo;</button>
+        <div class="calmonth" id="calMonth"></div>
+        <button class="calnav" id="calNext" aria-label="next month">&rsaquo;</button>
+      </div>
+      <div class="callegend">
+        <span><i class="dot work"></i>working</span>
+        <span><i class="dot logged"></i>logged</span>
+        <span><i class="dot notlogged"></i>not logged yet</span>
+        <span><i class="dot offday"></i>off</span>
+      </div>
+      <div id="calGrid" class="calgrid"></div>
+      <div id="calDetail" class="caldetail"></div>
     </div>
 
-    <h2 class="sec">Your cycle</h2>
-    <div class="locnote" style="margin:0 2px 10px">Every day defaults to OFF. Set only the days you work. Tap a day to choose its pattern.</div>
-    <div id="rosterGrid"></div>
-    <button class="act" id="saveRoster" style="margin-top:10px">Save roster</button>
-    <div id="rosterToast" class="toast" style="display:none">Roster saved.</div>
+    <!-- EDIT: the cycle input -->
+    <div class="subpanel" data-subpanel="edit">
+      <div class="banner">Set your repeating roster once. The app then knows your rostered pattern for any date and fills it in automatically when you enter a shift. Everything stays editable, this is a starting point, not a lock.</div>
+
+      <h2 class="sec">Cycle length &amp; anchor</h2>
+      <div class="card">
+        <label class="fld"><span>How many weeks in your roster cycle?</span>
+          <input type="number" id="rosterWeeks" min="1" max="26" value="9"></label>
+        <label class="fld"><span>Anchor: pick a date you know, then say which cycle week it falls in</span>
+          <input type="date" id="rosterAnchorDate"></label>
+        <label class="fld"><span>That date was in cycle week…</span>
+          <select id="rosterAnchorWeek"></select></label>
+        <div class="locnote">Example: if last Monday was the first Monday of your cycle, pick it and choose "Week 1". The app counts from there.</div>
+      </div>
+
+      <h2 class="sec">Your cycle</h2>
+      <div class="locnote" style="margin:0 2px 10px">Every day defaults to OFF. Set only the days you work. Tap a day to choose its pattern.</div>
+      <div id="rosterGrid"></div>
+      <div class="row2" style="margin-top:10px">
+        <button class="act" id="saveRoster">Save roster</button>
+        <button class="act ghost" id="clearRoster">Clear all</button>
+      </div>
+      <div id="rosterToast" class="toast" style="display:none">Roster saved.</div>
+    </div>
   </section>
 
   <!-- SETTINGS -->
@@ -746,6 +800,7 @@ function showTab(name){
   document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on', p.dataset.panel===name));
   if(name==='enter') renderStationBanner();
   if(name==='weeks') renderWeekTotals();
+  if(name==='roster') renderCalendar();
   window.scrollTo({top:0,behavior:'instant'});
 }
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>showTab(t.dataset.tab));
@@ -843,17 +898,91 @@ $('saveRoster').onclick=()=>{
   roster.anchorWeek=Number($('rosterAnchorWeek').value)||0;
   persist();
   const t=$('rosterToast'); t.style.display=''; setTimeout(()=>t.style.display='none',2000);
+  renderCalendar();
 };
+$('clearRoster').onclick=()=>{
+  if(!confirm('Clear your whole roster cycle? This wipes all the days you have set. Your saved shifts are not affected.')) return;
+  roster.cycle=blankCycle(roster.weeks); roster.anchorDate=null; roster.anchorWeek=0;
+  $('rosterAnchorDate').value=''; renderAnchorWeekOptions(); renderRosterGrid(); persist(); renderCalendar();
+};
+
+/* ---- roster sub-tabs ---- */
+document.querySelectorAll('.subtab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.subtab').forEach(x=>x.classList.toggle('on',x===t));
+  document.querySelectorAll('.subpanel').forEach(p=>p.classList.toggle('on',p.dataset.subpanel===t.dataset.sub));
+  if(t.dataset.sub==='view') renderCalendar();
+});
+
+/* ---- month calendar ---- */
+let calCursor = new Date(); calCursor.setDate(1);
+function renderCalendar(){
+  const banner=$('rosterViewBanner');
+  if(!roster.cycle || !roster.anchorDate){
+    $('calGrid').innerHTML=''; $('calMonth').textContent='';
+    banner.className='banner warn';
+    banner.innerHTML='No roster set yet. Go to <b>Edit cycle</b>, fill in your weeks and anchor date, and save.';
+    $('calDetail').innerHTML='';
+    return;
+  }
+  banner.className='banner'; banner.innerHTML='Your rostered pattern. Working days are filled; a dot shows whether you have logged that shift. One-off changes (leave, swaps) are not reflected yet.';
+  const y=calCursor.getFullYear(), m=calCursor.getMonth();
+  $('calMonth').textContent=calCursor.toLocaleDateString('en-IE',{month:'long',year:'numeric'});
+  const first=new Date(y,m,1);
+  const firstDow=(first.getDay()+6)%7;
+  const daysInMonth=new Date(y,m+1,0).getDate();
+  const todayStr=ymd(new Date());
+  let cells='';
+  cells+=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>`<div class="caldow">${d}</div>`).join('');
+  for(let i=0;i<firstDow;i++) cells+='<div class="calcell empty"></div>';
+  for(let day=1;day<=daysInMonth;day++){
+    const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const rf=rosterForDate(ds);
+    const working = rf && rf.pattern!=='off';
+    const logged = !!shiftStore[ds];
+    const past = ds < todayStr;
+    let cls='calcell';
+    if(working) cls+=' work';
+    if(logged) cls+=' logged';
+    else if(working && past) cls+=' notlogged';
+    if(ds===todayStr) cls+=' today';
+    cells+=`<div class="${cls}" data-date="${ds}">
+      <span class="cnum">${day}</span>
+      ${working?`<span class="cpat">${rf.pattern}</span>`:''}
+      ${logged?'<i class="cflag logged"></i>':(working&&past?'<i class="cflag notlogged"></i>':'')}
+    </div>`;
+  }
+  $('calGrid').innerHTML=cells;
+  $('calGrid').querySelectorAll('.calcell[data-date]').forEach(c=>c.onclick=()=>showCalDetail(c.dataset.date));
+  $('calDetail').innerHTML='';
+}
+function showCalDetail(ds){
+  const rf=rosterForDate(ds);
+  const logged=shiftStore[ds];
+  const working=rf && rf.pattern!=='off';
+  const past=ds<ymd(new Date());
+  let html=`<div class="card"><b>${fmtDate(ds)}</b><br>`;
+  html+= working ? `Rostered: ${rf.pattern}<br>` : `Rostered: day off<br>`;
+  if(logged){
+    html+=`<span class="stat confirmed">logged</span> ${logged.otHours}h OT, ${logged.subsistence.map(x=>x.tier+'h').join('+')||'no subsistence'}`;
+  } else if(working && past){
+    html+=`<span class="stat estimate">not logged yet</span> you were rostered but no shift is saved for this day.`;
+  } else if(working){
+    html+=`Upcoming working day.`;
+  }
+  html+='</div>';
+  $('calDetail').innerHTML=html;
+}
+$('calPrev').onclick=()=>{ calCursor.setMonth(calCursor.getMonth()-1); renderCalendar(); };
+$('calNext').onclick=()=>{ calCursor.setMonth(calCursor.getMonth()+1); renderCalendar(); };
 
 // Auto-fill the Enter tab's roster pattern when the date changes, if a roster exists.
 function applyRosterToDate(){
   const date=$('shiftDate').value; if(!date) return;
   const rf=rosterForDate(date);
-  if(!rf || rf.pattern==='off') return;          // no roster, or a day off: leave as-is
+  if(!rf || rf.pattern==='off') return;
   const [s,e]=rf.pattern.split('-');
   $('rosterStart').value=s+':00'; $('rosterEnd').value=e+':00';
   if(!$('actualStart').value) $('actualStart').value=s+':00';
-  // highlight the matching quick-pick chip
   document.querySelectorAll('#patternChips .chip').forEach(c=>c.classList.toggle('on', c.dataset.p===rf.pattern));
 }
 
