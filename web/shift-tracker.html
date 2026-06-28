@@ -86,10 +86,14 @@
   .hm input[type=number]{width:46px;text-align:center}
   .hmlab{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-right:4px}
   .custombox{margin-top:10px;padding:12px;border:1px dashed var(--ask);border-radius:10px;background:var(--ask-soft)}
-  .week{border:1px solid var(--line);border-radius:var(--radius);margin-bottom:14px;overflow:hidden}
-  .weekhead{display:flex;justify-content:space-between;align-items:center;padding:11px 13px;background:var(--ink);color:#fff}
+  .week{border:1px solid var(--line);border-radius:var(--radius);margin-bottom:14px;overflow:hidden;box-shadow:0 1px 3px rgba(15,22,34,.04)}
+  .weekhead{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--ink);color:#fff}
+  .weekhead b{font-family:var(--display);font-weight:700;letter-spacing:-.01em}
   .weekhead .weektot{font-family:var(--mono);font-size:12px;opacity:.9}
-  .dayrow{border-top:1px solid var(--line);padding:10px 13px}
+  .dayrow{border-top:1px solid var(--line);padding:10px 13px 11px 16px;position:relative}
+  .dayrow::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px}
+  .dayrow.rd::before{background:var(--day)}
+  .dayrow.rn::before{background:var(--night)}
   .dayhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
   .dayhead .del{background:none;border:none;color:var(--bad);font-size:17px;cursor:pointer;line-height:1;padding:0 2px}
   .daygrid{display:grid;grid-template-columns:1fr 1fr;gap:7px 14px;font-size:13px}
@@ -112,7 +116,7 @@
   .subtab.on{background:var(--ink-soft);color:#fff;border-color:var(--ink-soft)}
   .subpanel{display:none}.subpanel.on{display:block}
   .calhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-  .calmonth{font-weight:700;font-size:16px}
+  .calmonth{font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:-.01em}
   .calnav{width:40px;height:40px;border:1px solid var(--line);background:#fff;border-radius:9px;font-size:20px;cursor:pointer;color:var(--ink)}
   .calnav:active{background:var(--line-soft)}
   .callegend{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--ink-soft);margin-bottom:10px}
@@ -121,7 +125,7 @@
   .dot.day{background:var(--day)}.dot.night{background:var(--night)}.dot.logged{background:var(--hi)}.dot.notlogged{background:var(--bad)}
   .calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
   .caldow{font-family:var(--mono);font-size:10px;color:var(--ink-soft);text-align:center;padding-bottom:4px;font-weight:500}
-  .calcell{aspect-ratio:1;border:1px solid var(--line-soft);border-radius:9px;padding:4px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;cursor:pointer;position:relative;background:#fff;min-height:0;transition:transform .08s}
+  .calcell{aspect-ratio:1;border:1px solid var(--line-soft);border-radius:9px;padding:4px 4px 12px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;cursor:pointer;position:relative;background:#fff;min-height:0;transition:transform .08s}
   .calcell:active{transform:scale(.95)}
   .calcell.empty{border:none;background:none;cursor:default}
   .calcell .cnum{font-size:12px;color:var(--ink-soft);font-weight:500}
@@ -134,7 +138,7 @@
   .calcell.night .cpat{color:var(--night-ink);opacity:.85}
   .calcell .cpat{font-family:var(--mono);font-size:8px;margin-top:1px;letter-spacing:-.02em}
   .calcell.today{outline:2.5px solid var(--ask);outline-offset:1px}
-  .calcell .cflag{width:7px;height:7px;border-radius:50%;position:absolute;bottom:4px;border:1.5px solid #fff}
+  .calcell .cflag{width:10px;height:10px;border-radius:50%;position:absolute;bottom:4px;border:1.5px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.06)}
   .calcell .cflag.logged{background:var(--hi)}
   .calcell .cflag.notlogged{background:var(--bad)}
   .caldetail{margin-top:14px}
@@ -143,9 +147,10 @@
   .cadinline{font-family:var(--mono);font-size:12px;word-break:break-word;margin-top:1px}
   .cadinline .dl{display:inline;margin-right:4px}
   /* tabs */
-  .tabs{position:sticky;top:0;z-index:10;display:flex;gap:2px;background:var(--paper);padding:8px 0 10px;margin-bottom:6px}
-  .tab{flex:1;padding:10px 8px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);font-weight:600;font-size:14px;cursor:pointer;border-radius:9px}
-  .tab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .tabs{position:sticky;top:0;z-index:10;display:flex;gap:4px;background:var(--paper);padding:8px 0 12px;margin-bottom:6px}
+  .tab{flex:1;padding:11px 8px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);font-weight:600;font-size:13px;cursor:pointer;border-radius:10px;font-family:var(--display);letter-spacing:.01em;transition:transform .08s,background .12s}
+  .tab:active{transform:scale(.97)}
+  .tab.on{background:var(--ink);color:#fff;border-color:var(--ink);box-shadow:0 2px 6px rgba(15,22,34,.15)}
   .tab:not(.on):active{background:var(--line-soft)}
   .panel{display:none;animation:fade .18s ease}
   .panel.on{display:block}
@@ -808,7 +813,8 @@ function renderDayRow(s){
     : '<span class="locnote">none</span>';
   // overtime incidents
   const otCadStr = s.otCads && s.otCads.length ? s.otCads.join(', ') : noneOrCleared;
-  return `<div class="dayrow">
+  const isNight = s.rosterStart && parseInt(s.rosterStart,10)>=18;
+  return `<div class="dayrow ${isNight?'rn':'rd'}">
     <div class="dayhead"><b>${fmtDate(s.date)}</b><span class="dayactions"><button class="act ghost xsmall copyday" data-date="${s.date}">Copy</button><button class="del delday" data-date="${s.date}" title="delete">&times;</button></span></div>
     <div class="daygrid">
       <div><span class="dl">Actual</span>${s.actualStart}-${s.actualEnd}</div>
