@@ -1,0 +1,29 @@
+/*
+  OVERPASS QUERY — NAS ambulance stations + hospitals, Republic of Ireland
+
+  HOW TO RUN (free, no API key):
+    1. Go to https://overpass-turbo.eu
+    2. Paste this WHOLE block in the left panel
+    3. Click Run
+    4. Export > "raw OSM data" as GeoJSON -> save as data/osm-raw.geojson
+    5. node scripts/build-locations.js data/osm-raw.geojson
+
+  If the map shows the whole world or throws an area error, you have almost
+  certainly lost the {{geocodeArea}} line below — that line is what restricts
+  results to Ireland. Keep it.
+*/
+
+[out:json][timeout:90];
+
+// Resolve "Ireland" to an area by geocoding (more robust than admin_level tags)
+{{geocodeArea:Ireland}}->.searchArea;
+
+(
+  // --- Ambulance stations ---
+  nwr["amenity"="ambulance_station"](area.searchArea);
+
+  // --- Hospitals (build script separates these from stations) ---
+  nwr["amenity"="hospital"](area.searchArea);
+);
+
+out center tags;

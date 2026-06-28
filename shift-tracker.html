@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Shift Tracker</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{
+    /* Suez Canal ramp */
+    --p-100:#F2F8FF;--p-200:#C4DFFD;--p-300:#90C3EF;--p-400:#569BCA;
+    --p-500:#216082;--p-600:#0E506B;--p-700:#064254;--p-800:#03333D;--p-900:#022226;
+    /* semantic names used across the app, repointed to Suez + AA-safe neutrals */
+    --ink:#03333D;--ink-soft:#4c5563;--line:#dfe9f0;--line-soft:#eef4f8;
+    --paper:#eceff4;--card:#ffffff;
+    --hi:#0E506B;--hi-soft:#eaf3f8;            /* subsistence / confirmed → Suez blue */
+    --warn:#b06a00;--warn-soft:#f7eede;        /* overtime / not-logged amber, AA on white */
+    --ask:#216082;--ask-soft:#e7f0f6;          /* prompts */
+    --bad:#b03a3a;
+    /* day/night shift identity, expressed in the Suez ramp */
+    --day:#90C3EF;--day-ink:#022226;--day-soft:#e8f2fb;     /* light Suez = day */
+    --night:#03333D;--night-ink:#dbe7ee;--night-soft:#e6edf2; /* deep Suez = night */
+    --radius:16px;
+    --mono:"Inter",ui-monospace,Menlo,monospace;
+    --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+    --display:"Sora","Inter",sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--paper);font-size:16px;line-height:1.5;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+  .wrap{max-width:560px;margin:0 auto;padding:16px 16px 96px}
+  header.app{padding:8px 4px 16px;margin-bottom:8px}
+  header.app h1{font-family:var(--display);font-size:22px;font-weight:700;margin:0;letter-spacing:-.02em;color:var(--ink)}
+  header.app .tag{font-family:var(--sans);font-size:12px;font-weight:500;color:var(--ink-soft);letter-spacing:.02em;display:block;margin-top:2px}
+  h2.sec{font-family:var(--sans);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);font-weight:600;margin:24px 2px 11px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:15px;margin-bottom:12px;box-shadow:0 1px 2px rgba(3,51,61,.03)}
+  label.fld{display:block;margin-bottom:12px}label.fld:last-child{margin-bottom:0}
+  label.fld>span{display:block;font-size:12px;color:var(--ink-soft);margin-bottom:6px;font-weight:500}
+  input,select,button{font-family:var(--sans);font-size:16px}
+  input[type=time],input[type=date],input[type=text],input[type=number],select{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);appearance:none}
+  input:focus,select:focus{outline:2px solid var(--p-500);outline-offset:1px;border-color:var(--p-500)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{padding:9px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:13px;cursor:pointer;font-family:var(--sans);font-weight:600;color:var(--ink-soft);transition:transform .08s}
+  .chip:active{transform:scale(.96)}
+  .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  /* day/night-aware chips */
+  .chip.on.day{background:var(--day);color:var(--day-ink);border-color:var(--day)}
+  .chip.on.night{background:var(--night);color:#fff;border-color:var(--night)}
+  button.act{width:100%;padding:15px;border:none;border-radius:13px;background:var(--p-600);color:#fff;font-weight:600;cursor:pointer;letter-spacing:.01em;font-family:var(--display);transition:transform .08s,background .12s;box-shadow:0 6px 16px -8px rgba(33,96,130,.6)}
+  button.act.ghost{background:#fff;color:var(--ink);border:1px solid var(--line);font-weight:600;box-shadow:none}
+  button.act:active{transform:translateY(1px);background:var(--p-700)}
+  button.small{width:auto;padding:8px 13px;font-size:13px;border-radius:9px}
+  .call{border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:9px;background:#fff}
+  .call .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+  .call .cad{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink-soft)}
+  .call .del{background:none;border:none;color:var(--bad);font-size:18px;cursor:pointer;padding:0 4px;line-height:1}
+  .gap-q{border:1px solid var(--ask);background:var(--ask-soft);border-radius:12px;padding:12px;margin-bottom:9px}
+  .gap-q .qtxt{font-size:14px;margin-bottom:9px}.gap-q .qtxt b{font-weight:700}
+  .gap-q .opts{display:flex;gap:8px}
+  .gap-q .opts button{flex:1;padding:10px;border:1px solid var(--ask);border-radius:9px;background:#fff;color:var(--ask);font-weight:600;cursor:pointer}
+  .gap-q .opts button.on{background:var(--ask);color:#fff}
+  .result{border:1px solid var(--ink);border-radius:var(--radius);overflow:hidden}
+  .result .head{background:var(--ink);color:#fff;padding:12px 14px}
+  .result .head .ttl{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.1em;opacity:.8}
+  .metrics{display:grid;grid-template-columns:1fr 1fr}
+  .metric{padding:16px 14px;border-top:1px solid var(--line)}
+  .metric:nth-child(odd){border-right:1px solid var(--line)}
+  .metric .big{font-family:var(--display);font-size:34px;font-weight:800;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+  .metric .lbl{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);margin-top:6px}
+  .metric.ot .big{color:var(--warn)}.metric.sub .big{color:var(--hi)}
+  .ledger{padding:12px 14px;border-top:1px solid var(--line);background:var(--paper)}
+  .lrow{display:flex;gap:8px;font-size:13px;padding:5px 0;align-items:baseline}
+  .lrow .t{font-family:var(--mono);color:var(--ink-soft);white-space:nowrap}.lrow .d{flex:1}
+  .pill{display:inline-block;font-family:var(--mono);font-size:11px;padding:2px 7px;border-radius:999px;margin-left:4px}
+  .pill.away{background:var(--hi-soft);color:var(--hi)}.pill.reset{background:var(--warn-soft);color:var(--warn)}
+  .pill.t5{background:var(--hi-soft);color:var(--hi)}.pill.t10{background:var(--hi);color:#fff}
+  .note{font-size:12px;color:var(--ink-soft);padding:10px 14px;border-top:1px dashed var(--line)}
+  .empty{color:var(--ink-soft);font-size:14px;text-align:center;padding:18px}
+  details.tt{margin-top:6px}details.tt summary{font-size:13px;color:var(--ask);cursor:pointer;font-family:var(--mono)}
+  .tt table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
+  .tt th,.tt td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--line-soft)}
+  .tt th{font-family:var(--mono);font-size:11px;color:var(--ink-soft);text-transform:uppercase}
+  .warnline{color:var(--bad);font-size:13px;padding:8px 0}
+  .locnote{font-size:12px;color:var(--ink-soft)}
+  .stat{font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:999px;text-transform:uppercase;letter-spacing:.04em}
+  .stat.confirmed{background:var(--hi-soft);color:var(--hi)}
+  .stat.estimate{background:var(--warn-soft);color:var(--warn)}
+  .tt td input[type=number]{width:64px}
+  .hm{display:inline-flex;align-items:center;gap:3px}
+  .hm input[type=number]{width:46px;text-align:center}
+  .hmlab{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-right:4px}
+  .custombox{margin-top:10px;padding:12px;border:1px dashed var(--ask);border-radius:10px;background:var(--ask-soft)}
+  .week{border:1px solid var(--line);border-radius:var(--radius);margin-bottom:14px;overflow:hidden;box-shadow:0 1px 3px rgba(15,22,34,.04)}
+  .weekhead{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--ink);color:#fff}
+  .weekhead b{font-family:var(--display);font-weight:700;letter-spacing:-.01em}
+  .weekhead .weektot{font-family:var(--mono);font-size:12px;opacity:.9}
+  .dayrow{border-top:1px solid var(--line);padding:10px 13px 11px 16px;position:relative}
+  .dayrow::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px}
+  .dayrow.rd::before{background:var(--day)}
+  .dayrow.rn::before{background:var(--night)}
+  .dayhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+  .dayhead .del{background:none;border:none;color:var(--bad);font-size:17px;cursor:pointer;line-height:1;padding:0 2px}
+  .daygrid{display:grid;grid-template-columns:1fr 1fr;gap:7px 14px;font-size:13px}
+  .daygrid .cadcell{grid-column:1/-1;border-top:1px dashed var(--line-soft);padding-top:7px;font-family:var(--mono);word-break:break-word}
+  .dl{display:block;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);margin-bottom:2px}
+  .clearcads{margin:10px 13px 13px}
+  .copyweek{margin:10px 13px 4px}
+  .dayactions{display:flex;align-items:center;gap:8px}
+  button.xsmall{width:auto;padding:5px 10px;font-size:12px;border-radius:7px}
+  .rweek{border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden}
+  .rweekhead{background:var(--paper);padding:7px 11px;font-family:var(--mono);font-size:12px;font-weight:600;border-bottom:1px solid var(--line)}
+  .rdays{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:8px}
+  .rday{display:flex;flex-direction:column;gap:3px;min-width:0}
+  .rdow{font-family:var(--mono);font-size:10px;color:var(--ink-soft);text-align:center}
+  .rday select{padding:6px 2px;font-size:11px;border:1px solid var(--line);border-radius:6px;text-align:center;min-width:0;width:100%}
+  .rday select.ron{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:600}
+  .rday select.roff{background:#fff;color:var(--ink-soft)}
+  .subtabs{display:flex;gap:2px;margin-bottom:14px}
+  .subtab{flex:1;padding:9px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);font-weight:600;font-size:13px;cursor:pointer;border-radius:8px}
+  .subtab.on{background:var(--ink-soft);color:#fff;border-color:var(--ink-soft)}
+  .subpanel{display:none}.subpanel.on{display:block}
+  .calhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .calmonth{font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:-.01em;color:var(--ink)}
+  .calnav{width:36px;height:36px;border:none;background:var(--p-600);border-radius:11px;font-size:18px;font-weight:700;cursor:pointer;color:#fff;display:grid;place-items:center;line-height:1}
+  .calnav:active{background:var(--p-700)}
+  .callegend{display:flex;flex-wrap:wrap;gap:14px;font-size:11.5px;color:var(--ink-soft);margin-top:18px;justify-content:center}
+  .callegend span{display:flex;align-items:center;gap:5px}
+  .callegend .dot{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .dot.day{background:var(--day)}.dot.night{background:var(--night)}.dot.logged{background:var(--p-600)}.dot.notlogged{background:var(--warn)}
+  .calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .caldow{font-family:var(--sans);font-size:11px;color:var(--p-800);text-align:center;padding-bottom:4px;font-weight:700;letter-spacing:.02em}
+  .calcell{aspect-ratio:1;border:none;border-radius:11px;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;position:relative;background:#f1f5f9;min-height:0;transition:transform .08s;font-size:13px;font-weight:500;color:var(--ink-soft)}
+  .calcell:active{transform:scale(.95)}
+  .calcell.empty{border:none;background:none;cursor:default}
+  .calcell .cnum{font-size:13px;color:var(--ink-soft);font-weight:500}
+  /* day shift = light Suez, night shift = deep Suez */
+  .calcell.day{background:var(--day)}
+  .calcell.day .cnum{color:var(--day-ink);font-weight:700}
+  .calcell.day .cpat{color:var(--day-ink);opacity:.8}
+  .calcell.night{background:var(--night)}
+  .calcell.night .cnum{color:#fff;font-weight:700}
+  .calcell.night .cpat{color:var(--night-ink);opacity:.9}
+  .calcell .cpat{font-family:var(--sans);font-size:8px;font-weight:600;margin-top:0;letter-spacing:-.02em}
+  .calcell.today{box-shadow:inset 0 0 0 2.5px var(--p-500)}
+  /* dot top-right so it never blocks the shift time */
+  .calcell .cflag{width:6px;height:6px;border-radius:50%;position:absolute;top:5px;right:5px}
+  .calcell .cflag.logged{background:var(--p-600)}
+  .calcell.day .cflag.logged,.calcell.night .cflag.logged{background:#fff}
+  .calcell .cflag.notlogged{background:var(--warn)}
+  .caldetail{margin-top:14px}
+  .section-ot,.section-sub{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line-soft);font-size:13px}
+  .subline{margin-top:4px}
+  .cadinline{font-family:var(--mono);font-size:12px;word-break:break-word;margin-top:1px}
+  .cadinline .dl{display:inline;margin-right:4px}
+  /* tabs */
+  /* fixed bottom navigation */
+  .nav{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(4,1fr);gap:0;background:var(--card);border-top:1px solid var(--line);padding:8px 8px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -2px 12px rgba(3,51,61,.05)}
+  .navbtn{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10.5px;font-weight:600;color:var(--ink-soft);background:none;border:none;cursor:pointer;padding:4px 2px;font-family:var(--sans)}
+  .navbtn .ic{width:24px;height:24px;display:grid;place-items:center}
+  .navbtn .ic svg{width:23px;height:23px;stroke:currentColor;stroke-width:1.9;fill:none}
+  .navbtn.on{color:var(--p-600)}
+  .navbtn:active{transform:scale(.94)}
+  .tab:not(.on):active{background:var(--line-soft)}
+  .panel{display:none;animation:fade .18s ease}
+  .panel.on{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+  @media(prefers-reduced-motion:reduce){.panel{animation:none}}
+  /* banner (station on enter tab, totals on weeks tab) */
+  .banner{font-size:13px;color:var(--ink-soft);padding:11px 13px;border:1px solid var(--line);border-radius:12px;margin-bottom:14px;background:#fff}
+  .hero{background:var(--p-700);color:#fff;border-radius:22px;padding:20px;margin-bottom:18px}
+  .hero .wk{font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--p-200)}
+  .hero .ot{margin-top:14px}
+  .hero .ot .n{font-family:var(--display);font-size:34px;font-weight:700;line-height:1;letter-spacing:-.02em}
+  .hero .ot .n .un{font-family:var(--sans);font-size:14px;font-weight:600;margin-left:3px}
+  .hero .ot .u{font-size:12px;color:var(--p-200);margin-top:5px}
+  .hero .subs{display:flex;gap:32px;margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.14)}
+  .hero .sub-fig .n{font-family:var(--display);font-size:22px;font-weight:700;line-height:1;letter-spacing:-.02em}
+  .hero .sub-fig .n .un{font-family:var(--sans);font-size:12px;font-weight:600;margin-left:2px}
+  .hero .sub-fig .u{font-size:11px;color:var(--p-200);margin-top:5px}
+  .banner.warn{border-color:var(--warn);background:var(--warn-soft);color:var(--warn)}
+  .banner b{color:var(--ink)}
+  .banner .mini{font-family:var(--mono);font-size:12px}
+  .banner a.gotoset{color:var(--ask);cursor:pointer;text-decoration:underline;font-weight:600}
+  /* save toast */
+  .toast{margin-top:10px;padding:11px 13px;border-radius:10px;background:var(--hi-soft);color:var(--hi);font-size:14px;font-weight:600;text-align:center;animation:fade .2s ease}
+  .dttable{width:100%;border-collapse:collapse;font-size:13px}
+  .dttable th,.dttable td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line-soft)}
+  .dttable th{font-family:var(--mono);font-size:11px;color:var(--ink-soft);text-transform:uppercase}
+  .addloc{margin-top:12px;position:relative}
+  .locresults{margin-top:4px}
+  .locopt{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--line);border-top:none;background:#fff;cursor:pointer;font-size:14px}
+  .locopt:first-child{border-top:1px solid var(--line);border-radius:8px 8px 0 0}
+  .locopt:last-child{border-radius:0 0 8px 8px}
+  .locopt:active{background:var(--line-soft)}
+  .locopt .loccty{font-family:var(--mono);font-size:11px;color:var(--ink-soft);white-space:nowrap}
+  .locopt.locnew{color:var(--ask);font-weight:600}
+  .locopt.locnew .loccty{color:var(--ask)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app"><h1>Shift Tracker</h1><span class="tag">NAS overtime &amp; subsistence</span></header>
+
+  <nav class="nav" role="tablist">
+    <button class="navbtn on" data-tab="enter" role="tab">
+      <span class="ic"><svg viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg></span>Enter
+    </button>
+    <button class="navbtn" data-tab="weeks" role="tab">
+      <span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4m8-4v4"/></svg></span>My weeks
+    </button>
+    <button class="navbtn" data-tab="roster" role="tab">
+      <span class="ic"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M9 14h.01M15 14h.01"/></svg></span>Roster
+    </button>
+    <button class="navbtn" data-tab="settings" role="tab">
+      <span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg></span>About
+    </button>
+  </nav>
+
+  <!-- ENTER SHIFT -->
+  <section class="panel on" data-panel="enter">
+
+    <h2 class="sec">Rostered shift</h2>
+    <div class="card">
+      <label class="fld"><span>Date</span><input type="date" id="shiftDate"></label>
+      <label class="fld"><span>Pattern</span></label>
+      <div class="chips" id="patternChips"></div>
+      <div class="row2" style="margin-top:12px">
+        <label class="fld"><span>Roster start</span><input type="time" id="rosterStart"></label>
+        <label class="fld"><span>Roster end</span><input type="time" id="rosterEnd"></label>
+      </div>
+      <label class="fld"><span>Overtime rounding (always rounded up)</span>
+        <select id="otRound"><option value="0">Exact minutes</option><option value="15">15 min</option><option value="30">30 min</option><option value="60">1 hour</option></select>
+      </label>
+    </div>
+
+    <h2 class="sec">Calls this shift</h2>
+    <div id="callList"></div>
+    <button class="act ghost" id="addCall">+ Add call</button>
+
+    <h2 class="sec">Actual times worked</h2>
+    <div class="card">
+      <div class="locnote" style="margin-bottom:10px">The paysheet asks for roster and actual. Actual start defaults to your roster start, change it for a lay-off, early start, or early finish.</div>
+      <div class="row2">
+        <label class="fld"><span>Actual start (booked on)</span><input type="time" id="actualStart"></label>
+        <label class="fld"><span>Actual end (back at base)</span><input type="time" id="backAtBase"></label>
+      </div>
+      <div class="locnote" style="margin-top:6px">Actual end drives overtime (vs roster end). Actual start is for the paysheet only, it does not change overtime or subsistence.</div>
+    </div>
+
+    <div id="gapQuestions"></div>
+    <button class="act" id="compute" style="margin-top:6px">Compute shift</button>
+    <div id="output" style="margin-top:18px"></div>
+    <button class="act ghost" id="saveShift" style="margin-top:10px;display:none">Save this shift to my week</button>
+    <div id="saveToast" class="toast" style="display:none">Saved. Ready for the next day.</div>
+  </section>
+
+  <!-- MY WEEKS -->
+  <section class="panel" data-panel="weeks">
+    <div id="weekTotals" class="banner"></div>
+    <div id="history"></div>
+  </section>
+
+  <!-- ROSTER -->
+  <section class="panel" data-panel="roster">
+    <nav class="subtabs">
+      <button class="subtab on" data-sub="view">View roster</button>
+      <button class="subtab" data-sub="edit">Edit cycle</button>
+    </nav>
+
+    <!-- VIEW: month calendar -->
+    <div class="subpanel on" data-subpanel="view">
+      <div class="banner" id="rosterViewBanner"></div>
+      <div class="calhead">
+        <button class="calnav" id="calPrev" aria-label="previous month">&lsaquo;</button>
+        <div class="calmonth" id="calMonth"></div>
+        <button class="calnav" id="calNext" aria-label="next month">&rsaquo;</button>
+      </div>
+      <div class="callegend">
+        <span><i class="dot day"></i>day shift</span>
+        <span><i class="dot night"></i>night shift</span>
+        <span><i class="dot logged"></i>logged</span>
+        <span><i class="dot notlogged"></i>not logged</span>
+      </div>
+      <div id="calGrid" class="calgrid"></div>
+      <div id="calDetail" class="caldetail"></div>
+    </div>
+
+    <!-- EDIT: the cycle input -->
+    <div class="subpanel" data-subpanel="edit">
+      <div class="banner">Set your repeating roster once. The app then knows your rostered pattern for any date and fills it in automatically when you enter a shift. Everything stays editable, this is a starting point, not a lock.</div>
+
+      <h2 class="sec">Cycle length &amp; anchor</h2>
+      <div class="card">
+        <label class="fld"><span>How many weeks in your roster cycle?</span>
+          <input type="number" id="rosterWeeks" min="1" max="26" value="9"></label>
+        <label class="fld"><span>Anchor: pick a date you know, then say which cycle week it falls in</span>
+          <input type="date" id="rosterAnchorDate"></label>
+        <label class="fld"><span>That date was in cycle week…</span>
+          <select id="rosterAnchorWeek"></select></label>
+        <div class="locnote">Example: if last Monday was the first Monday of your cycle, pick it and choose "Week 1". The app counts from there.</div>
+      </div>
+
+      <h2 class="sec">Your cycle</h2>
+      <div class="locnote" style="margin:0 2px 10px">Every day defaults to OFF. Set only the days you work. Tap a day to choose its pattern.</div>
+      <div id="rosterGrid"></div>
+      <div class="row2" style="margin-top:10px">
+        <button class="act" id="saveRoster">Save roster</button>
+        <button class="act ghost" id="clearRoster">Clear all</button>
+      </div>
+      <div id="rosterToast" class="toast" style="display:none">Roster saved.</div>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="panel" data-panel="settings">
+    <h2 class="sec">About</h2>
+    <div class="card">
+      <p style="margin:0 0 8px;font-size:14px">This is your private working-out tool for NAS overtime and subsistence. Nothing leaves your device, you read the figures off and write them onto your paper timesheet.</p>
+      <p style="margin:0;font-size:13px;color:var(--ink-soft)">Incident numbers are held only until you have copied them to paper. Clear them per week in My weeks once they are on your sheet.</p>
+    </div>
+  </section>
+</div>
+
+<script src="../engine/engine.js"></script>
+<script>
+/* ===== UI: thin skin over ENGINE. ===== */
+const PATTERNS=["07-19","08-20","19-07","20-08","07-17","08-17"];
+// roster: a repeating cycle. cycle[w][d] = pattern string or 'off' (w=0..weeks-1, d=0..6 Mon..Sun)
+let roster = { weeks:9, cycle:null, anchorDate:null, anchorWeek:0 };
+let calls=[]; let gapAnswers={};
+const $=id=>document.getElementById(id);
+
+/* ---- init: load persisted data (no external data file needed anymore) ---- */
+function initApp(){
+  const savedData = loadPersisted();
+  if(savedData && savedData.shiftStore) shiftStore = savedData.shiftStore;
+  if(savedData && savedData.roster && savedData.roster.cycle) roster = savedData.roster;
+  renderCalls(); renderHistory();
+  // reflect restored roster into its UI
+  $('rosterWeeks').value=roster.weeks;
+  if(roster.anchorDate) $('rosterAnchorDate').value=roster.anchorDate;
+  renderAnchorWeekOptions();
+  renderRosterGrid();
+}
+
+/* ===== PERSISTENCE (localStorage) =====
+   Saves everything to the device so it survives closing/reopening the app.
+   Device-local: data lives in this browser only, not synced across devices.
+   Gracefully no-ops if storage is unavailable (e.g. artifact preview). */
+const STORE_KEY = 'shiftTracker.v1';
+let storageOK = (()=>{ try{ const k='__t'; localStorage.setItem(k,'1'); localStorage.removeItem(k); return true; }catch(e){ return false; } })();
+
+function persist(){
+  if(!storageOK) return;
+  try{
+    localStorage.setItem(STORE_KEY, JSON.stringify({ v:2, shiftStore, roster }));
+  }catch(e){ /* quota or serialization issue: fail quietly, app still works in-session */ }
+}
+function loadPersisted(){
+  if(!storageOK) return null;
+  try{ const raw=localStorage.getItem(STORE_KEY); return raw?JSON.parse(raw):null; }
+  catch(e){ return null; }
+}
+
+/* ---- patterns ---- */
+function isNightPattern(p){
+  // a night shift starts in the evening (hour >= 18). 19-07, 20-08 are nights.
+  if(!p || p==='custom' || p==='off') return false;
+  const startH=parseInt(p.split('-')[0],10);
+  return startH>=18;
+}
+function renderPatterns(){
+  $('patternChips').innerHTML=PATTERNS.map(p=>`<div class="chip ${isNightPattern(p)?'night':'day'}" data-p="${p}">${p}</div>`).join('')+`<div class="chip" data-p="custom">custom</div>`;
+  $('patternChips').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
+    $('patternChips').querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');
+    const p=c.dataset.p;if(p!=='custom'){const[s,e]=p.split('-');$('rosterStart').value=s+':00';$('rosterEnd').value=e+':00';$('actualStart').value=s+':00';}else{$('rosterStart').value='';$('rosterEnd').value='';$('actualStart').value='';}
+  });
+}
+
+
+/* ---- calls ---- */
+// Build county-grouped <optgroup> options of ALL hospitals, plus station + Other.
+// Drive-time still comes from the station table; a hospital with no set time uses Other-style fallback.
+function addCall(){calls.push({cad:'',start:'',clear:''});renderCalls();}
+
+function renderCalls(){
+  if(!calls.length){$('callList').innerHTML='<div class="empty">No calls yet. Add the first call from the MDT.</div>';return;}
+  $('callList').innerHTML=calls.map((c,i)=>`<div class="call"><div class="top"><span class="cad">CALL ${i+1}</span><button class="del" data-del="${i}">&times;</button></div>
+    <label class="fld"><span>CAD / incident #</span><input type="text" inputmode="numeric" data-f="cad" data-i="${i}" value="${c.cad}" placeholder="5886259"></label>
+    <div class="row2"><label class="fld"><span>Start</span><input type="time" data-f="start" data-i="${i}" value="${c.start}"></label>
+    <label class="fld"><span>Clear</span><input type="time" data-f="clear" data-i="${i}" value="${c.clear}"></label></div>
+    </div>`).join('');
+  $('callList').querySelectorAll('[data-f]').forEach(el=>el.oninput=el.onchange=()=>{
+    calls[el.dataset.i][el.dataset.f]=el.value;
+    renderGaps();
+  });
+  $('callList').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{calls.splice(+b.dataset.del,1);gapAnswers={};renderCalls();renderGaps();});
+}
+$('addCall').onclick=addCall;
+
+function currentInput(){return{rosterStart:$('rosterStart').value,rosterEnd:$('rosterEnd').value,backAtBase:$('backAtBase').value||null,otRoundInc:Number($('otRound').value),calls:calls.filter(c=>c.start&&c.clear),gapAnswers};}
+function renderGaps(){
+  const inp=currentInput();if(inp.calls.length<2){$('gapQuestions').innerHTML='';return;}
+  const flat=[];inp.calls.forEach(c=>{flat.push(ENGINE.parseTime(c.start));flat.push(ENGINE.parseTime(c.clear));});
+  const uw=ENGINE.unwrap(flat);const ev=inp.calls.map((c,i)=>({...c,startM:uw[i*2],clearM:uw[i*2+1]}));
+  const gaps=ENGINE.analyzeGaps(ev).filter(g=>g.possible);
+  if(!gaps.length){$('gapQuestions').innerHTML='';return;}
+  $('gapQuestions').innerHTML='<h2 class="sec">Resolve gaps</h2>'+gaps.map(g=>`<div class="gap-q"><div class="qtxt">Between <b>${ENGINE.fmtClock(g.clearAt)}</b> and <b>${ENGINE.fmtClock(g.nextStart)}</b> (${ENGINE.fmtDur(g.gap)} gap) you could have been back at base. Were you there 10+ minutes?</div><div class="opts"><button data-g="${g.index}" data-a="yes" class="${gapAnswers[g.index]==='yes'?'on':''}">Yes, returned</button><button data-g="${g.index}" data-a="no" class="${gapAnswers[g.index]==='no'?'on':''}">No, stayed out</button></div></div>`).join('');
+  $('gapQuestions').querySelectorAll('button').forEach(b=>b.onclick=()=>{gapAnswers[b.dataset.g]=b.dataset.a;renderGaps();});
+}
+function compute(){
+  const r=ENGINE.computeShift(currentInput());const out=$('output');
+  if(r.error){out.innerHTML=`<div class="card warnline">${r.error}</div>`;return;}
+  if(!r.ok){renderGaps();out.innerHTML='<div class="card warnline">Answer the gap question(s) above, then compute again.</div>';return;}
+  const ot=r.overtime,sub=r.subsistence;
+  out.innerHTML=`<div class="result"><div class="head"><div class="ttl">Computed shift &middot; ${$('shiftDate').value||'no date'}</div></div>
+    <div class="metrics"><div class="metric ot"><div class="big">${(ot.roundedMin/60).toFixed(2).replace(/\.00$/,'')}h</div><div class="lbl">Overtime ${Number($('otRound').value)?'(up '+$('otRound').value+'m)':'(exact)'}</div></div>
+    <div class="metric sub"><div class="big">${sub.summary}</div><div class="lbl">Subsistence tiers</div></div></div>
+    <div class="ledger">${r.awayWindows.map((w,i)=>`<div class="lrow"><span class="t">${ENGINE.fmtClock(w.start)}-${ENGINE.fmtClock(w.end)}</span><span class="d">Away window ${i+1}: ${ENGINE.fmtDur(w.durMin)} ${w.tier===10?'<span class="pill t10">10h tier</span>':w.tier===5?'<span class="pill t5">5h tier</span>':'<span class="pill">under 5h</span>'}</span></div>`).join('')}
+    <div class="lrow" style="border-top:1px solid var(--line);margin-top:6px;padding-top:9px"><span class="t">${ENGINE.fmtClock(ot.rosterEndM)}</span><span class="d">Rostered end &middot; back at base ${ENGINE.fmtClock(ot.backM)} &middot; raw ${ENGINE.fmtDur(ot.rawMin)}${Number($('otRound').value)?', up to '+ENGINE.fmtDur(ot.roundedMin):''}</span></div></div>
+    <details class="tt" style="padding:10px 14px"><summary>Step trace</summary><div style="margin-top:8px">${r.ledger.map(l=>`<div class="lrow"><span class="t">${ENGINE.fmtClock(l.atMin)}</span><span class="d">${l.text}<span class="pill ${l.kind}">${l.kind}</span></span></div>`).join('')}</div></details>
+    <div class="note">App assists, you assert. These figures rest on the locations and gap answers you confirmed, the record you stand behind for the claim.</div></div>`;
+  lastComputed = { r, input: currentInput() };
+  $('saveShift').style.display = '';
+}
+$('compute').onclick=compute;
+
+/* ===== SAVE + WEEK HISTORY (Sunday-ending, mirrors the paper paysheet) ===== */
+// NOTE: artifacts cannot persist across reloads. This holds shifts for the session.
+// The logic is storage-ready: swap `shiftStore` for a real store and history persists.
+let lastComputed = null;
+let shiftStore = {};   // keyed by date 'YYYY-MM-DD'
+
+// Build YYYY-MM-DD from local date parts (never via toISOString, which shifts to UTC
+// and can roll the date back a day in positive-offset timezones like Ireland in summer).
+function ymd(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function weekEndingSunday(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  const day = d.getDay();                 // 0=Sun..6=Sat
+  const add = (7 - day) % 7;              // days to next Sunday (0 if already Sun)
+  d.setDate(d.getDate()+add);
+  return ymd(d);
+}
+function fmtDate(dateStr){
+  return new Date(dateStr+'T00:00:00').toLocaleDateString('en-IE',{weekday:'short',day:'numeric',month:'short'});
+}
+
+function saveShift(){
+  if(!lastComputed) return;
+  const date = $('shiftDate').value;
+  if(!date){ alert('Set the shift date first.'); return; }
+  const { r, input } = lastComputed;
+
+  // Match each call's CAD to the periods it overlaps. A call counts if any part of
+  // it falls in the period (started inside OR ran into it). The engine's events
+  // carry startM/clearM (unwrapped minutes) and cad. overlap(a,b,x,y) = a<y && b>x.
+  const overlap = (s,e,x,y) => s < y && e > x;
+  const evs = r.events; // {cad,startM,clearM}
+  const otFromM = r.overtime.rosterEndM, otToM = r.overtime.backM;
+  const otCads = (r.overtime.roundedMin>0)
+    ? evs.filter(ev => overlap(ev.startM, ev.clearM, otFromM, otToM) && ev.cad).map(ev=>ev.cad)
+    : [];
+
+  const subsistence = r.awayWindows.filter(w=>w.tier>0).map(w=>({
+    from: ENGINE.fmtClock(w.start), to: ENGINE.fmtClock(w.end), tier: w.tier,
+    cads: evs.filter(ev => overlap(ev.startM, ev.clearM, w.start, w.end) && ev.cad).map(ev=>ev.cad)
+  }));
+
+  // capture exactly what the paysheet row needs
+  shiftStore[date] = {
+    date,
+    rosterStart: input.rosterStart, rosterEnd: input.rosterEnd,
+    actualStart: $('actualStart').value || input.rosterStart,
+    actualEnd: ENGINE.fmtClock(r.overtime.backM),
+    otFrom: ENGINE.fmtClock(r.overtime.rosterEndM),
+    otTo: ENGINE.fmtClock(r.overtime.backM),
+    otHours: +(r.overtime.roundedMin/60).toFixed(2),
+    otCads,
+    subsistence,
+    allCads: evs.map(ev=>ev.cad).filter(Boolean),
+    cadsCleared: false
+  };
+  $('saveShift').style.display='none';
+  renderHistory();
+  persist();
+  // stay on Enter, show a brief confirmation, ready for the next day
+  const toast=$('saveToast');
+  toast.style.display='';
+  setTimeout(()=>{ toast.style.display='none'; }, 2600);
+}
+$('saveShift').onclick=saveShift;
+
+function clearWeekCads(weekEnd){
+  for(const date in shiftStore){
+    if(weekEndingSunday(date)===weekEnd){
+      const s=shiftStore[date];
+      s.otCads=[]; s.allCads=[];
+      s.subsistence=s.subsistence.map(w=>({...w,cads:[]}));
+      s.cadsCleared=true;
+    }
+  }
+  renderHistory(); persist();
+}
+function deleteShift(date){
+  if(confirm('Delete '+fmtDate(date)+' from your record?')){ delete shiftStore[date]; renderHistory(); persist(); }
+}
+
+function renderHistory(){
+  const dates = Object.keys(shiftStore).sort().reverse();
+  if(!dates.length){ $('history').innerHTML='<div class="empty">No saved shifts yet. Compute a shift, then save it to your week.</div>'; return; }
+  // group by week-ending Sunday
+  const weeks = {};
+  for(const date of dates){ const w=weekEndingSunday(date); (weeks[w]=weeks[w]||[]).push(date); }
+  const weekKeys = Object.keys(weeks).sort().reverse();
+  $('history').innerHTML = weekKeys.map(wk=>{
+    const days = weeks[wk].sort(); // Mon..Sun within the week
+    const totOT = days.reduce((s,d)=>s+shiftStore[d].otHours,0);
+    const tot5 = days.reduce((s,d)=>s+shiftStore[d].subsistence.filter(x=>x.tier===5).length,0);
+    const tot10 = days.reduce((s,d)=>s+shiftStore[d].subsistence.filter(x=>x.tier===10).length,0);
+    const anyCads = days.some(d=>shiftStore[d].otCads.length || shiftStore[d].subsistence.some(w=>w.cads.length));
+    const subSum = [tot10?tot10+'x10h':'',tot5?tot5+'x5h':''].filter(Boolean).join(' + ')||'none';
+    return `<div class="week">
+      <div class="weekhead">
+        <div><b>Week ending ${fmtDate(wk)}</b></div>
+        <div class="weektot">${totOT}h OT &middot; ${subSum}</div>
+      </div>
+      <button class="act ghost small copyweek" data-wk="${wk}">Copy whole week</button>
+      ${days.map(d=>renderDayRow(shiftStore[d])).join('')}
+      ${anyCads?`<button class="act ghost small clearcads" data-wk="${wk}">Clear this week's incident numbers (after you've copied them to paper)</button>`:'<div class="locnote" style="padding:8px 2px">Incident numbers cleared for this week.</div>'}
+    </div>`;
+  }).join('');
+  $('history').querySelectorAll('.clearcads').forEach(b=>b.onclick=()=>{
+    if(confirm("Clear incident numbers for the week ending "+fmtDate(b.dataset.wk)+"? Keep the overtime and subsistence totals; only the CAD numbers are removed. Do this once they're on your paper sheet.")) clearWeekCads(b.dataset.wk);
+  });
+  $('history').querySelectorAll('.delday').forEach(b=>b.onclick=()=>deleteShift(b.dataset.date));
+  $('history').querySelectorAll('.copyday').forEach(b=>b.onclick=()=>copyText(buildDayText(shiftStore[b.dataset.date]), b));
+  $('history').querySelectorAll('.copyweek').forEach(b=>b.onclick=()=>{
+    const days=weeks[b.dataset.wk].sort();
+    const txt='WEEK ENDING '+fmtDate(b.dataset.wk)+'\n\n'+days.map(d=>buildDayText(shiftStore[d])).join('\n\n');
+    copyText(txt, b);
+  });
+}
+
+// Build the plain-text block for one day, laid out for transcribing to the paysheet.
+function buildDayText(s){
+  const L=[];
+  L.push(fmtDate(s.date));
+  L.push('Actual: '+s.actualStart+'-'+s.actualEnd);
+  if(s.otHours>0){
+    L.push('Overtime: '+s.otHours+'h  '+s.otFrom+'-'+s.otTo+(s.otCads&&s.otCads.length?'  incident '+s.otCads.join(', '):''));
+  } else L.push('Overtime: none');
+  if(s.subsistence.length){
+    s.subsistence.forEach(x=>L.push('Subsistence: '+x.from+'-'+x.to+'  '+x.tier+'h'+(x.cads.length?'  incident '+x.cads.join(', '):'')));
+  } else L.push('Subsistence: none');
+  return L.join('\n');
+}
+
+// Copy to clipboard with a brief "Copied" confirmation on the button.
+function copyText(text, btn){
+  const done=()=>{ const o=btn.textContent; btn.textContent='Copied'; setTimeout(()=>btn.textContent=o,1500); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text,done));
+  } else fallbackCopy(text,done);
+}
+function fallbackCopy(text,done){
+  const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); done(); }catch(e){}
+  document.body.removeChild(ta);
+}
+
+function renderDayRow(s){
+  const cleared = s.cadsCleared;
+  const noneOrCleared = cleared ? '<span class="locnote">cleared</span>' : '<span class="locnote">none</span>';
+  // subsistence: each qualifying window with its own incident numbers
+  const subBlocks = s.subsistence.length
+    ? s.subsistence.map(x=>{
+        const cads = x.cads.length ? x.cads.join(', ') : noneOrCleared;
+        return `<div class="subline">${x.from}-${x.to} <span class="pill ${x.tier===10?'t10':'t5'}">${x.tier}h</span>
+          <div class="cadinline"><span class="dl">Incident no.</span>${cads}</div></div>`;
+      }).join('')
+    : '<span class="locnote">none</span>';
+  // overtime incidents
+  const otCadStr = s.otCads && s.otCads.length ? s.otCads.join(', ') : noneOrCleared;
+  const isNight = s.rosterStart && parseInt(s.rosterStart,10)>=18;
+  return `<div class="dayrow ${isNight?'rn':'rd'}">
+    <div class="dayhead"><b>${fmtDate(s.date)}</b><span class="dayactions"><button class="act ghost xsmall copyday" data-date="${s.date}">Copy</button><button class="del delday" data-date="${s.date}" title="delete">&times;</button></span></div>
+    <div class="daygrid">
+      <div><span class="dl">Actual</span>${s.actualStart}-${s.actualEnd}</div>
+    </div>
+    <div class="section-ot">
+      <div class="dl">Overtime</div>
+      <div>${s.otHours}h (${s.otFrom}-${s.otTo})${s.otHours>0?` &middot; incident no. ${otCadStr}`:''}</div>
+    </div>
+    <div class="section-sub">
+      <div class="dl">Subsistence</div>
+      ${subBlocks}
+    </div>
+  </div>`;
+}
+
+/* ===== TABS ===== */
+function showTab(name){
+  document.querySelectorAll('.navbtn').forEach(t=>t.classList.toggle('on', t.dataset.tab===name));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on', p.dataset.panel===name));
+  if(name==='weeks') renderWeekTotals();
+  if(name==='roster') renderCalendar();
+  window.scrollTo({top:0,behavior:'instant'});
+}
+document.querySelectorAll('.navbtn').forEach(t=>t.onclick=()=>showTab(t.dataset.tab));
+
+/* Running totals across all saved weeks, shown atop My weeks. */
+function renderWeekTotals(){
+  const el=$('weekTotals'); if(!el) return;
+  const all=Object.values(shiftStore);
+  if(!all.length){ el.style.display='none'; return; }
+  el.style.display='';
+  const ot=all.reduce((s,d)=>s+d.otHours,0);
+  const t5=all.reduce((s,d)=>s+d.subsistence.filter(x=>x.tier===5).length,0);
+  const t10=all.reduce((s,d)=>s+d.subsistence.filter(x=>x.tier===10).length,0);
+  el.className='hero';
+  let subs='';
+  if(t10) subs+=`<div class="sub-fig"><div class="n">${t10}×10<span class="un">hrs</span></div><div class="u">subsistence</div></div>`;
+  if(t5) subs+=`<div class="sub-fig"><div class="n">${t5}×5<span class="un">hrs</span></div><div class="u">subsistence</div></div>`;
+  el.innerHTML=`<div class="wk">Totals across ${all.length} day${all.length>1?'s':''}</div>
+    <div class="ot"><div class="n">${ot}<span class="un">hrs</span></div><div class="u">overtime</div></div>
+    ${subs?`<div class="subs">${subs}</div>`:''}`;
+}
+
+/* ===== ROSTER SYSTEM ===== */
+const DOW=['Mon','Tue','Wed','Thu','Fri','Sat','Sun']; // Mon..Sun
+const ROSTER_CHOICES=['off',...PATTERNS];
+
+function blankCycle(weeks){
+  return Array.from({length:weeks},()=>Array.from({length:7},()=>'off'));
+}
+function ensureCycle(){
+  if(!roster.cycle || roster.cycle.length!==roster.weeks){
+    const old=roster.cycle||[];
+    roster.cycle=blankCycle(roster.weeks);
+    // preserve overlap if resizing
+    for(let w=0;w<Math.min(old.length,roster.weeks);w++) roster.cycle[w]=old[w].slice(0,7);
+  }
+}
+function renderRosterGrid(){
+  ensureCycle();
+  const grid=$('rosterGrid');
+  grid.innerHTML=roster.cycle.map((week,w)=>`
+    <div class="rweek">
+      <div class="rweekhead">Week ${w+1}</div>
+      <div class="rdays">
+        ${week.map((val,d)=>`
+          <div class="rday">
+            <div class="rdow">${DOW[d]}</div>
+            <select data-w="${w}" data-d="${d}" class="${val==='off'?'roff':'ron'}">
+              ${ROSTER_CHOICES.map(c=>`<option ${c===val?'selected':''}>${c}</option>`).join('')}
+            </select>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+  grid.querySelectorAll('select').forEach(sel=>sel.onchange=()=>{
+    roster.cycle[sel.dataset.w][sel.dataset.d]=sel.value;
+    sel.className = sel.value==='off'?'roff':'ron';
+  });
+}
+function renderAnchorWeekOptions(){
+  const sel=$('rosterAnchorWeek');
+  sel.innerHTML=Array.from({length:roster.weeks},(_,i)=>`<option value="${i}" ${i===roster.anchorWeek?'selected':''}>Week ${i+1}</option>`).join('');
+}
+
+// Which cycle week+day does a given date fall on? Counts whole weeks from the anchor.
+function rosterForDate(dateStr){
+  if(!roster.cycle || !roster.anchorDate) return null;
+  const anchor=new Date(roster.anchorDate+'T00:00:00');
+  const target=new Date(dateStr+'T00:00:00');
+  // align anchor to the Monday of its week so day-of-week maps cleanly
+  const anchorDow=(anchor.getDay()+6)%7;            // 0=Mon..6=Sun
+  const anchorMonday=new Date(anchor); anchorMonday.setDate(anchor.getDate()-anchorDow);
+  const targetDow=(target.getDay()+6)%7;
+  const targetMonday=new Date(target); targetMonday.setDate(target.getDate()-targetDow);
+  const weeksBetween=Math.round((targetMonday-anchorMonday)/(7*86400000));
+  // cycle week index, wrapping, offset by anchorWeek
+  let wi=((roster.anchorWeek + weeksBetween) % roster.weeks + roster.weeks) % roster.weeks;
+  return { pattern: roster.cycle[wi][targetDow], week:wi, dow:targetDow };
+}
+
+$('rosterWeeks').onchange=()=>{ roster.weeks=Math.max(1,Math.min(26,Number($('rosterWeeks').value)||9)); ensureCycle(); renderRosterGrid(); renderAnchorWeekOptions(); };
+$('rosterAnchorDate').onchange=()=>{ roster.anchorDate=$('rosterAnchorDate').value||null; };
+$('rosterAnchorWeek').onchange=()=>{ roster.anchorWeek=Number($('rosterAnchorWeek').value)||0; };
+$('saveRoster').onclick=()=>{
+  roster.anchorDate=$('rosterAnchorDate').value||null;
+  roster.anchorWeek=Number($('rosterAnchorWeek').value)||0;
+  persist();
+  const t=$('rosterToast'); t.style.display=''; setTimeout(()=>t.style.display='none',2000);
+  renderCalendar();
+};
+$('clearRoster').onclick=()=>{
+  if(!confirm('Clear your whole roster cycle? This wipes all the days you have set. Your saved shifts are not affected.')) return;
+  roster.cycle=blankCycle(roster.weeks); roster.anchorDate=null; roster.anchorWeek=0;
+  $('rosterAnchorDate').value=''; renderAnchorWeekOptions(); renderRosterGrid(); persist(); renderCalendar();
+};
+
+/* ---- roster sub-tabs ---- */
+document.querySelectorAll('.subtab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.subtab').forEach(x=>x.classList.toggle('on',x===t));
+  document.querySelectorAll('.subpanel').forEach(p=>p.classList.toggle('on',p.dataset.subpanel===t.dataset.sub));
+  if(t.dataset.sub==='view') renderCalendar();
+});
+
+/* ---- month calendar ---- */
+let calCursor = new Date(); calCursor.setDate(1);
+function renderCalendar(){
+  const banner=$('rosterViewBanner');
+  if(!roster.cycle || !roster.anchorDate){
+    $('calGrid').innerHTML=''; $('calMonth').textContent='';
+    banner.className='banner warn';
+    banner.innerHTML='No roster set yet. Go to <b>Edit cycle</b>, fill in your weeks and anchor date, and save.';
+    $('calDetail').innerHTML='';
+    return;
+  }
+  banner.className='banner'; banner.innerHTML='Your rostered pattern. Working days are filled; a dot shows whether you have logged that shift. One-off changes (leave, swaps) are not reflected yet.';
+  const y=calCursor.getFullYear(), m=calCursor.getMonth();
+  $('calMonth').textContent=calCursor.toLocaleDateString('en-IE',{month:'long',year:'numeric'});
+  const first=new Date(y,m,1);
+  const firstDow=(first.getDay()+6)%7;
+  const daysInMonth=new Date(y,m+1,0).getDate();
+  const todayStr=ymd(new Date());
+  let cells='';
+  cells+=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>`<div class="caldow">${d}</div>`).join('');
+  for(let i=0;i<firstDow;i++) cells+='<div class="calcell empty"></div>';
+  for(let day=1;day<=daysInMonth;day++){
+    const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const rf=rosterForDate(ds);
+    const working = rf && rf.pattern!=='off';
+    const logged = !!shiftStore[ds];
+    const past = ds < todayStr;
+    let cls='calcell';
+    if(working) cls+= isNightPattern(rf.pattern) ? ' night' : ' day';
+    if(ds===todayStr) cls+=' today';
+    cells+=`<div class="${cls}" data-date="${ds}">
+      <span class="cnum">${day}</span>
+      ${working?`<span class="cpat">${rf.pattern}</span>`:''}
+      ${logged?'<i class="cflag logged"></i>':(working&&past?'<i class="cflag notlogged"></i>':'')}
+    </div>`;
+  }
+  $('calGrid').innerHTML=cells;
+  $('calGrid').querySelectorAll('.calcell[data-date]').forEach(c=>c.onclick=()=>showCalDetail(c.dataset.date));
+  $('calDetail').innerHTML='';
+}
+function showCalDetail(ds){
+  const rf=rosterForDate(ds);
+  const logged=shiftStore[ds];
+  const working=rf && rf.pattern!=='off';
+  const past=ds<ymd(new Date());
+  let html=`<div class="card"><b>${fmtDate(ds)}</b><br>`;
+  html+= working ? `Rostered: ${rf.pattern}<br>` : `Rostered: day off<br>`;
+  if(logged){
+    html+=`<span class="stat confirmed">logged</span> ${logged.otHours}h OT, ${logged.subsistence.map(x=>x.tier+'h').join('+')||'no subsistence'}`;
+  } else if(working && past){
+    html+=`<span class="stat estimate">not logged yet</span> you were rostered but no shift is saved for this day.`;
+  } else if(working){
+    html+=`Upcoming working day.`;
+  }
+  html+='</div>';
+  $('calDetail').innerHTML=html;
+}
+$('calPrev').onclick=()=>{ calCursor.setMonth(calCursor.getMonth()-1); renderCalendar(); };
+$('calNext').onclick=()=>{ calCursor.setMonth(calCursor.getMonth()+1); renderCalendar(); };
+
+// Auto-fill the Enter tab's roster pattern when the date changes, if a roster exists.
+function applyRosterToDate(){
+  const date=$('shiftDate').value; if(!date) return;
+  const rf=rosterForDate(date);
+  if(!rf || rf.pattern==='off') return;
+  const [s,e]=rf.pattern.split('-');
+  $('rosterStart').value=s+':00'; $('rosterEnd').value=e+':00';
+  if(!$('actualStart').value) $('actualStart').value=s+':00';
+  document.querySelectorAll('#patternChips .chip').forEach(c=>c.classList.toggle('on', c.dataset.p===rf.pattern));
+}
+
+renderPatterns();$('shiftDate').valueAsDate=new Date();
+// when roster start is typed manually, mirror it to actual start if actual is still blank
+$('rosterStart').addEventListener('change',()=>{ if(!$('actualStart').value) $('actualStart').value=$('rosterStart').value; });
+$('shiftDate').addEventListener('change', applyRosterToDate);
+initApp();
+</script>
+</body>
+</html>
