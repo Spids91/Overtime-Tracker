@@ -888,13 +888,23 @@ function mdtExtract(text){
 }
 // Pull valid HH:MM:SS times from a line, fixing apostrophe-as-colon and inner spaces.
 function grabTimes(line){
+  // Primary: a clean incident time line has exactly 12 digits (HHMMSS + HHMMSS).
+  // Rebuild both times straight from the digits, ignoring whatever the separators
+  // got mangled into (space, dash, tilde, apostrophe, missing). Most robust path.
+  const digits=(line.match(/\d/g)||[]).join('');
+  if(digits.length===12){
+    const t1=digits.slice(0,2)+':'+digits.slice(2,4)+':'+digits.slice(4,6);
+    const t2=digits.slice(6,8)+':'+digits.slice(8,10)+':'+digits.slice(10,12);
+    if(mdtValidTime(t1)&&mdtValidTime(t2)) return [t1,t2];
+  }
+  // Fallback for lines with extra digits or only one time: token-grab with colon repairs.
   let norm=line.replace(/[']/g,':');
-  // repair a space where a colon should be: '07:41 01' -> '07:41:01' (2nd colon),
-  // and '07 41:01' -> '07:41:01' (1st colon). OCR often drops a colon to a space.
   norm=norm.replace(/(\d{1,2}:\d{2})\s+(\d{2})(?!\d)/g,'$1:$2');
   norm=norm.replace(/(\d{1,2})\s+(\d{2}:\d{2})/g,'$1:$2');
-  const toks=(norm.match(/\d{1,2}\s*:\s*\d{2}\s*:\s*\d{2}/g)||[]).map(t=>padTime(t.replace(/\s/g,'')));
-  return toks.filter(mdtValidTime);
+  norm=norm.replace(/(\d{1,2}:\d{2})(\d{2})(?!\d)/g,'$1:$2');
+  norm=norm.replace(/(?<!\d)(\d{2})(\d{2}):(\d{2})(?!\d)/g,'$1:$2:$3');
+  const toks=(norm.match(/\d{1,2}\s*:\s*\d{2}\s*:\s*\d{2}/g)||[]).map(t=>padTime(t.replace(/\s/g,''))).filter(mdtValidTime);
+  return toks;
 }
 function mdtFlag(records){
   const nums=records.map(r=>parseInt(r.cad,10));
