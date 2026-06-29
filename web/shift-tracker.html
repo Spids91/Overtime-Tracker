@@ -165,6 +165,33 @@
   .otdef{flex:1;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-soft);font-weight:500;cursor:pointer}
   .otdef input{width:auto;margin:0}
   .otmoney{font-weight:600;color:var(--p-600);margin-left:4px}
+  /* MDT scan modal */
+  .modal{position:fixed;inset:0;z-index:50;background:rgba(3,51,61,.45);display:flex;align-items:flex-end;justify-content:center;padding:0}
+  .modal-inner{background:var(--paper);width:100%;max-width:560px;border-radius:22px 22px 0 0;max-height:92vh;display:flex;flex-direction:column}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid var(--line);flex:none}
+  .modal-head b{font-family:var(--display);font-size:17px;font-weight:700}
+  .modal-x{background:none;border:none;font-size:26px;color:var(--ink-soft);cursor:pointer;line-height:1;padding:0 4px}
+  .modal-body{padding:16px 18px calc(18px + env(safe-area-inset-bottom));overflow:auto}
+  .mdt-priv{display:flex;gap:9px;align-items:flex-start;background:var(--hi-soft);border:1px solid var(--p-200);border-radius:11px;padding:11px 12px;margin-bottom:12px;font-size:12px;color:var(--ink-soft);line-height:1.5}
+  .mdt-priv .ic{flex:none;width:20px;height:20px;border-radius:50%;background:var(--hi);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700}
+  .mdt-prev{width:100%;border-radius:11px;border:1px solid var(--line);margin-bottom:12px}
+  .mdt-status{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink-soft)}
+  .mdt-spin{width:16px;height:16px;border:2px solid var(--p-200);border-top-color:var(--p-600);border-radius:50%;animation:spin .8s linear infinite;flex:none}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .mdt-bar{height:6px;background:var(--line-soft);border-radius:6px;overflow:hidden;margin-top:8px}
+  .mdt-bar > i{display:block;height:100%;width:0;background:var(--p-500);transition:width .2s}
+  .mdt-row{border:1px solid var(--line);border-radius:12px;padding:10px 11px;margin-bottom:8px;background:#fff}
+  .mdt-row.flagged{border-color:var(--warn);background:var(--warn-soft)}
+  .mdt-rh{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+  .mdt-rh .rn{font-size:12px;font-weight:600;color:var(--ink-soft)}
+  .mdt-rh .rflag{font-size:11px;font-weight:700;color:var(--warn);text-transform:uppercase;letter-spacing:.03em;display:none}
+  .mdt-row.flagged .rflag{display:inline}
+  .mdt-rh .del{background:none;border:none;color:var(--bad);font-size:18px;cursor:pointer;line-height:1}
+  .mdt-fields{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:7px}
+  .mdt-fields label{display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-soft);margin-bottom:3px;font-weight:600}
+  .mdt-fields input{width:100%;padding:8px 9px;border:1px solid var(--line);border-radius:8px;font-family:var(--mono);font-size:14px;color:var(--ink);background:#fff}
+  .mdt-fields input.bad{border-color:var(--bad);background:#fdf3f3}
+  .mdt-raw{font-family:var(--mono);font-size:11px;white-space:pre-wrap;word-break:break-word;background:#0e1a20;color:#bcd;padding:11px;border-radius:9px;margin-top:8px;max-height:200px;overflow:auto}
   .calmonthtotal{text-align:center;font-size:13px;color:var(--ink-soft);margin-top:14px}
   .calmonthtotal b{color:var(--p-700)}
   .pattype{flex:1;font-size:12px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em}
@@ -286,7 +313,23 @@
 
     <h2 class="sec">Calls this shift</h2>
     <div id="callList"></div>
-    <button class="act ghost" id="addCall">+ Add call</button>
+    <div class="row2" style="margin-top:2px">
+      <button class="act ghost" id="addCall">+ Add call</button>
+      <button class="act ghost" id="scanMdt">Scan MDT photo</button>
+    </div>
+
+    <!-- on-device MDT scan: hidden inputs + modal -->
+    <input type="file" id="mdtFile" accept="image/*" style="display:none">
+    <input type="file" id="mdtFileCam" accept="image/*" capture="environment" style="display:none">
+    <div id="mdtModal" class="modal" style="display:none">
+      <div class="modal-inner">
+        <div class="modal-head">
+          <b>Scan MDT</b>
+          <button class="modal-x" id="mdtClose" aria-label="close">&times;</button>
+        </div>
+        <div class="modal-body" id="mdtBody"></div>
+      </div>
+    </div>
 
     <h2 class="sec">Actual times worked</h2>
     <div class="card">
@@ -418,6 +461,21 @@
       <button class="act ghost small" id="addManualSub">+ Add payment</button>
     </div>
 
+    <h2 class="sec">Backup &amp; restore</h2>
+    <div class="card">
+      <div class="locnote" style="margin-bottom:10px">Your data lives only on this device. Export a backup file to keep it safe or move it to a new phone. The file is saved to your own device, nothing is sent anywhere.</div>
+      <label style="display:flex;align-items:center;gap:9px;margin-bottom:6px;cursor:pointer">
+        <input type="checkbox" id="exportInclCads" checked style="width:auto;margin:0">
+        <span style="font-size:13px">Include incident (CAD) numbers in the backup</span>
+      </label>
+      <div class="locnote" style="margin:0 0 12px;font-size:11.5px">CAD numbers relate to real calls. If they're already on your paysheet you may prefer to leave them out.</div>
+      <button class="act ghost small" id="exportData">Export backup file</button>
+      <div style="height:8px"></div>
+      <button class="act ghost small" id="importDataBtn">Restore from a backup file</button>
+      <input type="file" id="importData" accept="application/json,.json" style="display:none">
+      <div id="backupToast" class="toast" style="display:none;margin-top:10px"></div>
+    </div>
+
     <h2 class="sec">About</h2>
     <div class="card">
       <p style="margin:0 0 8px;font-size:14px">This is your private working-out tool for NAS overtime and subsistence. Nothing leaves your device, you read the figures off and write them onto your paper timesheet.</p>
@@ -427,6 +485,7 @@
 </div>
 
 <script src="../engine/engine.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js"></script>
 <script>
 /* ===== UI: thin skin over ENGINE. ===== */
 /* User-defined shift patterns (plain "HH-HH" ranges). Seeded with two common
@@ -501,6 +560,79 @@ function loadPersisted(){
   if(!storageOK) return null;
   try{ const raw=localStorage.getItem(STORE_KEY); return raw?JSON.parse(raw):null; }
   catch(e){ return null; }
+}
+
+/* ===== BACKUP & RESTORE (device-to-own-storage; nothing leaves the device) ===== */
+// Build the full data object, optionally stripping CAD/incident numbers.
+function buildBackup(includeCads){
+  // deep clone the shift store so we never mutate the live data
+  const shifts = JSON.parse(JSON.stringify(shiftStore));
+  if(!includeCads){
+    Object.values(shifts).forEach(s=>{
+      s.otCads = [];
+      s.allCads = [];
+      if(Array.isArray(s.subsistence)) s.subsistence.forEach(w=>{ w.cads = []; });
+      s.cadsCleared = true;
+    });
+  }
+  return {
+    app: 'shift-tracker', v: 2, exportedAt: new Date().toISOString(),
+    includesCads: !!includeCads,
+    data: { shiftStore: shifts, roster, patterns:PATTERNS, subsTiers:SUBS_TIERS,
+            manualSubs:MANUAL_SUBS, currency:CURRENCY, wage:WAGE, otRates:OT_RATES }
+  };
+}
+function exportData(){
+  const includeCads = $('exportInclCads').checked;
+  const payload = buildBackup(includeCads);
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = ymd(new Date());
+  a.href = url;
+  a.download = `shift-tracker-backup-${stamp}${includeCads?'':'-no-cad'}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  backupMsg(`Backup exported${includeCads?'':' (without incident numbers)'}.`);
+}
+function importData(file){
+  const reader = new FileReader();
+  reader.onload = () => {
+    let parsed;
+    try{ parsed = JSON.parse(reader.result); }
+    catch(e){ backupMsg('That file could not be read. Is it a Shift Tracker backup?', true); return; }
+    if(!parsed || parsed.app!=='shift-tracker' || !parsed.data){
+      backupMsg('That does not look like a Shift Tracker backup.', true); return;
+    }
+    const d = parsed.data;
+    const count = d.shiftStore ? Object.keys(d.shiftStore).length : 0;
+    if(!confirm(`Restore this backup? It has ${count} saved shift${count===1?'':'s'} and will replace what's currently on this device.`)) return;
+    // apply, with the same tolerant migration as load
+    shiftStore = d.shiftStore || {};
+    if(d.roster && d.roster.cycle){ roster = d.roster; if(!roster.exceptions) roster.exceptions={}; }
+    if(Array.isArray(d.patterns) && d.patterns.length) PATTERNS = d.patterns;
+    if(Array.isArray(d.subsTiers) && d.subsTiers.length) SUBS_TIERS = d.subsTiers.map(t=>({hours:t.hours,label:t.label||'',value:Number(t.value)||0}));
+    if(Array.isArray(d.manualSubs)) MANUAL_SUBS = d.manualSubs.map(m=> typeof m==='string'?{label:m,value:0}:{label:m.label,value:Number(m.value)||0});
+    if(d.currency) CURRENCY = d.currency;
+    if(d.wage!=null) WAGE = Number(d.wage)||0;
+    if(Array.isArray(d.otRates) && d.otRates.length) OT_RATES = d.otRates;
+    persist();
+    // re-render everything that reflects the restored data
+    renderHistory(); renderPatternList(); renderPatterns(); renderTierList();
+    renderManualSubList(); renderManualSubPicker(); renderOtRateList(); renderOtPicker();
+    renderRosterGrid(); renderAnchorWeekOptions();
+    $('rosterWeeks').value=roster.weeks;
+    if(roster.anchorDate) $('rosterAnchorDate').value=roster.anchorDate;
+    if($('currencySel')) $('currencySel').value=CURRENCY;
+    if($('wageInput')) $('wageInput').value = WAGE>0?WAGE:'';
+    backupMsg(`Restored ${count} shift${count===1?'':'s'}${parsed.includesCads===false?' (backup had no incident numbers)':''}.`);
+  };
+  reader.readAsText(file);
+}
+function backupMsg(text, isErr){
+  const el=$('backupToast'); if(!el) return;
+  el.textContent=text; el.style.display=''; el.style.color = isErr?'var(--bad)':'';
+  setTimeout(()=>{ el.style.display='none'; }, 4000);
 }
 
 /* ---- patterns ---- */
@@ -683,6 +815,107 @@ function addManualSub(){
 // Drive-time still comes from the station table; a hospital with no set time uses Other-style fallback.
 function addCall(){calls.push({cad:'',start:'',clear:''});renderCalls();}
 
+/* ===== MDT SCAN (on-device OCR; nothing leaves the phone) =====
+   Reads an MDT incident photo with Tesseract locally, extracts AS1+7-digit
+   incidents and their HH:MM:SS time pairs, and lets the user confirm before
+   the rows drop into the call list. No upload, no server, no Claude. */
+let mdtRows=[];
+function mdtValidTime(t){ const m=(t||'').match(/^(\d{2}):(\d{2}):(\d{2})$/); if(!m) return false; return +m[1]<=23&&+m[2]<=59&&+m[3]<=59; }
+function mdtExtract(text){
+  const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
+  const out=[]; let pending=null;
+  for(const line of lines){
+    const cadM=line.match(/AS[I1l]?\s*[: ]?\s*(\d{7})\b/i);   // AS1 + exactly 7 digits
+    const pairM=line.match(/(\d{2}:\d{2}:\d{2})\s*[-–—]+\s*(\d{2}:\d{2}:\d{2})/);
+    if(cadM&&!pairM){ pending={cad:cadM[1],start:'',clear:''}; out.push(pending); }
+    else if(pairM&&pending){ pending.start=pairM[1]; pending.clear=pairM[2]; pending=null; }
+  }
+  return out;
+}
+function mdtFlag(records){
+  const nums=records.map(r=>parseInt(r.cad,10));
+  return records.map((r,i)=>{
+    let flagged=false;
+    if(!/^\d{7}$/.test(r.cad)) flagged=true;
+    if(!mdtValidTime(r.start)||!mdtValidTime(r.clear)) flagged=true;
+    if(nums.length>=3){
+      const others=nums.filter((_,j)=>j!==i);
+      const span=Math.max(...others)-Math.min(...others);
+      const near=others.some(o=>Math.abs(o-nums[i])<=Math.max(span,2000));
+      if(!near) flagged=true;
+    }
+    return {...r,flagged};
+  });
+}
+function openMdt(){ $('mdtModal').style.display='flex'; mdtBodyChoose(); }
+function closeMdt(){ $('mdtModal').style.display='none'; $('mdtBody').innerHTML=''; mdtRows=[]; }
+function mdtBodyChoose(){
+  $('mdtBody').innerHTML=`
+    <div class="mdt-priv"><span class="ic">&#10003;</span><span>The photo is read on this device only. Nothing is uploaded or sent anywhere.</span></div>
+    <div class="locnote" style="margin:0 0 12px">Choose a photo of the MDT incident list. It pulls out each AS1 incident and its times for you to check.</div>
+    <button class="act ghost small" id="mdtPick">Choose a photo</button>
+    <div style="height:8px"></div>
+    <button class="act ghost small" id="mdtPickCam">Take a photo</button>`;
+  $('mdtPick').onclick=()=>$('mdtFile').click();
+  $('mdtPickCam').onclick=()=>$('mdtFileCam').click();
+}
+async function mdtRun(file){
+  const url=URL.createObjectURL(file);
+  $('mdtBody').innerHTML=`
+    <img src="${url}" class="mdt-prev">
+    <div class="mdt-status"><span class="mdt-spin"></span><span id="mdtStat">Reading on device…</span></div>
+    <div class="mdt-bar"><i id="mdtBar"></i></div>`;
+  try{
+    const { data } = await Tesseract.recognize(url,'eng',{ logger:m=>{ if(m.status==='recognizing text'&&$('mdtBar')) $('mdtBar').style.width=Math.round(m.progress*100)+'%'; } });
+    mdtRows=mdtFlag(mdtExtract(data.text||''));
+    mdtRenderRows(data.text||'');
+  }catch(e){
+    $('mdtBody').innerHTML=`<div class="locnote" style="color:var(--bad)">Could not read the image (${e.message}). Try a clearer, straight-on photo.</div><div style="height:10px"></div><button class="act ghost small" id="mdtBack">Try another photo</button>`;
+    $('mdtBack').onclick=mdtBodyChoose;
+  }finally{ URL.revokeObjectURL(url); }
+}
+function mdtRenderRows(raw){
+  if(!mdtRows.length){
+    $('mdtBody').innerHTML=`<div class="empty">No incidents found. Try a straighter, less glared photo.</div>
+      <details style="margin-top:10px"><summary style="font-size:12px;color:var(--ink-soft)">Show what the scan read</summary><pre class="mdt-raw">${(raw||'').replace(/[<>&]/g,'')}</pre></details>
+      <div style="height:10px"></div><button class="act ghost small" id="mdtBack">Try another photo</button>`;
+    $('mdtBack').onclick=mdtBodyChoose; return;
+  }
+  const flagged=mdtRows.filter(r=>r.flagged).length;
+  $('mdtBody').innerHTML=`
+    <div class="locnote" style="margin:0 0 11px">Found <b>${mdtRows.length}</b> incident${mdtRows.length>1?'s':''}${flagged?` · ${flagged} to check`:''}. Check each against the screen, flagged rows may have a glare-misread digit.</div>
+    <div id="mdtList"></div>
+    <div style="height:10px"></div>
+    <button class="act" id="mdtAccept">Add these to the shift</button>
+    <div style="height:8px"></div>
+    <button class="act ghost small" id="mdtBack">Scan another photo</button>`;
+  $('mdtList').innerHTML=mdtRows.map((r,i)=>`
+    <div class="mdt-row ${r.flagged?'flagged':''}">
+      <div class="mdt-rh"><span class="rn">Incident ${i+1}</span><span class="rflag">check</span><button class="del" data-del="${i}">&times;</button></div>
+      <div class="mdt-fields">
+        <div><label>CAD</label><input data-f="cad" data-i="${i}" value="${r.cad}" inputmode="numeric" maxlength="7"></div>
+        <div><label>Start</label><input data-f="start" data-i="${i}" value="${r.start}" inputmode="numeric" placeholder="00:00:00"></div>
+        <div><label>Clear</label><input data-f="clear" data-i="${i}" value="${r.clear}" inputmode="numeric" placeholder="00:00:00"></div>
+      </div>
+    </div>`).join('');
+  $('mdtList').querySelectorAll('input').forEach(inp=>inp.oninput=()=>{
+    const v=inp.value.trim(); mdtRows[inp.dataset.i][inp.dataset.f]=v;
+    const bad = inp.dataset.f==='cad' ? !/^\d{7}$/.test(v) : !mdtValidTime(v);
+    inp.classList.toggle('bad', bad && v.length>0);
+  });
+  $('mdtList').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ mdtRows.splice(+b.dataset.del,1); mdtRenderRows(raw); });
+  $('mdtBack').onclick=mdtBodyChoose;
+  $('mdtAccept').onclick=()=>{
+    const bad=mdtRows.filter(r=>!/^\d{7}$/.test(r.cad)||!mdtValidTime(r.start)||!mdtValidTime(r.clear));
+    if(bad.length){ alert(bad.length+' row(s) still have an invalid CAD or time. Fix or delete them first.'); return; }
+    // merge into the call list, skipping CADs already present
+    const have=new Set(calls.map(c=>c.cad));
+    let added=0;
+    mdtRows.forEach(r=>{ if(!have.has(r.cad)){ calls.push({cad:r.cad,start:r.start.slice(0,5),clear:r.clear.slice(0,5)}); have.add(r.cad); added++; } });
+    closeMdt(); renderCalls(); renderGaps();
+  };
+}
+
 function renderCalls(){
   if(!calls.length){$('callList').innerHTML='<div class="empty">No calls yet. Add the first call from the MDT.</div>';return;}
   $('callList').innerHTML=calls.map((c,i)=>`<div class="call"><div class="top"><span class="cad">CALL ${i+1}</span><button class="del" data-del="${i}">&times;</button></div>
@@ -697,6 +930,10 @@ function renderCalls(){
   $('callList').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{calls.splice(+b.dataset.del,1);gapAnswers={};renderCalls();renderGaps();});
 }
 $('addCall').onclick=addCall;
+$('scanMdt').onclick=openMdt;
+$('mdtClose').onclick=closeMdt;
+$('mdtFile').onchange=()=>{ const f=$('mdtFile').files[0]; if(f) mdtRun(f); $('mdtFile').value=''; };
+$('mdtFileCam').onchange=()=>{ const f=$('mdtFileCam').files[0]; if(f) mdtRun(f); $('mdtFileCam').value=''; };
 
 function currentInput(){return{rosterStart:$('rosterStart').value,rosterEnd:$('rosterEnd').value,backAtBase:$('backAtBase').value||null,otRoundInc:Number($('otRound').value),calls:calls.filter(c=>c.start&&c.clear),gapAnswers,subsistenceTiers:SUBS_TIERS};}
 function renderGaps(){
@@ -1187,6 +1424,9 @@ $('addManualSub').onclick=addManualSub;
 $('currencySel').onchange=()=>{ CURRENCY=$('currencySel').value; persist(); renderTierList(); renderManualSubList(); renderManualSubPicker(); renderHistory(); };
 $('wageInput').oninput=()=>{ WAGE=parseFloat($('wageInput').value)||0; persist(); renderOtPicker(); };
 $('addOtRate').onclick=addOtRate;
+$('exportData').onclick=exportData;
+$('importDataBtn').onclick=()=>$('importData').click();
+$('importData').onchange=()=>{ if($('importData').files[0]){ importData($('importData').files[0]); $('importData').value=''; } };
 initApp();
 </script>
 </body>
