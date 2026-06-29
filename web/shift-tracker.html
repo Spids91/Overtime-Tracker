@@ -859,10 +859,19 @@ function mdtExtract(text){
   const lines=text.split('\n');
   const cads=[]; const times=[];
   lines.forEach((line,idx)=>{
-    const cadM=line.match(/AS[\dITLil]\s+(\d[\d ]{5,7}\d)/i);
-    if(cadM){ const digits=cadM[1].replace(/\s/g,''); if(digits.length===7) cads.push({cad:digits, line:idx}); }
     const toks=grabTimes(line);
-    if(toks.length>=2) times.push({start:toks[0], clear:toks[1], line:idx, used:false});
+    const isTimeLine = toks.length>=2;
+    let cadFound=null;
+    const cadM=line.match(/AS[\dITLil]\s+(\d[\d ]{5,7}\d)/i);   // normal: AS1/AS2 + 7 digits
+    if(cadM){ const digits=cadM[1].replace(/\s/g,''); if(digits.length===7) cadFound=digits; }
+    // fallback: AS prefix badly mangled (e.g. '"a 5901651'). Catch a bare 7-digit CAD
+    // (starts with 5) ONLY on a line that is not a time line, to avoid message-log noise.
+    if(!cadFound && !isTimeLine){
+      const bare=line.match(/(?:^|[^\d])(5\d{6})(?:[^\d]|$)/);
+      if(bare) cadFound=bare[1];
+    }
+    if(cadFound) cads.push({cad:cadFound, line:idx});
+    if(isTimeLine) times.push({start:toks[0], clear:toks[1], line:idx, used:false});
   });
   // Pass 1: pair each CAD with the nearest unused time within 3 lines below it.
   const out=cads.map(cd=>({cad:cd.cad, line:cd.line, start:'', clear:'', _done:false}));
