@@ -930,7 +930,11 @@ function mdtRenderRows(raw){
     <div style="height:10px"></div>
     <button class="act" id="mdtAccept">Add these to the shift</button>
     <div style="height:8px"></div>
-    <button class="act ghost small" id="mdtBack">Scan another photo</button>`;
+    <button class="act ghost small" id="mdtBack">Scan another photo</button>
+    <details style="margin-top:12px"><summary style="font-size:12px;color:var(--ink-soft)">Show what the scan read (for debugging)</summary>
+      <button class="act ghost small" id="mdtCopyRaw" style="margin:8px 0">Copy this text</button>
+      <pre class="mdt-raw" id="mdtRawText">${(raw||'(nothing)').replace(/[<>&]/g,'')}</pre>
+    </details>`;
   $('mdtList').innerHTML=mdtRows.map((r,i)=>`
     <div class="mdt-row ${r.flagged?'flagged':''}">
       <div class="mdt-rh"><span class="rn">Incident ${i+1}</span><span class="rflag">check</span><button class="del" data-del="${i}">&times;</button></div>
@@ -947,6 +951,12 @@ function mdtRenderRows(raw){
   });
   $('mdtList').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ mdtRows.splice(+b.dataset.del,1); mdtRenderRows(raw); });
   $('mdtBack').onclick=mdtBodyChoose;
+  const cpy=$('mdtCopyRaw');
+  if(cpy) cpy.onclick=()=>{
+    const t=$('mdtRawText').textContent;
+    if(navigator.clipboard) navigator.clipboard.writeText(t).then(()=>{ cpy.textContent='Copied'; setTimeout(()=>cpy.textContent='Copy this text',1500); });
+    else { const r=document.createRange(); r.selectNode($('mdtRawText')); getSelection().removeAllRanges(); getSelection().addRange(r); }
+  };
   $('mdtAccept').onclick=()=>{
     const bad=mdtRows.filter(r=>!/^\d{7}$/.test(r.cad)||!mdtValidTime(r.start)||!mdtValidTime(r.clear));
     if(bad.length){ alert(bad.length+' row(s) still have an invalid CAD or time. Fix or delete them first.'); return; }
