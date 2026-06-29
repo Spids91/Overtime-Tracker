@@ -198,6 +198,11 @@
   .mdt-zoom{position:fixed;inset:0;z-index:80;background:rgba(2,34,38,.92);display:flex;align-items:center;justify-content:center;padding:14px;cursor:zoom-out}
   .mdt-zoom img{max-width:100%;max-height:88vh;border-radius:8px;object-fit:contain}
   .mdt-zoom-x{position:absolute;top:calc(14px + env(safe-area-inset-top));right:18px;color:#fff;font-size:15px;font-weight:600;background:rgba(0,0,0,.4);padding:7px 13px;border-radius:20px}
+  .mdt-tips{background:var(--hi-soft);border:1px solid var(--p-200);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+  .mdt-tips-h{font-size:12.5px;font-weight:600;color:var(--p-700);margin-bottom:6px}
+  .mdt-tips ul{margin:0;padding-left:18px}
+  .mdt-tips li{font-size:12.5px;color:var(--ink-soft);line-height:1.6}
+  .mdt-progress{background:var(--ok-soft);border:1px solid #bfe2ce;border-radius:11px;padding:10px 12px;margin-bottom:12px;font-size:12.5px;color:var(--ink)}
   .calmonthtotal{text-align:center;font-size:13px;color:var(--ink-soft);margin-top:14px}
   .calmonthtotal b{color:var(--p-700)}
   .pattype{flex:1;font-size:12px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em}
@@ -826,6 +831,7 @@ function addCall(){calls.push({cad:'',start:'',clear:''});renderCalls();}
    incidents and their HH:MM:SS time pairs, and lets the user confirm before
    the rows drop into the call list. No upload, no server, no Claude. */
 let mdtRows=[];
+let mdtAllRows=[];      // incidents accumulated across multiple photos (long shifts that scroll)
 let mdtImageUrl=null;   // object URL of the scanned photo, kept for on-screen comparison
 function mdtRevokeImage(){ if(mdtImageUrl){ URL.revokeObjectURL(mdtImageUrl); mdtImageUrl=null; } }
 function mdtValidTime(t){ const m=(t||'').match(/^(\d{1,2}):(\d{2}):(\d{2})$/); if(!m) return false; return +m[1]<=23&&+m[2]<=59&&+m[3]<=59; }
@@ -941,18 +947,30 @@ function mdtFlag(records){
     return {...r,flagged};
   });
 }
-function openMdt(){ $('mdtModal').style.display='flex'; mdtBodyChoose(); }
-function closeMdt(){ mdtRevokeImage(); $('mdtModal').style.display='none'; $('mdtBody').innerHTML=''; mdtRows=[]; }
+function openMdt(){ mdtAllRows=[]; $('mdtModal').style.display='flex'; mdtBodyChoose(); }
+function closeMdt(){ mdtRevokeImage(); $('mdtModal').style.display='none'; $('mdtBody').innerHTML=''; mdtRows=[]; mdtAllRows=[]; }
 function mdtBodyChoose(){
   mdtRevokeImage();
+  const haveSome = mdtAllRows.length>0;
   $('mdtBody').innerHTML=`
     <div class="mdt-priv"><span class="ic">&#10003;</span><span>The photo is read on this device only. Nothing is uploaded or sent anywhere.</span></div>
-    <div class="locnote" style="margin:0 0 12px">Choose a photo of the MDT incident list. It pulls out each AS1 incident and its times for you to check.</div>
+    ${haveSome?`<div class="mdt-progress">So far: <b>${mdtAllRows.length}</b> incident${mdtAllRows.length>1?'s':''} collected. Add another photo for the rest of the list, or review what you have.</div>`:''}
+    <div class="mdt-tips">
+      <div class="mdt-tips-h">For the best read:</div>
+      <ul>
+        <li>Hold the phone <b>straight on</b>, not at an angle</li>
+        <li>Get <b>close</b> so the incident list fills the frame</li>
+        <li>Good light, but <b>avoid glare</b> on the screen</li>
+        <li>Keep the photo <b>steady</b> and in focus</li>
+      </ul>
+    </div>
     <button class="act ghost small" id="mdtPick">Choose a photo</button>
     <div style="height:8px"></div>
-    <button class="act ghost small" id="mdtPickCam">Take a photo</button>`;
+    <button class="act ghost small" id="mdtPickCam">Take a photo</button>
+    ${haveSome?`<div style="height:8px"></div><button class="act" id="mdtReview">Review ${mdtAllRows.length} collected, done scanning</button>`:''}`;
   $('mdtPick').onclick=()=>$('mdtFile').click();
   $('mdtPickCam').onclick=()=>$('mdtFileCam').click();
+  if(haveSome) $('mdtReview').onclick=()=>{ mdtRows=mdtAllRows.slice(); mdtRenderRows(''); };
 }
 async function mdtRun(file){
   const url=URL.createObjectURL(file);
@@ -1021,9 +1039,11 @@ function mdtRenderRows(raw){
     <div class="locnote" style="margin:0 0 11px">Found <b>${mdtRows.length}</b> incident${mdtRows.length>1?'s':''}${flagged?` · ${flagged} to check`:''}. Check each against the photo above, flagged rows may have a glare-misread digit.</div>
     <div id="mdtList"></div>
     <div style="height:10px"></div>
-    <button class="act" id="mdtAccept">Add these to the shift</button>
+    <button class="act" id="mdtAccept">Add ${mdtRows.length} to the shift</button>
     <div style="height:8px"></div>
-    <button class="act ghost small" id="mdtBack">Scan another photo</button>
+    <button class="act ghost small" id="mdtAddMore">Long shift? Scan another photo for more</button>
+    <div style="height:6px"></div>
+    <button class="act ghost small" id="mdtBack">Start over with a different photo</button>
     <details style="margin-top:12px"><summary style="font-size:12px;color:var(--ink-soft)">Show what the scan read (for debugging)</summary>
       <button class="act ghost small" id="mdtCopyRaw" style="margin:8px 0">Copy this text</button>
       <pre class="mdt-raw" id="mdtRawText">${(raw||'(nothing)').replace(/[<>&]/g,'')}</pre>
@@ -1059,7 +1079,18 @@ function mdtRenderRows(raw){
     };
   });
   $('mdtList').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ mdtRows.splice(+b.dataset.del,1); mdtRenderRows(raw); });
-  $('mdtBack').onclick=mdtBodyChoose;
+  $('mdtBack').onclick=()=>{ mdtAllRows=[]; mdtBodyChoose(); };   // start over: clear accumulator
+  const addMore=$('mdtAddMore');
+  if(addMore) addMore.onclick=()=>{
+    // accumulate the current (validated) rows into mdtAllRows, de-duped by CAD, then scan again
+    mdtRows.forEach(r=>{
+      const ns=normaliseTimeInput(r.start), nc=normaliseTimeInput(r.clear);
+      if(ns) r.start=ns; if(nc) r.clear=nc;
+      r.cad=(r.cad||'').replace(/\D/g,'');
+    });
+    mdtRows.forEach(r=>{ if(!mdtAllRows.some(x=>x.cad===r.cad)) mdtAllRows.push({cad:r.cad,start:r.start,clear:r.clear,flagged:r.flagged}); });
+    mdtBodyChoose();
+  };
   const shot=$('mdtShot');
   if(shot) shot.onclick=()=>{
     const ov=document.createElement('div'); ov.className='mdt-zoom';
@@ -1082,9 +1113,13 @@ function mdtRenderRows(raw){
     });
     const bad=mdtRows.filter(r=>!/^\d{7}$/.test(r.cad)||!mdtValidTime(r.start)||!mdtValidTime(r.clear));
     if(bad.length){ alert(bad.length+' row(s) still need a valid CAD (7 digits) or time (hh:mm:ss). Fix or delete them first.'); return; }
-    // merge into the call list, skipping CADs already present
+    // combine any incidents accumulated from earlier photos with the current rows,
+    // de-duped by CAD (scrolled MDT screens often overlap), then merge into the call list.
+    const combined=[];
+    const seen=new Set();
+    mdtAllRows.concat(mdtRows).forEach(r=>{ if(!seen.has(r.cad)){ seen.add(r.cad); combined.push(r); } });
     const have=new Set(calls.map(c=>c.cad));
-    mdtRows.forEach(r=>{ if(!have.has(r.cad)){ calls.push({cad:r.cad,start:r.start.slice(0,5),clear:r.clear.slice(0,5)}); have.add(r.cad); } });
+    combined.forEach(r=>{ if(!have.has(r.cad)){ calls.push({cad:r.cad,start:r.start.slice(0,5),clear:r.clear.slice(0,5)}); have.add(r.cad); } });
     closeMdt(); renderCalls(); renderGaps();
   };
 }
