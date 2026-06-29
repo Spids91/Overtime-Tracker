@@ -1314,16 +1314,22 @@ function renderHistory(){
   $('history').innerHTML = weekKeys.map(wk=>{
     const days = weeks[wk].sort(); // Mon..Sun within the week
     const totOT = days.reduce((s,d)=>s+shiftStore[d].otHours,0);
-    // count subsistence by label across the week (works for any tier set)
+    const weekOtMoney = days.reduce((s,d)=>s+effOtMoney(shiftStore[d]),0);
+    // count TIME-BASED subsistence tiers by label across the week
     const subCounts={};
     days.forEach(d=>shiftStore[d].subsistence.forEach(x=>{const l=x.label||(x.tier+'h');subCounts[l]=(subCounts[l]||0)+1;}));
+    // count MANUAL payments (B&B, Sunday, etc.) separately, by their own name
+    const manCounts={};
+    days.forEach(d=>(shiftStore[d].manualSubs||[]).forEach(m=>{manCounts[m.label]=(manCounts[m.label]||0)+1;}));
     const anyCads = days.some(d=>shiftStore[d].otCads.length || shiftStore[d].subsistence.some(w=>w.cads.length));
-    const subSum = Object.keys(subCounts).length ? Object.entries(subCounts).map(([l,n])=>`${n}x${l}`).join(' + ') : 'none';
+    const tierSum = Object.entries(subCounts).map(([l,n])=>`${n}x${l}`);
+    const manSum = Object.entries(manCounts).map(([l,n])=>`${n}x ${l}`);
+    const subSum = [...tierSum, ...manSum].join(' + ') || 'none';
     const weekSubMoney = days.reduce((s,d)=>s+shiftSubsMoney(shiftStore[d]),0);
     return `<div class="week">
       <div class="weekhead">
         <div><b>Week ending ${fmtDate(wk)}</b></div>
-        <div class="weektot">${totOT}h OT &middot; ${subSum}${weekSubMoney>0?' &middot; '+money(weekSubMoney):''}</div>
+        <div class="weektot">${totOT}h OT${weekOtMoney>0?' '+money(weekOtMoney):''} &middot; ${subSum}${weekSubMoney>0?' &middot; '+money(weekSubMoney):''}</div>
       </div>
       <button class="act ghost small copyweek" data-wk="${wk}">Copy whole week</button>
       ${days.map(d=>renderDayRow(shiftStore[d])).join('')}
@@ -1419,17 +1425,23 @@ function renderWeekTotals(){
   if(!all.length){ el.style.display='none'; return; }
   el.style.display='';
   const ot=all.reduce((s,d)=>s+d.otHours,0);
-  // count each subsistence tier by its label, across all saved days
+  const otMoney=all.reduce((s,d)=>s+effOtMoney(d),0);
+  // count each TIME-BASED subsistence tier by its label, across all saved days
   const counts={};
   all.forEach(d=>d.subsistence.forEach(x=>{const l=x.label||(x.tier+'h');counts[l]=(counts[l]||0)+1;}));
+  // count MANUAL payments (B&B, Sunday, etc.) separately by their own name
+  const manCounts={};
+  all.forEach(d=>(d.manualSubs||[]).forEach(m=>{manCounts[m.label]=(manCounts[m.label]||0)+1;}));
   el.className='hero';
   // order tiers by their numeric hours, highest first
   const ordered=Object.entries(counts).sort((a,b)=>parseFloat(b[0])-parseFloat(a[0]));
   let subs=ordered.map(([l,n])=>`<div class="sub-fig"><div class="n">${n}×${l}</div><div class="u">subsistence</div></div>`).join('');
+  // manual payments shown as their own named figures (not mixed into the tier counts)
+  subs+=Object.entries(manCounts).map(([l,n])=>`<div class="sub-fig"><div class="n">${n}×</div><div class="u">${l}</div></div>`).join('');
   const totalMoney=all.reduce((s,d)=>s+shiftSubsMoney(d),0);
   if(totalMoney>0) subs+=`<div class="sub-fig"><div class="n">${money(totalMoney)}</div><div class="u">subsistence total</div></div>`;
   el.innerHTML=`<div class="wk">Totals across ${all.length} day${all.length>1?'s':''}</div>
-    <div class="ot"><div class="n">${ot}<span class="un">hrs</span></div><div class="u">overtime</div></div>
+    <div class="ot"><div class="n">${ot}<span class="un">hrs</span>${otMoney>0?` <span class="un" style="color:var(--p-200);font-weight:600">&middot; ${money(otMoney)}</span>`:''}</div><div class="u">overtime</div></div>
     ${subs?`<div class="subs">${subs}</div>`:''}`;
 }
 
