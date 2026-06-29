@@ -954,34 +954,32 @@ async function mdtRun(file){
   }
   // note: do NOT revoke here — the image stays visible on the confirm screen; revoked on close/rescan
 }
-// Greyscale + invert + threshold on a canvas, sized safely for mobile. Returns a
-// data URL for Tesseract. Phone photos are huge (12MP+); processing them at full
-// size can silently fail on mobile, so we cap the working width to a target that
-// is big enough for OCR but small enough for any device to handle.
+// Greyscale + contrast-stretch + invert on a canvas, sized safely for mobile.
+// (A hard black/white threshold was tried and made things worse — it wiped out
+// faint strokes and dropped whole lines — so we use a gentle contrast stretch.)
 function mdtPreprocess(url){
   return new Promise((resolve)=>{
     const img=new Image();
     img.onload=()=>{
       try{
-        const TARGET_W=1500;                       // good for OCR, safe on mobile
-        // scale DOWN big photos to TARGET_W; gently scale up only very small ones
+        const TARGET_W=1600;                       // big enough for OCR, safe on mobile
         let scale=TARGET_W/img.width;
-        if(scale>1.5) scale=1.5;                    // don't over-enlarge
+        if(scale>1.5) scale=1.5;                    // gently enlarge only small images
+        if(scale>1 && img.width>=TARGET_W) scale=1; // never enlarge already-large photos
         const w=Math.max(1,Math.round(img.width*scale)), h=Math.max(1,Math.round(img.height*scale));
         const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
         const ctx=cv.getContext('2d'); ctx.drawImage(img,0,0,w,h);
         const im=ctx.getImageData(0,0,w,h); const d=im.data;
-        // greyscale + collect histogram for an auto threshold
-        let sum=0;
-        for(let i=0;i<d.length;i+=4){ const g=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2]; d[i]=d[i+1]=d[i+2]=g; sum+=g; }
-        const mean=sum/(d.length/4);
-        // threshold around the mean, then INVERT (white-on-black text → black-on-white)
-        const thr=mean*0.9;
-        for(let i=0;i<d.length;i+=4){ const on=d[i]>thr?0:255; d[i]=d[i+1]=d[i+2]=on; }  // bright pixel→black text
+        // greyscale + find min/max for a contrast stretch
+        let mn=255,mx=0;
+        for(let i=0;i<d.length;i+=4){ const g=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2]; d[i]=d[i+1]=d[i+2]=g; if(g<mn)mn=g; if(g>mx)mx=g; }
+        const range=Math.max(1,mx-mn);
+        // stretch contrast, then INVERT (white-on-black text → black-on-white)
+        for(let i=0;i<d.length;i+=4){ let g=(d[i]-mn)/range*255; g=255-g; d[i]=d[i+1]=d[i+2]=g; }
         ctx.putImageData(im,0,0);
         const out=cv.toDataURL('image/png');
-        resolve(out && out.length>100 ? out : url);   // guard against empty canvas export
-      }catch(err){ resolve(url); }                     // any failure → use original
+        resolve(out && out.length>100 ? out : url);
+      }catch(err){ resolve(url); }
     };
     img.onerror=()=>resolve(url);
     img.src=url;
