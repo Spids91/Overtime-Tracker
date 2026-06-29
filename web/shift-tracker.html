@@ -822,13 +822,23 @@ function addCall(){calls.push({cad:'',start:'',clear:''});renderCalls();}
 let mdtRows=[];
 function mdtValidTime(t){ const m=(t||'').match(/^(\d{2}):(\d{2}):(\d{2})$/); if(!m) return false; return +m[1]<=23&&+m[2]<=59&&+m[3]<=59; }
 function mdtExtract(text){
-  const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
-  const out=[]; let pending=null;
-  for(const line of lines){
-    const cadM=line.match(/AS[I1l]?\s*[: ]?\s*(\d{7})\b/i);   // AS1 + exactly 7 digits
+  // Robust two-stream approach: collect every CAD and every valid time-pair as
+  // ordered streams, then zip them, each CAD takes the next time-pair on its line
+  // or after. Survives CAD+time on one line, time-only lines, and the two-column
+  // layout where a right-hand message log is interleaved.
+  const lines=text.split('\n');
+  const cads=[]; const times=[];
+  lines.forEach((line,idx)=>{
+    const cadM=line.match(/AS[I1l]?\s*[: ]?\s*(\d{7})\b/i);          // AS1 + exactly 7 digits
+    if(cadM) cads.push({cad:cadM[1], line:idx});
     const pairM=line.match(/(\d{2}:\d{2}:\d{2})\s*[-–—]+\s*(\d{2}:\d{2}:\d{2})/);
-    if(cadM&&!pairM){ pending={cad:cadM[1],start:'',clear:''}; out.push(pending); }
-    else if(pairM&&pending){ pending.start=pairM[1]; pending.clear=pairM[2]; pending=null; }
+    if(pairM && mdtValidTime(pairM[1]) && mdtValidTime(pairM[2])) times.push({start:pairM[1], clear:pairM[2], line:idx});
+  });
+  const out=[]; let ti=0;
+  for(const c of cads){
+    while(ti<times.length && times[ti].line < c.line) ti++;        // skip times before this CAD
+    if(ti<times.length){ out.push({cad:c.cad, start:times[ti].start, clear:times[ti].clear}); ti++; }
+    else out.push({cad:c.cad, start:'', clear:''});                 // CAD with no time found → user fills
   }
   return out;
 }
@@ -866,13 +876,45 @@ async function mdtRun(file){
     <div class="mdt-status"><span class="mdt-spin"></span><span id="mdtStat">Reading on device…</span></div>
     <div class="mdt-bar"><i id="mdtBar"></i></div>`;
   try{
-    const { data } = await Tesseract.recognize(url,'eng',{ logger:m=>{ if(m.status==='recognizing text'&&$('mdtBar')) $('mdtBar').style.width=Math.round(m.progress*100)+'%'; } });
+    // Pre-process: MDT is white-on-black. OCR reads dark-on-light far better, so we
+    // greyscale, invert, and harden contrast on a canvas before recognising. All local.
+    const prepped = await mdtPreprocess(url);
+    const { data } = await Tesseract.recognize(prepped,'eng',{
+      logger:m=>{ if(m.status==='recognizing text'&&$('mdtBar')) $('mdtBar').style.width=Math.round(m.progress*100)+'%'; },
+      tessedit_char_whitelist:'0123456789:-ASI ',   // only chars that appear in incident rows
+    });
     mdtRows=mdtFlag(mdtExtract(data.text||''));
     mdtRenderRows(data.text||'');
   }catch(e){
     $('mdtBody').innerHTML=`<div class="locnote" style="color:var(--bad)">Could not read the image (${e.message}). Try a clearer, straight-on photo.</div><div style="height:10px"></div><button class="act ghost small" id="mdtBack">Try another photo</button>`;
     $('mdtBack').onclick=mdtBodyChoose;
   }finally{ URL.revokeObjectURL(url); }
+}
+// Greyscale + invert + contrast stretch on a canvas. Returns a data URL for Tesseract.
+function mdtPreprocess(url){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    img.onload=()=>{
+      try{
+        // upscale small images a little; OCR likes ~1000px+ on the text dimension
+        const scale = Math.min(2, Math.max(1, 1400/Math.max(img.width,img.height)));
+        const w=Math.round(img.width*scale), h=Math.round(img.height*scale);
+        const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+        const ctx=cv.getContext('2d'); ctx.drawImage(img,0,0,w,h);
+        const im=ctx.getImageData(0,0,w,h); const d=im.data;
+        // first pass: greyscale + find min/max for contrast stretch
+        let mn=255,mx=0;
+        for(let i=0;i<d.length;i+=4){ const g=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2]; d[i]=d[i+1]=d[i+2]=g; if(g<mn)mn=g; if(g>mx)mx=g; }
+        const range=Math.max(1,mx-mn);
+        // second pass: stretch contrast then INVERT (white-on-black → black-on-white)
+        for(let i=0;i<d.length;i+=4){ let g=(d[i]-mn)/range*255; g=255-g; d[i]=d[i+1]=d[i+2]=g; }
+        ctx.putImageData(im,0,0);
+        resolve(cv.toDataURL('image/png'));
+      }catch(err){ resolve(url); }   // if anything fails, fall back to the original
+    };
+    img.onerror=()=>resolve(url);
+    img.src=url;
+  });
 }
 function mdtRenderRows(raw){
   if(!mdtRows.length){
