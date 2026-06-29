@@ -830,6 +830,25 @@ let mdtImageUrl=null;   // object URL of the scanned photo, kept for on-screen c
 function mdtRevokeImage(){ if(mdtImageUrl){ URL.revokeObjectURL(mdtImageUrl); mdtImageUrl=null; } }
 function mdtValidTime(t){ const m=(t||'').match(/^(\d{1,2}):(\d{2}):(\d{2})$/); if(!m) return false; return +m[1]<=23&&+m[2]<=59&&+m[3]<=59; }
 function padTime(t){ const m=(t||'').match(/^(\d{1,2}):(\d{2}):(\d{2})$/); return m ? String(+m[1]).padStart(2,'0')+':'+m[2]+':'+m[3] : t; }
+// Accept loosely-typed times and normalise to HH:MM:SS. Handles "07:41:01",
+// "074101", "7:41:1", "0741" (→07:41:00). Returns '' if it can't make a valid time.
+function normaliseTimeInput(v){
+  v=(v||'').trim();
+  if(!v.replace(/\D/g,'')) return '';        // no digits at all → leave empty
+  let h,m,s;
+  if(v.includes(':')){
+    const p=v.split(':').map(x=>x.replace(/\D/g,''));
+    h=p[0]||''; m=p[1]||'00'; s=p[2]||'00';
+  } else {
+    const d=v.replace(/\D/g,'');
+    if(d.length<=2){ h=d; m='00'; s='00'; }
+    else if(d.length<=4){ h=d.slice(0,d.length-2); m=d.slice(-2); s='00'; }
+    else { h=d.slice(0,d.length-4); m=d.slice(d.length-4,d.length-2); s=d.slice(-2); }
+  }
+  h=h.padStart(2,'0'); m=m.padStart(2,'0'); s=s.padStart(2,'0');
+  const out=h+':'+m+':'+s;
+  return mdtValidTime(out) ? out : '';
+}
 function mdtExtract(text){
   // Tolerant of real OCR glitches seen on actual MDT photos:
   //  - CAD with a stray inner space (5900 185) and AS1 misread as AST/ASI
@@ -935,27 +954,34 @@ async function mdtRun(file){
   }
   // note: do NOT revoke here — the image stays visible on the confirm screen; revoked on close/rescan
 }
-// Greyscale + invert + contrast stretch on a canvas. Returns a data URL for Tesseract.
+// Greyscale + invert + threshold on a canvas, sized safely for mobile. Returns a
+// data URL for Tesseract. Phone photos are huge (12MP+); processing them at full
+// size can silently fail on mobile, so we cap the working width to a target that
+// is big enough for OCR but small enough for any device to handle.
 function mdtPreprocess(url){
-  return new Promise((resolve,reject)=>{
+  return new Promise((resolve)=>{
     const img=new Image();
     img.onload=()=>{
       try{
-        // upscale small images a little; OCR likes ~1000px+ on the text dimension
-        const scale = Math.min(2, Math.max(1, 1400/Math.max(img.width,img.height)));
-        const w=Math.round(img.width*scale), h=Math.round(img.height*scale);
+        const TARGET_W=1500;                       // good for OCR, safe on mobile
+        // scale DOWN big photos to TARGET_W; gently scale up only very small ones
+        let scale=TARGET_W/img.width;
+        if(scale>1.5) scale=1.5;                    // don't over-enlarge
+        const w=Math.max(1,Math.round(img.width*scale)), h=Math.max(1,Math.round(img.height*scale));
         const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
         const ctx=cv.getContext('2d'); ctx.drawImage(img,0,0,w,h);
         const im=ctx.getImageData(0,0,w,h); const d=im.data;
-        // first pass: greyscale + find min/max for contrast stretch
-        let mn=255,mx=0;
-        for(let i=0;i<d.length;i+=4){ const g=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2]; d[i]=d[i+1]=d[i+2]=g; if(g<mn)mn=g; if(g>mx)mx=g; }
-        const range=Math.max(1,mx-mn);
-        // second pass: stretch contrast then INVERT (white-on-black → black-on-white)
-        for(let i=0;i<d.length;i+=4){ let g=(d[i]-mn)/range*255; g=255-g; d[i]=d[i+1]=d[i+2]=g; }
+        // greyscale + collect histogram for an auto threshold
+        let sum=0;
+        for(let i=0;i<d.length;i+=4){ const g=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2]; d[i]=d[i+1]=d[i+2]=g; sum+=g; }
+        const mean=sum/(d.length/4);
+        // threshold around the mean, then INVERT (white-on-black text → black-on-white)
+        const thr=mean*0.9;
+        for(let i=0;i<d.length;i+=4){ const on=d[i]>thr?0:255; d[i]=d[i+1]=d[i+2]=on; }  // bright pixel→black text
         ctx.putImageData(im,0,0);
-        resolve(cv.toDataURL('image/png'));
-      }catch(err){ resolve(url); }   // if anything fails, fall back to the original
+        const out=cv.toDataURL('image/png');
+        resolve(out && out.length>100 ? out : url);   // guard against empty canvas export
+      }catch(err){ resolve(url); }                     // any failure → use original
     };
     img.onerror=()=>resolve(url);
     img.src=url;
@@ -986,14 +1012,30 @@ function mdtRenderRows(raw){
       <div class="mdt-rh"><span class="rn">Incident ${i+1}</span><span class="rflag">check</span><button class="del" data-del="${i}">&times;</button></div>
       <div class="mdt-fields">
         <div><label>CAD</label><input data-f="cad" data-i="${i}" value="${r.cad}" inputmode="numeric" maxlength="7"></div>
-        <div><label>Start</label><input data-f="start" data-i="${i}" value="${r.start}" inputmode="numeric" placeholder="00:00:00"></div>
-        <div><label>Clear</label><input data-f="clear" data-i="${i}" value="${r.clear}" inputmode="numeric" placeholder="00:00:00"></div>
+        <div><label>Start</label><input data-f="start" data-i="${i}" value="${r.start}" inputmode="text" placeholder="hh:mm:ss"></div>
+        <div><label>Clear</label><input data-f="clear" data-i="${i}" value="${r.clear}" inputmode="text" placeholder="hh:mm:ss"></div>
       </div>
     </div>`).join('');
-  $('mdtList').querySelectorAll('input').forEach(inp=>inp.oninput=()=>{
-    const v=inp.value.trim(); mdtRows[inp.dataset.i][inp.dataset.f]=v;
-    const bad = inp.dataset.f==='cad' ? !/^\d{7}$/.test(v) : !mdtValidTime(v);
-    inp.classList.toggle('bad', bad && v.length>0);
+  $('mdtList').querySelectorAll('input').forEach(inp=>{
+    const f=inp.dataset.f;
+    inp.oninput=()=>{
+      // store the raw value as typed; do NOT block or red-flag mid-typing
+      mdtRows[inp.dataset.i][f]=inp.value;
+      inp.classList.remove('bad');
+    };
+    inp.onblur=()=>{
+      let v=inp.value.trim();
+      if(f==='cad'){
+        v=v.replace(/\D/g,'');                      // keep digits only
+        inp.value=v; mdtRows[inp.dataset.i].cad=v;
+        inp.classList.toggle('bad', v.length>0 && !/^\d{7}$/.test(v));
+        return;
+      }
+      // time field: accept "07:41:01", "074101", "7:41:1", etc. Normalise to HH:MM:SS.
+      const norm=normaliseTimeInput(v);
+      if(norm){ inp.value=norm; mdtRows[inp.dataset.i][f]=norm; inp.classList.remove('bad'); }
+      else { mdtRows[inp.dataset.i][f]=v; inp.classList.toggle('bad', v.length>0); }
+    };
   });
   $('mdtList').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ mdtRows.splice(+b.dataset.del,1); mdtRenderRows(raw); });
   $('mdtBack').onclick=mdtBodyChoose;
@@ -1011,12 +1053,17 @@ function mdtRenderRows(raw){
     else { const r=document.createRange(); r.selectNode($('mdtRawText')); getSelection().removeAllRanges(); getSelection().addRange(r); }
   };
   $('mdtAccept').onclick=()=>{
+    // normalise any loosely-typed times first, then validate
+    mdtRows.forEach(r=>{
+      const ns=normaliseTimeInput(r.start), nc=normaliseTimeInput(r.clear);
+      if(ns) r.start=ns; if(nc) r.clear=nc;
+      r.cad=(r.cad||'').replace(/\D/g,'');
+    });
     const bad=mdtRows.filter(r=>!/^\d{7}$/.test(r.cad)||!mdtValidTime(r.start)||!mdtValidTime(r.clear));
-    if(bad.length){ alert(bad.length+' row(s) still have an invalid CAD or time. Fix or delete them first.'); return; }
+    if(bad.length){ alert(bad.length+' row(s) still need a valid CAD (7 digits) or time (hh:mm:ss). Fix or delete them first.'); return; }
     // merge into the call list, skipping CADs already present
     const have=new Set(calls.map(c=>c.cad));
-    let added=0;
-    mdtRows.forEach(r=>{ if(!have.has(r.cad)){ calls.push({cad:r.cad,start:r.start.slice(0,5),clear:r.clear.slice(0,5)}); have.add(r.cad); added++; } });
+    mdtRows.forEach(r=>{ if(!have.has(r.cad)){ calls.push({cad:r.cad,start:r.start.slice(0,5),clear:r.clear.slice(0,5)}); have.add(r.cad); } });
     closeMdt(); renderCalls(); renderGaps();
   };
 }
