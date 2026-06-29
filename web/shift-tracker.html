@@ -192,6 +192,12 @@
   .mdt-fields input{width:100%;padding:8px 9px;border:1px solid var(--line);border-radius:8px;font-family:var(--mono);font-size:14px;color:var(--ink);background:#fff}
   .mdt-fields input.bad{border-color:var(--bad);background:#fdf3f3}
   .mdt-raw{font-family:var(--mono);font-size:11px;white-space:pre-wrap;word-break:break-word;background:#0e1a20;color:#bcd;padding:11px;border-radius:9px;margin-top:8px;max-height:200px;overflow:auto}
+  .mdt-compare{margin-bottom:12px}
+  .mdt-shot{width:100%;max-height:220px;object-fit:cover;object-position:top;border-radius:11px;border:1px solid var(--line);cursor:zoom-in;display:block}
+  .mdt-shot-hint{font-size:11px;color:var(--ink-soft);text-align:center;margin-top:5px}
+  .mdt-zoom{position:fixed;inset:0;z-index:80;background:rgba(2,34,38,.92);display:flex;align-items:center;justify-content:center;padding:14px;cursor:zoom-out}
+  .mdt-zoom img{max-width:100%;max-height:88vh;border-radius:8px;object-fit:contain}
+  .mdt-zoom-x{position:absolute;top:calc(14px + env(safe-area-inset-top));right:18px;color:#fff;font-size:15px;font-weight:600;background:rgba(0,0,0,.4);padding:7px 13px;border-radius:20px}
   .calmonthtotal{text-align:center;font-size:13px;color:var(--ink-soft);margin-top:14px}
   .calmonthtotal b{color:var(--p-700)}
   .pattype{flex:1;font-size:12px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em}
@@ -820,6 +826,8 @@ function addCall(){calls.push({cad:'',start:'',clear:''});renderCalls();}
    incidents and their HH:MM:SS time pairs, and lets the user confirm before
    the rows drop into the call list. No upload, no server, no Claude. */
 let mdtRows=[];
+let mdtImageUrl=null;   // object URL of the scanned photo, kept for on-screen comparison
+function mdtRevokeImage(){ if(mdtImageUrl){ URL.revokeObjectURL(mdtImageUrl); mdtImageUrl=null; } }
 function mdtValidTime(t){ const m=(t||'').match(/^(\d{1,2}):(\d{2}):(\d{2})$/); if(!m) return false; return +m[1]<=23&&+m[2]<=59&&+m[3]<=59; }
 function padTime(t){ const m=(t||'').match(/^(\d{1,2}):(\d{2}):(\d{2})$/); return m ? String(+m[1]).padStart(2,'0')+':'+m[2]+':'+m[3] : t; }
 function mdtExtract(text){
@@ -837,18 +845,27 @@ function mdtExtract(text){
     const toks=grabTimes(line);
     if(toks.length>=2) times.push({start:toks[0], clear:toks[1], line:idx, used:false});
   });
-  const out=[];
-  for(const cd of cads){
+  // Pass 1: pair each CAD with the nearest unused time within 3 lines below it.
+  const out=cads.map(cd=>({cad:cd.cad, line:cd.line, start:'', clear:'', _done:false}));
+  out.forEach(rec=>{
     let best=-1, bestDist=999;
     for(let i=0;i<times.length;i++){
       if(times[i].used) continue;
-      const dist=times[i].line - cd.line;
-      if(dist>=0 && dist<=2 && dist<bestDist){ best=i; bestDist=dist; }
+      const dist=times[i].line - rec.line;
+      if(dist>=0 && dist<=3 && dist<bestDist){ best=i; bestDist=dist; }
     }
-    if(best>=0){ times[best].used=true; out.push({cad:cd.cad, start:times[best].start, clear:times[best].clear}); }
-    else out.push({cad:cd.cad, start:'', clear:''});
-  }
-  return out;
+    if(best>=0){ times[best].used=true; rec.start=times[best].start; rec.clear=times[best].clear; rec._done=true; }
+  });
+  // Pass 2: any CAD still without a time takes the next unused time below it
+  // (covers the last/trailing row when OCR slips an extra line in).
+  out.forEach(rec=>{
+    if(rec._done) return;
+    for(let i=0;i<times.length;i++){
+      if(times[i].used) continue;
+      if(times[i].line >= rec.line){ times[i].used=true; rec.start=times[i].start; rec.clear=times[i].clear; break; }
+    }
+  });
+  return out.map(r=>({cad:r.cad, start:r.start, clear:r.clear}));
 }
 // Pull valid HH:MM:SS times from a line, fixing apostrophe-as-colon and inner spaces.
 function grabTimes(line){
@@ -883,8 +900,9 @@ function mdtFlag(records){
   });
 }
 function openMdt(){ $('mdtModal').style.display='flex'; mdtBodyChoose(); }
-function closeMdt(){ $('mdtModal').style.display='none'; $('mdtBody').innerHTML=''; mdtRows=[]; }
+function closeMdt(){ mdtRevokeImage(); $('mdtModal').style.display='none'; $('mdtBody').innerHTML=''; mdtRows=[]; }
 function mdtBodyChoose(){
+  mdtRevokeImage();
   $('mdtBody').innerHTML=`
     <div class="mdt-priv"><span class="ic">&#10003;</span><span>The photo is read on this device only. Nothing is uploaded or sent anywhere.</span></div>
     <div class="locnote" style="margin:0 0 12px">Choose a photo of the MDT incident list. It pulls out each AS1 incident and its times for you to check.</div>
@@ -896,6 +914,7 @@ function mdtBodyChoose(){
 }
 async function mdtRun(file){
   const url=URL.createObjectURL(file);
+  mdtImageUrl=url;                       // keep for the confirmation screen comparison
   $('mdtBody').innerHTML=`
     <img src="${url}" class="mdt-prev">
     <div class="mdt-status"><span class="mdt-spin"></span><span id="mdtStat">Reading on device…</span></div>
@@ -913,7 +932,8 @@ async function mdtRun(file){
   }catch(e){
     $('mdtBody').innerHTML=`<div class="locnote" style="color:var(--bad)">Could not read the image (${e.message}). Try a clearer, straight-on photo.</div><div style="height:10px"></div><button class="act ghost small" id="mdtBack">Try another photo</button>`;
     $('mdtBack').onclick=mdtBodyChoose;
-  }finally{ URL.revokeObjectURL(url); }
+  }
+  // note: do NOT revoke here — the image stays visible on the confirm screen; revoked on close/rescan
 }
 // Greyscale + invert + contrast stretch on a canvas. Returns a data URL for Tesseract.
 function mdtPreprocess(url){
@@ -950,7 +970,8 @@ function mdtRenderRows(raw){
   }
   const flagged=mdtRows.filter(r=>r.flagged).length;
   $('mdtBody').innerHTML=`
-    <div class="locnote" style="margin:0 0 11px">Found <b>${mdtRows.length}</b> incident${mdtRows.length>1?'s':''}${flagged?` · ${flagged} to check`:''}. Check each against the screen, flagged rows may have a glare-misread digit.</div>
+    ${mdtImageUrl?`<div class="mdt-compare"><img src="${mdtImageUrl}" class="mdt-shot" id="mdtShot"><div class="mdt-shot-hint">Tap photo to zoom</div></div>`:''}
+    <div class="locnote" style="margin:0 0 11px">Found <b>${mdtRows.length}</b> incident${mdtRows.length>1?'s':''}${flagged?` · ${flagged} to check`:''}. Check each against the photo above, flagged rows may have a glare-misread digit.</div>
     <div id="mdtList"></div>
     <div style="height:10px"></div>
     <button class="act" id="mdtAccept">Add these to the shift</button>
@@ -976,6 +997,13 @@ function mdtRenderRows(raw){
   });
   $('mdtList').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ mdtRows.splice(+b.dataset.del,1); mdtRenderRows(raw); });
   $('mdtBack').onclick=mdtBodyChoose;
+  const shot=$('mdtShot');
+  if(shot) shot.onclick=()=>{
+    const ov=document.createElement('div'); ov.className='mdt-zoom';
+    ov.innerHTML=`<img src="${mdtImageUrl}"><div class="mdt-zoom-x">&times; close</div>`;
+    ov.onclick=()=>ov.remove();
+    document.body.appendChild(ov);
+  };
   const cpy=$('mdtCopyRaw');
   if(cpy) cpy.onclick=()=>{
     const t=$('mdtRawText').textContent;
