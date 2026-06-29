@@ -45,25 +45,21 @@ function unwrap(seq) {
 function roundUp(min, inc) { return inc ? Math.ceil(min / inc) * inc : min; }
 
 /* ---- gap analysis --------------------------------------------------------- */
-// For each consecutive pair of calls, decide whether a 10+ min base return was
-// PLAUSIBLE, and if so surface it as a question. The honest test for subsistence
-// is "did they get back to base and stand down 10+ min?". We know driveBack (from
-// the cleared location), but we do NOT know driveOut to the next call (it may have
-// started right at base, needing no drive). So we must not assume driveOut eats the
-// gap. We ask whenever gap - driveBack >= GRACE: they had time to get back and
-// stand down. Erring toward asking fits "app assists, user asserts" — when unsure,
-// put it to the user rather than silently deciding the money.
-function analyzeGaps(events, driveTimes) {
+// For each consecutive pair of calls, if there's a gap of GRACE_MIN (10 min) or
+// more between one call clearing and the next starting, we ask the user "did you
+// get back to base and stand down 10+ min?". We don't try to guess from drive
+// distances whether a return was physically possible: some bases sit right beside
+// a hospital, so even a short gap can be a genuine return. Asking on every real
+// gap keeps the call with the user, who actually knows, and ensures no qualifying
+// subsistence break is silently missed. This is "app assists, user asserts".
+function analyzeGaps(events) {
   const gaps = [];
   for (let i = 0; i < events.length - 1; i++) {
     const clearAt = events[i].clearM;
     const nextStart = events[i + 1].startM;
     const gap = nextStart - clearAt;
-    const driveBack = driveTimes[events[i].loc] ?? 20;
-    const driveOut = driveTimes[events[i].loc] ?? 20; // kept for display/info only
-    // plausible if there was time to drive back AND stand down 10+ min
-    const possible = (gap - driveBack) >= GRACE_MIN;
-    gaps.push({ index: i, clearAt, nextStart, gap, driveBack, driveOut, possible });
+    const possible = gap >= GRACE_MIN;     // any gap of 10+ min is worth asking about
+    gaps.push({ index: i, clearAt, nextStart, gap, possible });
   }
   return gaps;
 }
@@ -77,7 +73,6 @@ function analyzeGaps(events, driveTimes) {
     rosterEnd:   "HH:MM",
     backAtBase:  "HH:MM:SS" | null,   // final leg; if null, last clear is used
     otRoundInc:  0|15|30|60,
-    driveTimes:  { locName: minutesToBase, ... },
     gapAnswers:  { gapIndex: "yes"|"no" }
   }
 
@@ -99,7 +94,6 @@ function computeShift(input) {
   if (!valid.length) return fail('Add at least one call with start and clear times.');
   if (!input.rosterEnd) return fail('Set the rostered end time.');
 
-  const dt = input.driveTimes || {};
   const ga = input.gapAnswers || {};
 
   // Anchor every call to the shift's roster start so overnight shifts work.
@@ -125,7 +119,7 @@ function computeShift(input) {
     if (startM < anchor) startM += 1440;
     if (clearM < anchor) clearM += 1440;
     if (clearM < startM) clearM += 1440;   // clear after midnight relative to its start
-    return { cad: c.cad, loc: c.loc, startM, clearM };
+    return { cad: c.cad, startM, clearM };
   });
 
   // Sanity guard: a single call running longer than MAX_CALL_MIN is almost certainly
@@ -137,7 +131,7 @@ function computeShift(input) {
     return fail(`Call ${badCall.cad || ''} has start ${fmtClock(badCall.startM)} and clear ${fmtClock(badCall.clearM)}, which is over ${Math.round(MAX_CALL_MIN/60)} hours. Check the times.`);
   }
 
-  const gaps = analyzeGaps(events, dt);
+  const gaps = analyzeGaps(events);
   const needAnswers = gaps.filter(g => g.possible && !ga[g.index]);
   if (needAnswers.length) {
     return { ok: false, needAnswers, error: null, gaps,
@@ -174,17 +168,32 @@ function computeShift(input) {
   windows.push({ start: winStart, end: backM });
   ledger.push({ atMin: backM, kind: 'away', text: 'Back at base, final away window closes' });
 
-  // tier each window independently; 10h replaces 5h
-  let count5 = 0, count10 = 0;
+  // tier each window independently against the configured subsistence tiers.
+  // Tiers: [{hours, label}], highest qualifying threshold wins (higher replaces lower,
+  // not cumulative). Defaults to the standard 5h/10h if none supplied.
+  const tiers = (input.subsistenceTiers && input.subsistenceTiers.length)
+    ? input.subsistenceTiers.slice().sort((a, b) => a.hours - b.hours)
+    : [{ hours: 5, label: '5h' }, { hours: 10, label: '10h' }];
+  const tierCounts = {};   // label -> count
   const awayWindows = windows.map(w => {
     const durMin = w.end - w.start;
-    let tier = 0;
-    if (durMin >= TIER10_MIN) { tier = 10; count10++; }
-    else if (durMin >= TIER5_MIN) { tier = 5; count5++; }
-    return { start: w.start, end: w.end, durMin, tier };
+    let chosen = null;
+    for (const t of tiers) {
+      if (durMin >= t.hours * 60) chosen = t;   // highest qualifying threshold wins
+    }
+    const tier = chosen ? chosen.hours : 0;
+    const tierLabel = chosen ? (chosen.label || `${chosen.hours}h`) : null;
+    if (chosen) tierCounts[tierLabel] = (tierCounts[tierLabel] || 0) + 1;
+    return { start: w.start, end: w.end, durMin, tier, tierLabel };
   });
-  const summary = ([count10 ? `${count10}x10h` : '', count5 ? `${count5}x5h` : '']
-                    .filter(Boolean).join(' + ')) || 'none';
+  // legacy counts kept for callers still reading them (default 5h/10h case)
+  const count5 = awayWindows.filter(w => w.tier === 5).length;
+  const count10 = awayWindows.filter(w => w.tier === 10).length;
+  const summary = Object.keys(tierCounts).length
+    ? tiers.slice().reverse()
+        .map(t => { const l = t.label || `${t.hours}h`; return tierCounts[l] ? `${tierCounts[l]}x${l}` : ''; })
+        .filter(Boolean).join(' + ')
+    : 'none';
 
   // ---- overtime ----
   const rEnd = parseTime(input.rosterEnd);

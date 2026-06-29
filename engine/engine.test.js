@@ -149,6 +149,29 @@ function check(name, got, want) {
   });
   check('7h call still computes', ok.ok, true);
 })();
+
+/* ----------------------------------------------------------------------------
+   CASE 9 — configurable subsistence tiers.
+---------------------------------------------------------------------------- */
+(function customTiers() {
+  console.log('\nCASE 9: configurable subsistence tiers');
+  const tiers = [{ hours: 4, label: '' }, { hours: 8, label: 'Full day' }];
+  const mk = calls => ({ rosterStart:'08:00', rosterEnd:'20:00', otRoundInc:0, backAtBase:'20:00',
+    gapAnswers:{0:'no'}, subsistenceTiers: tiers, calls });
+  // ~11h away (09:00→20:00 back) hits the 8h "Full day" tier
+  let r = E.computeShift(mk([{cad:'1',start:'09:00',clear:'12:00'},{cad:'2',start:'13:00',clear:'16:00'}]));
+  check('long window hits highest tier', r.awayWindows[0].tier, 8);
+  check('custom label applied', r.awayWindows[0].tierLabel, 'Full day');
+  // a true 5h window (09:00→14:00) hits 4h tier, blank label → "4h"
+  let r2 = E.computeShift({ rosterStart:'08:00', rosterEnd:'20:00', otRoundInc:0, backAtBase:'14:00',
+    gapAnswers:{0:'no'}, subsistenceTiers: tiers, calls:[{cad:'1',start:'09:00',clear:'11:00'},{cad:'2',start:'12:00',clear:'14:00'}] });
+  check('5h window hits 4h tier', r2.awayWindows[0].tier, 4);
+  check('blank label defaults to Xh', r2.awayWindows[0].tierLabel, '4h');
+  // default (no tiers supplied) still 5/10
+  let r3 = E.computeShift({ rosterStart:'08:00', rosterEnd:'20:00', otRoundInc:0, backAtBase:'20:00',
+    gapAnswers:{0:'no'}, calls:[{cad:'1',start:'09:00',clear:'13:00'},{cad:'2',start:'14:00',clear:'18:30'}] });
+  check('default tiers unchanged (10h)', r3.awayWindows[0].tier, 10);
+})();
 (function units() {
   console.log('\nCASE 3: unit rules');
   check('roundUp 8min to 60', E.roundUp(8, 60), 60);

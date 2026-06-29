@@ -5,55 +5,59 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Shift Tracker</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
   :root{
-    --ink:#0f1622;--ink-soft:#5a6473;--line:#dde2ea;--line-soft:#eceff4;
-    --paper:#f4f6f9;--card:#ffffff;
-    --hi:#1f7a55;--hi-soft:#e3f1ea;          /* subsistence / confirmed green */
-    --warn:#c2660f;--warn-soft:#f8ecdf;       /* overtime amber */
-    --ask:#28507e;--ask-soft:#e5edf6;         /* prompts blue */
+    /* Suez Canal ramp */
+    --p-100:#F2F8FF;--p-200:#C4DFFD;--p-300:#90C3EF;--p-400:#569BCA;
+    --p-500:#216082;--p-600:#0E506B;--p-700:#064254;--p-800:#03333D;--p-900:#022226;
+    /* semantic names used across the app, repointed to Suez + AA-safe neutrals */
+    --ink:#03333D;--ink-soft:#4c5563;--line:#dfe9f0;--line-soft:#eef4f8;
+    --paper:#eceff4;--card:#ffffff;
+    --hi:#0E506B;--hi-soft:#eaf3f8;            /* subsistence / confirmed → Suez blue */
+    --warn:#b06a00;--warn-soft:#f7eede;        /* overtime / not-logged amber, AA on white */
+    --ask:#216082;--ask-soft:#e7f0f6;          /* prompts */
     --bad:#b03a3a;
-    /* day/night shift identity */
-    --day:#f2b705;--day-ink:#3a2c00;--day-soft:#fdf3d2;   /* hi-vis amber */
-    --night:#1a2740;--night-ink:#dfe6f2;--night-soft:#e6e9f1; /* deep navy */
-    --radius:14px;
-    --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+    /* day/night shift identity, expressed in the Suez ramp */
+    --day:#90C3EF;--day-ink:#022226;--day-soft:#e8f2fb;     /* light Suez = day */
+    --night:#03333D;--night-ink:#dbe7ee;--night-soft:#e6edf2; /* deep Suez = night */
+    --radius:16px;
+    --mono:"Inter",ui-monospace,Menlo,monospace;
     --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
-    --display:"Archivo","Inter",sans-serif;
+    --display:"Sora","Inter",sans-serif;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--paper);font-size:16px;line-height:1.45;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+  body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--paper);font-size:16px;line-height:1.5;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
   .wrap{max-width:560px;margin:0 auto;padding:16px 16px 96px}
-  header.app{display:flex;align-items:center;justify-content:space-between;padding:10px 4px 16px;border-bottom:2px solid var(--ink);margin-bottom:18px}
-  header.app h1{font-family:var(--display);font-size:21px;font-weight:800;margin:0;letter-spacing:-.02em}
-  header.app .tag{font-family:var(--mono);font-size:10px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.1em}
-  h2.sec{font-family:var(--display);font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);font-weight:700;margin:24px 2px 10px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:15px;margin-bottom:12px;box-shadow:0 1px 2px rgba(15,22,34,.03)}
+  header.app{padding:8px 4px 16px;margin-bottom:8px}
+  header.app h1{font-family:var(--display);font-size:22px;font-weight:700;margin:0;letter-spacing:-.02em;color:var(--ink)}
+  header.app .tag{font-family:var(--sans);font-size:12px;font-weight:500;color:var(--ink-soft);letter-spacing:.02em;display:block;margin-top:2px}
+  h2.sec{font-family:var(--sans);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);font-weight:600;margin:24px 2px 11px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:15px;margin-bottom:12px;box-shadow:0 1px 2px rgba(3,51,61,.03)}
   label.fld{display:block;margin-bottom:12px}label.fld:last-child{margin-bottom:0}
-  label.fld>span{display:block;font-size:13px;color:var(--ink-soft);margin-bottom:5px}
+  label.fld>span{display:block;font-size:12px;color:var(--ink-soft);margin-bottom:6px;font-weight:500}
   input,select,button{font-family:var(--sans);font-size:16px}
-  input[type=time],input[type=date],input[type=text],input[type=number],select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);appearance:none}
-  input:focus,select:focus{outline:2px solid var(--ask);outline-offset:1px;border-color:var(--ask)}
-  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  input[type=time],input[type=date],input[type=text],input[type=number],select{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);appearance:none}
+  input:focus,select:focus{outline:2px solid var(--p-500);outline-offset:1px;border-color:var(--p-500)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
   .chips{display:flex;flex-wrap:wrap;gap:7px}
-  .chip{padding:8px 13px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:13px;cursor:pointer;font-family:var(--mono);font-weight:500;transition:transform .08s}
+  .chip{padding:9px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:13px;cursor:pointer;font-family:var(--sans);font-weight:600;color:var(--ink-soft);transition:transform .08s}
   .chip:active{transform:scale(.96)}
   .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
-  /* day/night-aware chips: a day pattern chip glows amber when on, night chip goes navy */
+  /* day/night-aware chips */
   .chip.on.day{background:var(--day);color:var(--day-ink);border-color:var(--day)}
-  .chip.on.night{background:var(--night);color:var(--night-ink);border-color:var(--night)}
-  button.act{width:100%;padding:14px;border:none;border-radius:11px;background:var(--ink);color:#fff;font-weight:600;cursor:pointer;letter-spacing:.01em;font-family:var(--display);transition:transform .08s}
-  button.act.ghost{background:#fff;color:var(--ink);border:1px solid var(--line);font-weight:600}
-  button.act:active{transform:translateY(1px)}
+  .chip.on.night{background:var(--night);color:#fff;border-color:var(--night)}
+  button.act{width:100%;padding:15px;border:none;border-radius:13px;background:var(--p-600);color:#fff;font-weight:600;cursor:pointer;letter-spacing:.01em;font-family:var(--display);transition:transform .08s,background .12s;box-shadow:0 6px 16px -8px rgba(33,96,130,.6)}
+  button.act.ghost{background:#fff;color:var(--ink);border:1px solid var(--line);font-weight:600;box-shadow:none}
+  button.act:active{transform:translateY(1px);background:var(--p-700)}
   button.small{width:auto;padding:8px 13px;font-size:13px;border-radius:9px}
-  .call{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:9px;background:#fff}
+  .call{border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:9px;background:#fff}
   .call .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
-  .call .cad{font-family:var(--mono);font-size:13px;color:var(--ink-soft)}
+  .call .cad{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink-soft)}
   .call .del{background:none;border:none;color:var(--bad);font-size:18px;cursor:pointer;padding:0 4px;line-height:1}
-  .gap-q{border:1px solid var(--ask);background:var(--ask-soft);border-radius:10px;padding:12px;margin-bottom:9px}
-  .gap-q .qtxt{font-size:14px;margin-bottom:9px}.gap-q .qtxt b{font-family:var(--mono)}
+  .gap-q{border:1px solid var(--ask);background:var(--ask-soft);border-radius:12px;padding:12px;margin-bottom:9px}
+  .gap-q .qtxt{font-size:14px;margin-bottom:9px}.gap-q .qtxt b{font-weight:700}
   .gap-q .opts{display:flex;gap:8px}
-  .gap-q .opts button{flex:1;padding:9px;border:1px solid var(--ask);border-radius:8px;background:#fff;color:var(--ask);font-weight:600;cursor:pointer}
+  .gap-q .opts button{flex:1;padding:10px;border:1px solid var(--ask);border-radius:9px;background:#fff;color:var(--ask);font-weight:600;cursor:pointer}
   .gap-q .opts button.on{background:var(--ask);color:#fff}
   .result{border:1px solid var(--ink);border-radius:var(--radius);overflow:hidden}
   .result .head{background:var(--ink);color:#fff;padding:12px 14px}
@@ -70,6 +74,7 @@
   .pill{display:inline-block;font-family:var(--mono);font-size:11px;padding:2px 7px;border-radius:999px;margin-left:4px}
   .pill.away{background:var(--hi-soft);color:var(--hi)}.pill.reset{background:var(--warn-soft);color:var(--warn)}
   .pill.t5{background:var(--hi-soft);color:var(--hi)}.pill.t10{background:var(--hi);color:#fff}
+  .pill.psub{background:var(--hi-soft);color:var(--p-700);font-weight:600}
   .note{font-size:12px;color:var(--ink-soft);padding:10px 14px;border-top:1px dashed var(--line)}
   .empty{color:var(--ink-soft);font-size:14px;text-align:center;padding:18px}
   details.tt{margin-top:6px}details.tt summary{font-size:13px;color:var(--ask);cursor:pointer;font-family:var(--mono)}
@@ -116,48 +121,110 @@
   .subtab.on{background:var(--ink-soft);color:#fff;border-color:var(--ink-soft)}
   .subpanel{display:none}.subpanel.on{display:block}
   .calhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-  .calmonth{font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:-.01em}
-  .calnav{width:40px;height:40px;border:1px solid var(--line);background:#fff;border-radius:9px;font-size:20px;cursor:pointer;color:var(--ink)}
-  .calnav:active{background:var(--line-soft)}
-  .callegend{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--ink-soft);margin-bottom:10px}
-  .callegend span{display:flex;align-items:center;gap:4px}
-  .callegend .dot{width:10px;height:10px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.1)}
-  .dot.day{background:var(--day)}.dot.night{background:var(--night)}.dot.logged{background:var(--hi)}.dot.notlogged{background:var(--bad)}
-  .calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
-  .caldow{font-family:var(--mono);font-size:10px;color:var(--ink-soft);text-align:center;padding-bottom:4px;font-weight:500}
-  .calcell{aspect-ratio:1;border:1px solid var(--line-soft);border-radius:9px;padding:4px 4px 12px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;cursor:pointer;position:relative;background:#fff;min-height:0;transition:transform .08s}
+  .calmonth{font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:-.01em;color:var(--ink)}
+  .calnav{width:36px;height:36px;border:none;background:var(--p-600);border-radius:11px;font-size:18px;font-weight:700;cursor:pointer;color:#fff;display:grid;place-items:center;line-height:1}
+  .calnav:active{background:var(--p-700)}
+  .callegend{display:flex;flex-wrap:wrap;gap:14px;font-size:11.5px;color:var(--ink-soft);margin-top:18px;justify-content:center}
+  .callegend span{display:flex;align-items:center;gap:5px}
+  .callegend .dot{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .dot.day{background:var(--day)}.dot.night{background:var(--night)}.dot.logged{background:var(--p-600)}.dot.notlogged{background:var(--warn)}
+  .dot.leave-a{background:var(--p-200)}.dot.leave-s{background:#f0e6d6}.dot.exc{background:var(--warn)}
+  .calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .caldow{font-family:var(--sans);font-size:11px;color:var(--p-800);text-align:center;padding-bottom:4px;font-weight:700;letter-spacing:.02em}
+  .calcell{aspect-ratio:1;border:none;border-radius:11px;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;position:relative;background:#f1f5f9;min-height:0;transition:transform .08s;font-size:13px;font-weight:500;color:var(--ink-soft)}
   .calcell:active{transform:scale(.95)}
   .calcell.empty{border:none;background:none;cursor:default}
-  .calcell .cnum{font-size:12px;color:var(--ink-soft);font-weight:500}
-  /* day shift = hi-vis amber, night shift = deep navy */
-  .calcell.day{background:var(--day);border-color:#d9a300}
+  .calcell .cnum{font-size:13px;color:var(--ink-soft);font-weight:500}
+  /* day shift = light Suez, night shift = deep Suez */
+  .calcell.day{background:var(--day)}
   .calcell.day .cnum{color:var(--day-ink);font-weight:700}
-  .calcell.day .cpat{color:var(--day-ink);opacity:.75}
-  .calcell.night{background:var(--night);border-color:#0e1729}
+  .calcell.day .cpat{color:var(--day-ink);opacity:.8}
+  .calcell.night{background:var(--night)}
   .calcell.night .cnum{color:#fff;font-weight:700}
-  .calcell.night .cpat{color:var(--night-ink);opacity:.85}
-  .calcell .cpat{font-family:var(--mono);font-size:8px;margin-top:1px;letter-spacing:-.02em}
-  .calcell.today{outline:2.5px solid var(--ask);outline-offset:1px}
-  .calcell .cflag{width:10px;height:10px;border-radius:50%;position:absolute;bottom:4px;border:1.5px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.06)}
-  .calcell .cflag.logged{background:var(--hi)}
-  .calcell .cflag.notlogged{background:var(--bad)}
+  .calcell.night .cpat{color:var(--night-ink);opacity:.9}
+  .calcell .cpat{font-family:var(--sans);font-size:8px;font-weight:600;margin-top:0;letter-spacing:-.02em}
+  .calcell.today{box-shadow:inset 0 0 0 2.5px var(--p-500)}
+  /* dot top-right so it never blocks the shift time */
+  .calcell .cflag{width:6px;height:6px;border-radius:50%;position:absolute;top:5px;right:5px}
+  .calcell .cflag.logged{background:var(--p-600)}
+  .calcell.day .cflag.logged,.calcell.night .cflag.logged{background:#fff}
+  .calcell .cflag.notlogged{background:var(--warn)}
   .caldetail{margin-top:14px}
+  /* shift pattern manager */
+  .patrow{display:flex;align-items:center;gap:11px;padding:9px 2px;border-bottom:1px solid var(--line-soft)}
+  .patrow:last-child{border-bottom:none}
+  .patbadge{font-family:var(--sans);font-weight:700;font-size:14px;padding:5px 11px;border-radius:8px;letter-spacing:.01em}
+  .patbadge.day{background:var(--day);color:var(--day-ink)}
+  .patbadge.night{background:var(--night);color:#fff}
+  .patbadge.sub{background:var(--hi-soft);color:var(--p-700)}
+  .msubs{display:flex;flex-wrap:wrap;gap:8px}
+  .msub{padding:9px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:14px;font-weight:600;color:var(--ink-soft);cursor:pointer}
+  .msub.on{background:var(--p-600);color:#fff;border-color:var(--p-600)}
+  .msub-claimed{margin-top:7px;display:flex;flex-wrap:wrap;gap:5px}
+  .msub-val{opacity:.85;font-weight:600}
+  .calmonthtotal{text-align:center;font-size:13px;color:var(--ink-soft);margin-top:14px}
+  .calmonthtotal b{color:var(--p-700)}
+  .pattype{flex:1;font-size:12px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em}
+  .patdel{background:none;border:none;color:var(--bad);font-size:20px;cursor:pointer;line-height:1;padding:0 6px}
+  /* leave days + exception marker */
+  .calcell.leave-a{background:var(--p-200)}
+  .calcell.leave-a .cnum{color:var(--p-800);font-weight:700}
+  .calcell.leave-a .cpat{color:var(--p-700);opacity:.9}
+  .calcell.leave-s{background:#f0e6d6}
+  .calcell.leave-s .cnum{color:#7a5a1a;font-weight:700}
+  .calcell.leave-s .cpat{color:#7a5a1a;opacity:.9}
+  .calcell .cex-tag{font-family:var(--sans);font-size:7.5px;font-weight:700;letter-spacing:.02em;line-height:1;text-transform:uppercase;opacity:.95}
+  .calcell.day .cex-tag{color:var(--day-ink)}
+  .calcell.night .cex-tag{color:#fff}
+  .calcell.leave-a .cex-tag{color:var(--p-800)}
+  .calcell.leave-s .cex-tag{color:#7a5a1a}
+  /* detail panel edit controls */
+  .cd-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .cd-head b{font-family:var(--display);font-size:16px;font-weight:700}
+  .extag,.cyctag{font-size:10px;font-weight:600;padding:3px 7px;border-radius:6px;text-transform:uppercase;letter-spacing:.04em}
+  .extag{background:var(--warn-soft);color:var(--warn)}
+  .cyctag{background:var(--line-soft);color:var(--ink-soft)}
+  .cd-status{font-size:15px;font-weight:600;color:var(--ink);margin-top:8px}
+  .cd-log{margin-top:6px;font-size:13px;color:var(--ink-soft)}
+  .cd-edit{margin-top:14px;padding-top:13px;border-top:1px solid var(--line)}
+  .cd-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:9px}
+  .cd-pats{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+  .cd-pat{padding:8px 11px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:13px;font-weight:600;color:var(--ink-soft);cursor:pointer}
+  .cd-pat.day:active{background:var(--day);color:var(--day-ink);border-color:var(--day)}
+  .cd-pat.night:active{background:var(--night);color:#fff;border-color:var(--night)}
+  .cd-rows{display:flex;flex-wrap:wrap;gap:6px}
+  .cd-opt{padding:8px 12px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer}
+  .cd-opt.clear{color:var(--warn);border-color:var(--warn-soft);background:var(--warn-soft)}
+  .cd-opt:active{background:var(--line-soft)}
   .section-ot,.section-sub{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line-soft);font-size:13px}
   .subline{margin-top:4px}
   .cadinline{font-family:var(--mono);font-size:12px;word-break:break-word;margin-top:1px}
   .cadinline .dl{display:inline;margin-right:4px}
   /* tabs */
-  .tabs{position:sticky;top:0;z-index:10;display:flex;gap:4px;background:var(--paper);padding:8px 0 12px;margin-bottom:6px}
-  .tab{flex:1;padding:11px 8px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);font-weight:600;font-size:13px;cursor:pointer;border-radius:10px;font-family:var(--display);letter-spacing:.01em;transition:transform .08s,background .12s}
-  .tab:active{transform:scale(.97)}
-  .tab.on{background:var(--ink);color:#fff;border-color:var(--ink);box-shadow:0 2px 6px rgba(15,22,34,.15)}
+  /* fixed bottom navigation */
+  .nav{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(4,1fr);gap:0;background:var(--card);border-top:1px solid var(--line);padding:8px 8px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -2px 12px rgba(3,51,61,.05)}
+  .navbtn{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10.5px;font-weight:600;color:var(--ink-soft);background:none;border:none;cursor:pointer;padding:4px 2px;font-family:var(--sans)}
+  .navbtn .ic{width:24px;height:24px;display:grid;place-items:center}
+  .navbtn .ic svg{width:23px;height:23px;stroke:currentColor;stroke-width:1.9;fill:none}
+  .navbtn.on{color:var(--p-600)}
+  .navbtn:active{transform:scale(.94)}
   .tab:not(.on):active{background:var(--line-soft)}
   .panel{display:none;animation:fade .18s ease}
   .panel.on{display:block}
   @keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
   @media(prefers-reduced-motion:reduce){.panel{animation:none}}
   /* banner (station on enter tab, totals on weeks tab) */
-  .banner{font-size:13px;color:var(--ink-soft);padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:14px;background:#fff}
+  .banner{font-size:13px;color:var(--ink-soft);padding:11px 13px;border:1px solid var(--line);border-radius:12px;margin-bottom:14px;background:#fff}
+  .hero{background:var(--p-700);color:#fff;border-radius:22px;padding:20px;margin-bottom:18px}
+  .hero .wk{font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--p-200)}
+  .hero .ot{margin-top:14px}
+  .hero .ot .n{font-family:var(--display);font-size:34px;font-weight:700;line-height:1;letter-spacing:-.02em}
+  .hero .ot .n .un{font-family:var(--sans);font-size:14px;font-weight:600;margin-left:3px}
+  .hero .ot .u{font-size:12px;color:var(--p-200);margin-top:5px}
+  .hero .subs{display:flex;gap:32px;margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.14)}
+  .hero .sub-fig .n{font-family:var(--display);font-size:22px;font-weight:700;line-height:1;letter-spacing:-.02em}
+  .hero .sub-fig .n .un{font-family:var(--sans);font-size:12px;font-weight:600;margin-left:2px}
+  .hero .sub-fig .u{font-size:11px;color:var(--p-200);margin-top:5px}
   .banner.warn{border-color:var(--warn);background:var(--warn-soft);color:var(--warn)}
   .banner b{color:var(--ink)}
   .banner .mini{font-family:var(--mono);font-size:12px}
@@ -182,16 +249,23 @@
 <div class="wrap">
   <header class="app"><h1>Shift Tracker</h1><span class="tag">NAS overtime &amp; subsistence</span></header>
 
-  <nav class="tabs" role="tablist">
-    <button class="tab on" data-tab="enter" role="tab">Enter shift</button>
-    <button class="tab" data-tab="weeks" role="tab">My weeks</button>
-    <button class="tab" data-tab="roster" role="tab">Roster</button>
-    <button class="tab" data-tab="settings" role="tab">Settings</button>
+  <nav class="nav" role="tablist">
+    <button class="navbtn on" data-tab="enter" role="tab">
+      <span class="ic"><svg viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg></span>Enter
+    </button>
+    <button class="navbtn" data-tab="weeks" role="tab">
+      <span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4m8-4v4"/></svg></span>My weeks
+    </button>
+    <button class="navbtn" data-tab="roster" role="tab">
+      <span class="ic"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M9 14h.01M15 14h.01"/></svg></span>Roster
+    </button>
+    <button class="navbtn" data-tab="settings" role="tab">
+      <span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>Settings
+    </button>
   </nav>
 
   <!-- ENTER SHIFT -->
   <section class="panel on" data-panel="enter">
-    <div id="stationBanner" class="banner"></div>
 
     <h2 class="sec">Rostered shift</h2>
     <div class="card">
@@ -220,6 +294,8 @@
       </div>
       <div class="locnote" style="margin-top:6px">Actual end drives overtime (vs roster end). Actual start is for the paysheet only, it does not change overtime or subsistence.</div>
     </div>
+
+    <div id="manualSubPicker"></div>
 
     <div id="gapQuestions"></div>
     <button class="act" id="compute" style="margin-top:6px">Compute shift</button>
@@ -250,12 +326,15 @@
         <button class="calnav" id="calNext" aria-label="next month">&rsaquo;</button>
       </div>
       <div class="callegend">
-        <span><i class="dot day"></i>day shift</span>
-        <span><i class="dot night"></i>night shift</span>
+        <span><i class="dot day"></i>day</span>
+        <span><i class="dot night"></i>night</span>
+        <span><i class="dot leave-a"></i>annual</span>
+        <span><i class="dot leave-s"></i>sick</span>
         <span><i class="dot logged"></i>logged</span>
         <span><i class="dot notlogged"></i>not logged</span>
       </div>
       <div id="calGrid" class="calgrid"></div>
+      <div id="calMonthTotal" class="calmonthtotal"></div>
       <div id="calDetail" class="caldetail"></div>
     </div>
 
@@ -287,96 +366,100 @@
 
   <!-- SETTINGS -->
   <section class="panel" data-panel="settings">
-    <h2 class="sec">Your station</h2>
+    <h2 class="sec">Currency</h2>
     <div class="card">
-      <label class="fld"><span>Home station (set once, drive-times are measured from here)</span>
-        <select id="homeStation"><option value="">Loading stations…</option></select></label>
-      <div id="stationNote" class="locnote"></div>
+      <label class="fld"><span>Symbol used for subsistence values</span>
+        <select id="currencySel"><option value="€">€ (euro)</option><option value="£">£ (pound)</option></select>
+      </label>
     </div>
 
-    <h2 class="sec">Drive-times from your station</h2>
+    <h2 class="sec">Your shift patterns</h2>
     <div class="card">
-      <div class="locnote" style="margin-bottom:10px">Confirmed = you set it. Estimate = derived from map coordinates, unverified. Editing a value confirms it.</div>
-      <table class="dttable"><thead><tr><th>Hospital</th><th>Drive time</th><th>Status</th></tr></thead><tbody id="ttBody"></tbody></table>
-      <div class="addloc">
-        <input type="text" id="newLoc" placeholder="Add a hospital — type to search" autocomplete="off">
-        <div id="locResults" class="locresults"></div>
+      <div class="locnote" style="margin-bottom:10px">Add the shift times your station runs. These become your quick-picks when entering a shift and building your roster.</div>
+      <div id="patternList"></div>
+      <div class="row2" style="margin-top:10px">
+        <label class="fld"><span>Start</span><input type="time" id="newPatStart"></label>
+        <label class="fld"><span>End</span><input type="time" id="newPatEnd"></label>
       </div>
+      <button class="act ghost small" id="addPattern">+ Add pattern</button>
+    </div>
+
+    <h2 class="sec">Subsistence tiers</h2>
+    <div class="card">
+      <div class="locnote" style="margin-bottom:10px">Set the hours-away thresholds that qualify for subsistence in your region. The highest tier a window reaches applies. Leave the label blank to show as "Xh".</div>
+      <div id="tierList"></div>
+      <div class="row2" style="margin-top:10px">
+        <label class="fld"><span>Hours away</span><input type="number" id="newTierHours" min="1" max="24" step="0.5" inputmode="decimal"></label>
+        <label class="fld"><span>Label (optional)</span><input type="text" id="newTierLabel" placeholder="e.g. 5h"></label>
+      </div>
+      <label class="fld"><span>Value</span><input type="number" id="newTierValue" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+      <button class="act ghost small" id="addTier">+ Add tier</button>
+    </div>
+
+    <h2 class="sec">Other subsistence payments</h2>
+    <div class="card">
+      <div class="locnote" style="margin-bottom:10px">Add allowances that aren't earned by time away, like B&amp;B or a meal allowance. You tick these on a shift when you claim them.</div>
+      <div id="manualSubList"></div>
+      <label class="fld" style="margin-top:10px"><span>Payment name</span><input type="text" id="newManualSub" placeholder="e.g. B&amp;B"></label>
+      <label class="fld"><span>Value</span><input type="number" id="newManualSubValue" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+      <button class="act ghost small" id="addManualSub">+ Add payment</button>
+    </div>
+
+    <h2 class="sec">About</h2>
+    <div class="card">
+      <p style="margin:0 0 8px;font-size:14px">This is your private working-out tool for NAS overtime and subsistence. Nothing leaves your device, you read the figures off and write them onto your paper timesheet.</p>
+      <p style="margin:0;font-size:13px;color:var(--ink-soft)">Incident numbers are held only until you have copied them to paper. Clear them per week in My weeks once they are on your sheet.</p>
     </div>
   </section>
 </div>
 
 <script src="../engine/engine.js"></script>
 <script>
-/* ===== UI: thin skin over ENGINE. Loads locations.json, keys drive-times to a home station. ===== */
-const PATTERNS=["07-19","08-20","19-07","20-08","07-17","08-17"];
-let LOC=null;                 // full locations.json
-let homeStationId=null;       // chosen station id
-let driveTimes={};            // {hospitalName: minutes}  — built per station, fed to ENGINE
-let dtMeta={};                // {hospitalName: 'confirmed'|'estimate'} — for labelling only
+/* ===== UI: thin skin over ENGINE. ===== */
+/* User-defined shift patterns (plain "HH-HH" ranges). Seeded with two common
+   examples; the user manages the list in Settings. Persisted with everything else. */
+let PATTERNS=["07-19","19-07"];
+/* User-defined subsistence tiers: {hours, label, value}. Highest qualifying threshold wins.
+   Seeded with the standard NAS 5h and 10h; label blank → shows as "Xh"; value is money. */
+let SUBS_TIERS=[{hours:5,label:'',value:0},{hours:10,label:'',value:0}];
+/* Manual subsistence types: {label, value}. Declared allowances not earned by time. */
+let MANUAL_SUBS=[];
+/* Currency symbol for money display, chosen in Settings. */
+let CURRENCY='€';
 // roster: a repeating cycle. cycle[w][d] = pattern string or 'off' (w=0..weeks-1, d=0..6 Mon..Sun)
-let roster = { weeks:9, cycle:null, anchorDate:null, anchorWeek:0 };
+// exceptions: one-off overrides keyed by date 'YYYY-MM-DD', each {type, pattern?}.
+//   type 'work'  → worked a pattern (extra shift or swap to a different pattern); has .pattern
+//   type 'off'   → removed/swapped-away: a normally-rostered day you did not work
+//   type 'annual'→ annual leave
+//   type 'sick'  → sick leave
+// Exceptions never repeat; they apply to that single date only.
+let roster = { weeks:9, cycle:null, anchorDate:null, anchorWeek:0, exceptions:{} };
 let calls=[]; let gapAnswers={};
+let claimedManual=[];   // manual subsistence labels ticked for the current shift entry
 const $=id=>document.getElementById(id);
 
-/* ---- load data ---- */
-async function loadLocations(){
-  try{
-    const res=await fetch('../data/locations.json');
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    LOC=await res.json();
-  }catch(e){
-    $('homeStation').innerHTML='<option value="">Could not load locations.json</option>';
-    $('stationNote').textContent='locations.json did not load. If opening the file directly, serve it instead (a browser blocks local file fetches). On GitHub Pages it works.';
-    return;
-  }
-  // re-apply any saved user changes (custom locations, confirmed drive-times)
+/* ---- init: load persisted data (no external data file needed anymore) ---- */
+function initApp(){
   const savedData = loadPersisted();
-  applyPersistedToLOC(savedData);
-  // restore saved shifts
   if(savedData && savedData.shiftStore) shiftStore = savedData.shiftStore;
-  // restore roster
-  if(savedData && savedData.roster && savedData.roster.cycle) roster = savedData.roster;
-  // populate station picker: real stations first, flagged ones last
-  const stations=[...LOC.stations].sort((a,b)=>{
-    const af=a.likely_not_a_station?1:0, bf=b.likely_not_a_station?1:0;
-    if(af!==bf) return af-bf;
-    return (a.name||'').localeCompare(b.name||'');
-  });
-  $('homeStation').innerHTML='<option value="">Select your station…</option>'+
-    stations.map(s=>`<option value="${s.id}">${s.name}${s.likely_not_a_station?' (not a station?)':''}${s.verified===false?' ·unverified':''}</option>`).join('');
-  $('homeStation').onchange=()=>{ homeStationId=$('homeStation').value; buildDriveTimes(); renderTT(); renderCalls(); renderGaps(); renderStationBanner(); persist(); };
-  // restore previous station choice
-  const savedHome = savedData ? savedData.homeStationId : null;
-  if(savedHome && stations.some(s=>s.id===savedHome)){ $('homeStation').value=savedHome; homeStationId=savedHome; buildDriveTimes(); }
-  renderTT(); renderCalls(); renderHistory(); renderStationBanner();
+  if(savedData && savedData.roster && savedData.roster.cycle){ roster = savedData.roster; if(!roster.exceptions) roster.exceptions={}; }
+  if(savedData && Array.isArray(savedData.patterns) && savedData.patterns.length) PATTERNS = savedData.patterns;
+  if(savedData && Array.isArray(savedData.subsTiers) && savedData.subsTiers.length) SUBS_TIERS = savedData.subsTiers.map(t=>({hours:t.hours,label:t.label||'',value:Number(t.value)||0}));
+  if(savedData && Array.isArray(savedData.manualSubs)) MANUAL_SUBS = savedData.manualSubs.map(m=> typeof m==='string' ? {label:m,value:0} : {label:m.label,value:Number(m.value)||0});
+  if(savedData && savedData.currency) CURRENCY = savedData.currency;
+  renderCalls(); renderHistory();
   // reflect restored roster into its UI
   $('rosterWeeks').value=roster.weeks;
   if(roster.anchorDate) $('rosterAnchorDate').value=roster.anchorDate;
   renderAnchorWeekOptions();
   renderRosterGrid();
+  renderPatternList();
+  renderTierList();
+  renderManualSubList();
+  renderManualSubPicker();
+  if($('currencySel')) $('currencySel').value=CURRENCY;
 }
 
-/* ---- build the flat driveTimes map ENGINE expects, from chosen station's routes ---- */
-function buildDriveTimes(){
-  driveTimes={}; dtMeta={};
-  if(!LOC||!homeStationId){ $('stationNote').textContent=''; return; }
-  const stn=LOC.stations.find(s=>s.id===homeStationId);
-  $('stationNote').textContent=stn? `Drive-times below are from ${stn.name}. Returning to station = same as outbound.`:'';
-  // base itself is 0
-  driveTimes[stn.name+' (station)']=0; dtMeta[stn.name+' (station)']='confirmed';
-  const hospById={}; LOC.hospitals.forEach(h=>hospById[h.id]=h);
-  for(const dt of LOC.driveTimes){
-    if(dt.from!==homeStationId) continue;
-    const h=hospById[dt.to]; if(!h) continue;
-    driveTimes[h.name]=dt.minutes;
-    dtMeta[h.name]=dt.source==='confirmed'?'confirmed':'estimate';
-  }
-}
-
-/* ---- persist home station + user-confirmed overrides (in-memory + a tiny URL-free store) ---- */
-// NOTE: artifacts can't use localStorage; we keep a module variable. On a real deploy this
-// would persist. For now the choice lives for the session.
 /* ===== PERSISTENCE (localStorage) =====
    Saves everything to the device so it survives closing/reopening the app.
    Device-local: data lives in this browser only, not synced across devices.
@@ -387,38 +470,13 @@ let storageOK = (()=>{ try{ const k='__t'; localStorage.setItem(k,'1'); localSto
 function persist(){
   if(!storageOK) return;
   try{
-    // only persist USER changes to locations: custom-added hospitals + confirmed/edited drive-times
-    const userHospitals = LOC ? LOC.hospitals.filter(h=>h.source==='user') : [];
-    const userDriveTimes = LOC ? LOC.driveTimes.filter(d=>d.source==='confirmed' || d.by==='user') : [];
-    const data = {
-      v: 1,
-      homeStationId,
-      shiftStore,
-      userHospitals,
-      userDriveTimes,
-      roster
-    };
-    localStorage.setItem(STORE_KEY, JSON.stringify(data));
+    localStorage.setItem(STORE_KEY, JSON.stringify({ v:2, shiftStore, roster, patterns:PATTERNS, subsTiers:SUBS_TIERS, manualSubs:MANUAL_SUBS, currency:CURRENCY }));
   }catch(e){ /* quota or serialization issue: fail quietly, app still works in-session */ }
 }
-
 function loadPersisted(){
   if(!storageOK) return null;
   try{ const raw=localStorage.getItem(STORE_KEY); return raw?JSON.parse(raw):null; }
   catch(e){ return null; }
-}
-
-// Re-apply saved user changes onto a freshly-loaded LOC (called after locations.json loads).
-function applyPersistedToLOC(saved){
-  if(!saved || !LOC) return;
-  // add back custom hospitals the user created
-  (saved.userHospitals||[]).forEach(h=>{ if(!LOC.hospitals.some(x=>x.id===h.id)) LOC.hospitals.push(h); });
-  // re-apply user drive-times (confirmed overrides + custom routes)
-  (saved.userDriveTimes||[]).forEach(d=>{
-    const ex=LOC.driveTimes.find(x=>x.from===d.from && x.to===d.to);
-    if(ex){ ex.minutes=d.minutes; ex.source=d.source; if(d.by) ex.by=d.by; }
-    else LOC.driveTimes.push(d);
-  });
 }
 
 /* ---- patterns ---- */
@@ -436,201 +494,138 @@ function renderPatterns(){
   });
 }
 
-/* ---- drive-time table with confirmed/estimate labels and editing ---- */
-function renderTT(){
-  const rows=Object.keys(driveTimes);
-  if(!rows.length){ $('ttBody').innerHTML='<tr><td colspan="3" class="locnote">Pick your station above to see drive-times.</td></tr>'; return; }
-  $('ttBody').innerHTML=rows.map(name=>{
-    const status=dtMeta[name]||'estimate';
-    const total=driveTimes[name]||0;
-    const hh=Math.floor(total/60), mm=total%60;
-    return `<tr><td>${name}</td>
-      <td><span class="hm"><input type="number" min="0" max="23" value="${hh}" data-loc="${name}" data-part="h"><label class="hmlab">h</label><input type="number" min="0" max="59" value="${mm}" data-loc="${name}" data-part="m"><label class="hmlab">m</label></span></td>
-      <td><span class="stat ${status}">${status}</span></td></tr>`;
+/* ---- shift pattern manager (Settings) ---- */
+// store a pattern as "HH-HH" from two HH:MM times (drop minutes for the label, like 07-19)
+function patFromTimes(start,end){
+  if(!start||!end) return null;
+  const sh=start.slice(0,2), eh=end.slice(0,2);
+  return `${sh}-${eh}`;
+}
+function renderPatternList(){
+  const el=$('patternList'); if(!el) return;
+  if(!PATTERNS.length){ el.innerHTML='<div class="locnote">No patterns yet. Add your station\u2019s shift times below.</div>'; return; }
+  el.innerHTML=PATTERNS.map((p,i)=>`<div class="patrow">
+    <span class="patbadge ${isNightPattern(p)?'night':'day'}">${p}</span>
+    <span class="pattype">${isNightPattern(p)?'night':'day'}</span>
+    <button class="patdel" data-i="${i}" aria-label="delete">&times;</button>
+  </div>`).join('');
+  el.querySelectorAll('.patdel').forEach(b=>b.onclick=()=>{
+    PATTERNS.splice(+b.dataset.i,1); persist();
+    renderPatternList(); renderPatterns(); renderRosterGrid();
+  });
+}
+function addPattern(){
+  const p=patFromTimes($('newPatStart').value,$('newPatEnd').value);
+  if(!p){ alert('Set both a start and end time.'); return; }
+  if(PATTERNS.includes(p)){ alert('That pattern is already in your list.'); return; }
+  PATTERNS.push(p);
+  // keep them ordered by start hour for tidiness
+  PATTERNS.sort((a,b)=>parseInt(a,10)-parseInt(b,10));
+  $('newPatStart').value=''; $('newPatEnd').value='';
+  persist();
+  renderPatternList(); renderPatterns(); renderRosterGrid();
+}
+
+/* ---- subsistence tier manager (Settings) ---- */
+function tierLabel(t){ return (t.label && t.label.trim()) ? t.label.trim() : `${t.hours}h`; }
+function money(n){ return CURRENCY + (Math.round(n*100)/100).toFixed(2); }
+// total subsistence money for a saved shift: computed windows + manual claims
+function shiftSubsMoney(s){
+  let t=0;
+  (s.subsistence||[]).forEach(x=>{ t+=Number(x.value)||0; });
+  (s.manualSubs||[]).forEach(m=>{ t+=Number(m.value)||0; });
+  return t;
+}
+function renderTierList(){
+  const el=$('tierList'); if(!el) return;
+  if(!SUBS_TIERS.length){ el.innerHTML='<div class="locnote">No tiers set. Add your region\u2019s subsistence thresholds below.</div>'; return; }
+  const sorted=SUBS_TIERS.slice().sort((a,b)=>a.hours-b.hours);
+  el.innerHTML=sorted.map(t=>{
+    const i=SUBS_TIERS.indexOf(t);
+    return `<div class="patrow">
+      <span class="patbadge sub">${tierLabel(t)}</span>
+      <span class="pattype">from ${t.hours}h away${t.value>0?` · ${money(t.value)}`:''}</span>
+      <button class="patdel" data-i="${i}" aria-label="delete">&times;</button>
+    </div>`;
   }).join('');
-  $('ttBody').querySelectorAll('input').forEach(i=>i.onchange=()=>{
-    const name=i.dataset.loc;
-    const row=i.closest('tr');
-    const h=Number(row.querySelector('[data-part="h"]').value)||0;
-    const m=Number(row.querySelector('[data-part="m"]').value)||0;
-    driveTimes[name]=h*60+m;
-    dtMeta[name]='confirmed';      // a user edit is, by definition, a confirmation
-    // write the confirmed time back into LOC so it persists
-    if(LOC && homeStationId){
-      const hosp=LOC.hospitals.find(x=>x.name===name);
-      if(hosp){
-        const ex=LOC.driveTimes.find(d=>d.from===homeStationId && d.to===hosp.id);
-        if(ex){ ex.minutes=driveTimes[name]; ex.source='confirmed'; ex.by='user'; }
-        else LOC.driveTimes.push({from:homeStationId,to:hosp.id,minutes:driveTimes[name],source:'confirmed',by:'user'});
-      }
-    }
-    renderTT(); renderCalls(); renderGaps(); persist();
+  el.querySelectorAll('.patdel').forEach(b=>b.onclick=()=>{
+    SUBS_TIERS.splice(+b.dataset.i,1); persist(); renderTierList();
   });
 }
-/* ---- add-location autocomplete: searches the hospital list as you type ---- */
-// Normalise a name for searching: lowercase, unify saint/st variants, drop punctuation.
-// So "saint james", "st james", "st. james's" all match "St. James's Hospital".
-function normName(s){
-  return s.toLowerCase()
-    .replace(/\bsaint\b/g,'st')
-    .replace(/\bst\.?\b/g,'st')
-    .replace(/[^a-z0-9 ]/g,'')   // drop apostrophes, periods, commas
-    .replace(/\s+/g,' ')
-    .trim();
+function addTier(){
+  const hours=parseFloat($('newTierHours').value);
+  if(!hours || hours<=0){ alert('Set the hours-away threshold.'); return; }
+  if(SUBS_TIERS.some(t=>t.hours===hours)){ alert('A tier at that many hours already exists.'); return; }
+  SUBS_TIERS.push({hours, label:($('newTierLabel').value||'').trim(), value:parseFloat($('newTierValue').value)||0});
+  SUBS_TIERS.sort((a,b)=>a.hours-b.hours);
+  $('newTierHours').value=''; $('newTierLabel').value=''; $('newTierValue').value='';
+  persist(); renderTierList();
 }
-function renderLocResults(){
-  const box=$('locResults'); const raw=$('newLoc').value.trim();
-  if(!LOC || !homeStationId){ box.innerHTML=''; return; }
-  if(raw.length<2){ box.innerHTML=''; return; }
-  const q=normName(raw);
-  // hospitals not already in the table, matching the normalised query
-  const inTable=new Set(Object.keys(driveTimes));
-  const matches=LOC.hospitals
-    .filter(h=>normName(h.name).includes(q) && !inTable.has(h.name))
-    .sort((a,b)=>{
-      // prioritise names that START with the query
-      const as=normName(a.name).startsWith(q)?0:1, bs=normName(b.name).startsWith(q)?0:1;
-      return as-bs || a.name.localeCompare(b.name);
-    })
-    .slice(0,8);
-  let html=matches.map(h=>`<div class="locopt" data-hid="${h.id}"><span>${h.name}</span><span class="loccty">${h.county||'?'}</span></div>`).join('');
-  // offer a "create new" row if the typed text isn't an exact existing match
-  const exact=LOC.hospitals.some(h=>normName(h.name)===q);
-  if(!exact && $('newLoc').value.trim().length>=2){
-    html+=`<div class="locopt locnew" data-new="1"><span>Add &ldquo;${$('newLoc').value.trim()}&rdquo; as a new location</span><span class="loccty">new</span></div>`;
-  }
-  box.innerHTML=html;
-  box.querySelectorAll('.locopt').forEach(el=>el.onclick=()=>{
-    if(el.dataset.new){ addExistingOrNew(null, $('newLoc').value.trim()); }
-    else { const h=LOC.hospitals.find(x=>x.id===el.dataset.hid); addExistingOrNew(h); }
+
+/* ---- manual subsistence picker (Enter screen) ---- */
+function renderManualSubPicker(){
+  const el=$('manualSubPicker'); if(!el) return;
+  if(!MANUAL_SUBS.length){ el.innerHTML=''; return; }
+  el.innerHTML=`<h2 class="sec">Subsistence claimed</h2>
+    <div class="card">
+      <div class="locnote" style="margin-bottom:10px">Tick any allowances you're claiming for this shift.</div>
+      <div class="msubs">${MANUAL_SUBS.map(m=>`
+        <button class="msub ${claimedManual.includes(m.label)?'on':''}" data-m="${m.label}">${m.label}${m.value>0?` <span class="msub-val">${money(m.value)}</span>`:''}</button>`).join('')}</div>
+    </div>`;
+  el.querySelectorAll('.msub').forEach(b=>b.onclick=()=>{
+    const n=b.dataset.m;
+    if(claimedManual.includes(n)) claimedManual=claimedManual.filter(x=>x!==n);
+    else claimedManual.push(n);
+    b.classList.toggle('on');
   });
 }
-// Add a hospital (existing or brand-new) to the drive-time table, default 20 min, ready to edit.
-function addExistingOrNew(hosp, newName){
-  if(hosp){
-    driveTimes[hosp.name]=20; dtMeta[hosp.name]='estimate';
-    // record a route so it persists in LOC for this station
-    if(!LOC.driveTimes.some(d=>d.from===homeStationId&&d.to===hosp.id))
-      LOC.driveTimes.push({from:homeStationId,to:hosp.id,minutes:20,source:'estimate',flag:'unverified'});
-  } else if(newName){
-    // brand-new place not in the list: create it (county Unknown, user can't geocode here)
-    const id='hosp_custom_'+newName.toLowerCase().replace(/[^a-z0-9]+/g,'').slice(0,20);
-    if(!LOC.hospitals.some(h=>h.id===id))
-      LOC.hospitals.push({id,name:newName,eircode:null,lat:null,lng:null,county:'Unknown',county_confidence:'user',source:'user',verified:true});
-    driveTimes[newName]=20; dtMeta[newName]='estimate';
-    if(!LOC.driveTimes.some(d=>d.from===homeStationId&&d.to===id))
-      LOC.driveTimes.push({from:homeStationId,to:id,minutes:20,source:'estimate',by:'user'});
-  }
-  $('newLoc').value=''; $('locResults').innerHTML='';
-  renderTT(); renderCalls(); persist();
+function renderManualSubList(){
+  const el=$('manualSubList'); if(!el) return;
+  if(!MANUAL_SUBS.length){ el.innerHTML='<div class="locnote">None yet. Add allowances like B&B below.</div>'; return; }
+  el.innerHTML=MANUAL_SUBS.map((m,i)=>`<div class="patrow">
+    <span class="patbadge sub">${m.label}</span>
+    <span class="pattype">${m.value>0?money(m.value)+' · ':''}tick on a shift to claim</span>
+    <button class="patdel" data-i="${i}" aria-label="delete">&times;</button>
+  </div>`).join('');
+  el.querySelectorAll('.patdel').forEach(b=>b.onclick=()=>{
+    MANUAL_SUBS.splice(+b.dataset.i,1); persist(); renderManualSubList(); renderManualSubPicker();
+  });
 }
-$('newLoc').oninput=renderLocResults;
+function addManualSub(){
+  const name=($('newManualSub').value||'').trim();
+  if(!name){ alert('Give the payment a name.'); return; }
+  if(MANUAL_SUBS.some(m=>m.label.toLowerCase()===name.toLowerCase())){ alert('That payment is already in your list.'); return; }
+  MANUAL_SUBS.push({label:name, value:parseFloat($('newManualSubValue').value)||0});
+  $('newManualSub').value=''; $('newManualSubValue').value='';
+  persist(); renderManualSubList(); renderManualSubPicker();
+}
 
 /* ---- calls ---- */
 // Build county-grouped <optgroup> options of ALL hospitals, plus station + Other.
 // Drive-time still comes from the station table; a hospital with no set time uses Other-style fallback.
-function locationOptions(selected){
-  if(!LOC) return `<option>Other / custom</option>`;
-  const stn=LOC.stations.find(s=>s.id===homeStationId);
-  const stnName=stn?stn.name+' (station)':null;
-  // group hospitals by county
-  const byCounty={};
-  for(const h of LOC.hospitals){
-    const c=h.county||'Unknown';
-    (byCounty[c]=byCounty[c]||[]).push(h);
-  }
-  const counties=Object.keys(byCounty).sort((a,b)=> a==='Unknown'?1 : b==='Unknown'?-1 : a.localeCompare(b));
-  let html='';
-  // station + Other at top for quick access
-  html+=`<optgroup label="Quick">`;
-  if(stnName) html+=`<option ${selected===stnName?'selected':''}>${stnName}</option>`;
-  html+=`<option ${selected==='Other / custom'?'selected':''}>Other / custom</option></optgroup>`;
-  for(const c of counties){
-    html+=`<optgroup label="${c}">`+byCounty[c]
-      .sort((a,b)=>(a.name||'').localeCompare(b.name||''))
-      .map(h=>`<option ${selected===h.name?'selected':''}>${h.name}</option>`).join('')+`</optgroup>`;
-  }
-  return html;
-}
-function addCall(){calls.push({cad:'',start:'',clear:'',loc:''});renderCalls();}
-
-const COUNTIES=['Carlow','Cavan','Clare','Cork','Donegal','Dublin','Galway','Kerry','Kildare','Kilkenny','Laois','Leitrim','Limerick','Longford','Louth','Mayo','Meath','Monaghan','Offaly','Roscommon','Sligo','Tipperary','Waterford','Westmeath','Wexford','Wicklow','Unknown'];
-
-// Add a user-named location to LOC + driveTimes as a CONFIRMED route from the home station.
-// It then appears in the county-grouped dropdown and the drive-time table like any other.
-function saveCustomLocation(name, county, minutes){
-  name=(name||'').trim(); if(!name) return false;
-  county=county||'Unknown';
-  // de-dupe by name
-  let h=LOC.hospitals.find(x=>x.name.toLowerCase()===name.toLowerCase());
-  if(!h){
-    h={ id:'hosp_custom_'+name.toLowerCase().replace(/[^a-z0-9]+/g,'').slice(0,20),
-        name, eircode:null, lat:null, lng:null, county, county_confidence:'user',
-        source:'user', verified:true };
-    LOC.hospitals.push(h);
-  } else { h.county=county; }
-  // confirmed drive-time from current station
-  const ex=LOC.driveTimes.find(d=>d.from===homeStationId && d.to===h.id);
-  if(ex){ ex.minutes=minutes; ex.source='confirmed'; }
-  else LOC.driveTimes.push({ from:homeStationId, to:h.id, minutes, source:'confirmed', by:'user' });
-  // reflect into the live driveTimes map used by the engine
-  driveTimes[name]=minutes; dtMeta[name]='confirmed';
-  return h.name;
-}
+function addCall(){calls.push({cad:'',start:'',clear:''});renderCalls();}
 
 function renderCalls(){
   if(!calls.length){$('callList').innerHTML='<div class="empty">No calls yet. Add the first call from the MDT.</div>';return;}
-  const ready = LOC && homeStationId;
-  const locField = ready
-    ? (i,c)=>{
-        const isOther = c.loc==='Other / custom';
-        const custom = isOther ? `
-          <div class="custombox" data-ci="${i}">
-            <div class="locnote" style="margin-bottom:8px">Name where you cleared, set the drive-time back to base, then save it to reuse next time.</div>
-            <label class="fld"><span>Location name</span><input type="text" data-cf="cname" data-i="${i}" value="${c.customName||''}" placeholder="e.g. Navan injury unit"></label>
-            <label class="fld"><span>County</span><select data-cf="ccounty" data-i="${i}">${COUNTIES.map(co=>`<option ${ (c.customCounty||'Unknown')===co?'selected':''}>${co}</option>`).join('')}</select></label>
-            <label class="fld"><span>Drive-time back to base</span>
-              <span class="hm"><input type="number" min="0" max="23" data-cf="ch" data-i="${i}" value="${Math.floor((c.customMin||0)/60)}"><label class="hmlab">h</label><input type="number" min="0" max="59" data-cf="cm" data-i="${i}" value="${(c.customMin||0)%60}"><label class="hmlab">m</label></span>
-            </label>
-            <button class="act ghost small" data-savecustom="${i}">Save location to my list</button>
-          </div>` : '';
-        return `<label class="fld"><span>Cleared at</span><select data-f="loc" data-i="${i}">${locationOptions(c.loc)}</select></label>${custom}`;
-      }
-    : (i,c)=>`<label class="fld"><span>Cleared at</span><div class="locnote">Pick your home station at the top first, then locations appear here.</div></label>`;
   $('callList').innerHTML=calls.map((c,i)=>`<div class="call"><div class="top"><span class="cad">CALL ${i+1}</span><button class="del" data-del="${i}">&times;</button></div>
     <label class="fld"><span>CAD / incident #</span><input type="text" inputmode="numeric" data-f="cad" data-i="${i}" value="${c.cad}" placeholder="5886259"></label>
     <div class="row2"><label class="fld"><span>Start</span><input type="time" data-f="start" data-i="${i}" value="${c.start}"></label>
     <label class="fld"><span>Clear</span><input type="time" data-f="clear" data-i="${i}" value="${c.clear}"></label></div>
-    ${locField(i,c)}</div>`).join('');
+    </div>`).join('');
   $('callList').querySelectorAll('[data-f]').forEach(el=>el.oninput=el.onchange=()=>{
     calls[el.dataset.i][el.dataset.f]=el.value;
-    if(el.dataset.f==='loc') renderCalls();  // only re-render to toggle the custom box
     renderGaps();
-  });
-  // custom-field handlers (store on the call object as we type)
-  $('callList').querySelectorAll('[data-cf]').forEach(el=>el.oninput=el.onchange=()=>{
-    const i=el.dataset.i, k=el.dataset.cf, c=calls[i];
-    if(k==='cname') c.customName=el.value;
-    else if(k==='ccounty') c.customCounty=el.value;
-    else { const row=el.closest('.custombox'); const h=Number(row.querySelector('[data-cf="ch"]').value)||0; const m=Number(row.querySelector('[data-cf="cm"]').value)||0; c.customMin=h*60+m; }
-  });
-  $('callList').querySelectorAll('[data-savecustom]').forEach(b=>b.onclick=()=>{
-    const i=b.dataset.savecustom, c=calls[i];
-    const saved=saveCustomLocation(c.customName, c.customCounty, c.customMin||0);
-    if(!saved){ alert('Give the location a name first.'); return; }
-    c.loc=saved; delete c.customName; delete c.customCounty; delete c.customMin;
-    renderTT(); renderCalls(); renderGaps(); persist();
   });
   $('callList').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{calls.splice(+b.dataset.del,1);gapAnswers={};renderCalls();renderGaps();});
 }
 $('addCall').onclick=addCall;
 
-function currentInput(){return{rosterStart:$('rosterStart').value,rosterEnd:$('rosterEnd').value,backAtBase:$('backAtBase').value||null,otRoundInc:Number($('otRound').value),driveTimes,calls:calls.filter(c=>c.start&&c.clear),gapAnswers};}
+function currentInput(){return{rosterStart:$('rosterStart').value,rosterEnd:$('rosterEnd').value,backAtBase:$('backAtBase').value||null,otRoundInc:Number($('otRound').value),calls:calls.filter(c=>c.start&&c.clear),gapAnswers,subsistenceTiers:SUBS_TIERS};}
 function renderGaps(){
   const inp=currentInput();if(inp.calls.length<2){$('gapQuestions').innerHTML='';return;}
   const flat=[];inp.calls.forEach(c=>{flat.push(ENGINE.parseTime(c.start));flat.push(ENGINE.parseTime(c.clear));});
   const uw=ENGINE.unwrap(flat);const ev=inp.calls.map((c,i)=>({...c,startM:uw[i*2],clearM:uw[i*2+1]}));
-  const gaps=ENGINE.analyzeGaps(ev,driveTimes).filter(g=>g.possible);
+  const gaps=ENGINE.analyzeGaps(ev).filter(g=>g.possible);
   if(!gaps.length){$('gapQuestions').innerHTML='';return;}
   $('gapQuestions').innerHTML='<h2 class="sec">Resolve gaps</h2>'+gaps.map(g=>`<div class="gap-q"><div class="qtxt">Between <b>${ENGINE.fmtClock(g.clearAt)}</b> and <b>${ENGINE.fmtClock(g.nextStart)}</b> (${ENGINE.fmtDur(g.gap)} gap) you could have been back at base. Were you there 10+ minutes?</div><div class="opts"><button data-g="${g.index}" data-a="yes" class="${gapAnswers[g.index]==='yes'?'on':''}">Yes, returned</button><button data-g="${g.index}" data-a="no" class="${gapAnswers[g.index]==='no'?'on':''}">No, stayed out</button></div></div>`).join('');
   $('gapQuestions').querySelectorAll('button').forEach(b=>b.onclick=()=>{gapAnswers[b.dataset.g]=b.dataset.a;renderGaps();});
@@ -643,7 +638,7 @@ function compute(){
   out.innerHTML=`<div class="result"><div class="head"><div class="ttl">Computed shift &middot; ${$('shiftDate').value||'no date'}</div></div>
     <div class="metrics"><div class="metric ot"><div class="big">${(ot.roundedMin/60).toFixed(2).replace(/\.00$/,'')}h</div><div class="lbl">Overtime ${Number($('otRound').value)?'(up '+$('otRound').value+'m)':'(exact)'}</div></div>
     <div class="metric sub"><div class="big">${sub.summary}</div><div class="lbl">Subsistence tiers</div></div></div>
-    <div class="ledger">${r.awayWindows.map((w,i)=>`<div class="lrow"><span class="t">${ENGINE.fmtClock(w.start)}-${ENGINE.fmtClock(w.end)}</span><span class="d">Away window ${i+1}: ${ENGINE.fmtDur(w.durMin)} ${w.tier===10?'<span class="pill t10">10h tier</span>':w.tier===5?'<span class="pill t5">5h tier</span>':'<span class="pill">under 5h</span>'}</span></div>`).join('')}
+    <div class="ledger">${r.awayWindows.map((w,i)=>`<div class="lrow"><span class="t">${ENGINE.fmtClock(w.start)}-${ENGINE.fmtClock(w.end)}</span><span class="d">Away window ${i+1}: ${ENGINE.fmtDur(w.durMin)} ${w.tier>0?`<span class="pill psub">${w.tierLabel||(w.tier+'h')} tier</span>`:'<span class="pill">under threshold</span>'}</span></div>`).join('')}
     <div class="lrow" style="border-top:1px solid var(--line);margin-top:6px;padding-top:9px"><span class="t">${ENGINE.fmtClock(ot.rosterEndM)}</span><span class="d">Rostered end &middot; back at base ${ENGINE.fmtClock(ot.backM)} &middot; raw ${ENGINE.fmtDur(ot.rawMin)}${Number($('otRound').value)?', up to '+ENGINE.fmtDur(ot.roundedMin):''}</span></div></div>
     <details class="tt" style="padding:10px 14px"><summary>Step trace</summary><div style="margin-top:8px">${r.ledger.map(l=>`<div class="lrow"><span class="t">${ENGINE.fmtClock(l.atMin)}</span><span class="d">${l.text}<span class="pill ${l.kind}">${l.kind}</span></span></div>`).join('')}</div></details>
     <div class="note">App assists, you assert. These figures rest on the locations and gap answers you confirmed, the record you stand behind for the claim.</div></div>`;
@@ -679,7 +674,6 @@ function saveShift(){
   const date = $('shiftDate').value;
   if(!date){ alert('Set the shift date first.'); return; }
   const { r, input } = lastComputed;
-  const stn = LOC && homeStationId ? (LOC.stations.find(s=>s.id===homeStationId)||{}).name : '';
 
   // Match each call's CAD to the periods it overlaps. A call counts if any part of
   // it falls in the period (started inside OR ran into it). The engine's events
@@ -691,15 +685,23 @@ function saveShift(){
     ? evs.filter(ev => overlap(ev.startM, ev.clearM, otFromM, otToM) && ev.cad).map(ev=>ev.cad)
     : [];
 
-  const subsistence = r.awayWindows.filter(w=>w.tier>0).map(w=>({
-    from: ENGINE.fmtClock(w.start), to: ENGINE.fmtClock(w.end), tier: w.tier,
-    cads: evs.filter(ev => overlap(ev.startM, ev.clearM, w.start, w.end) && ev.cad).map(ev=>ev.cad)
-  }));
+  const subsistence = r.awayWindows.filter(w=>w.tier>0).map(w=>{
+    const tierDef = SUBS_TIERS.find(t=>t.hours===w.tier);
+    return {
+      from: ENGINE.fmtClock(w.start), to: ENGINE.fmtClock(w.end), tier: w.tier, label: w.tierLabel || (w.tier+'h'),
+      value: tierDef ? (Number(tierDef.value)||0) : 0,
+      cads: evs.filter(ev => overlap(ev.startM, ev.clearM, w.start, w.end) && ev.cad).map(ev=>ev.cad)
+    };
+  });
+  // manual claims captured with their value at time of saving
+  const manualClaimed = claimedManual.map(label=>{
+    const def = MANUAL_SUBS.find(m=>m.label===label);
+    return { label, value: def ? (Number(def.value)||0) : 0 };
+  });
 
   // capture exactly what the paysheet row needs
   shiftStore[date] = {
     date,
-    station: stn || '',
     rosterStart: input.rosterStart, rosterEnd: input.rosterEnd,
     actualStart: $('actualStart').value || input.rosterStart,
     actualEnd: ENGINE.fmtClock(r.overtime.backM),
@@ -708,10 +710,13 @@ function saveShift(){
     otHours: +(r.overtime.roundedMin/60).toFixed(2),
     otCads,
     subsistence,
+    manualSubs: manualClaimed,
+    currency: CURRENCY,
     allCads: evs.map(ev=>ev.cad).filter(Boolean),
     cadsCleared: false
   };
   $('saveShift').style.display='none';
+  claimedManual=[]; renderManualSubPicker();
   renderHistory();
   persist();
   // stay on Enter, show a brief confirmation, ready for the next day
@@ -746,14 +751,16 @@ function renderHistory(){
   $('history').innerHTML = weekKeys.map(wk=>{
     const days = weeks[wk].sort(); // Mon..Sun within the week
     const totOT = days.reduce((s,d)=>s+shiftStore[d].otHours,0);
-    const tot5 = days.reduce((s,d)=>s+shiftStore[d].subsistence.filter(x=>x.tier===5).length,0);
-    const tot10 = days.reduce((s,d)=>s+shiftStore[d].subsistence.filter(x=>x.tier===10).length,0);
+    // count subsistence by label across the week (works for any tier set)
+    const subCounts={};
+    days.forEach(d=>shiftStore[d].subsistence.forEach(x=>{const l=x.label||(x.tier+'h');subCounts[l]=(subCounts[l]||0)+1;}));
     const anyCads = days.some(d=>shiftStore[d].otCads.length || shiftStore[d].subsistence.some(w=>w.cads.length));
-    const subSum = [tot10?tot10+'x10h':'',tot5?tot5+'x5h':''].filter(Boolean).join(' + ')||'none';
+    const subSum = Object.keys(subCounts).length ? Object.entries(subCounts).map(([l,n])=>`${n}x${l}`).join(' + ') : 'none';
+    const weekSubMoney = days.reduce((s,d)=>s+shiftSubsMoney(shiftStore[d]),0);
     return `<div class="week">
       <div class="weekhead">
         <div><b>Week ending ${fmtDate(wk)}</b></div>
-        <div class="weektot">${totOT}h OT &middot; ${subSum}</div>
+        <div class="weektot">${totOT}h OT &middot; ${subSum}${weekSubMoney>0?' &middot; '+money(weekSubMoney):''}</div>
       </div>
       <button class="act ghost small copyweek" data-wk="${wk}">Copy whole week</button>
       ${days.map(d=>renderDayRow(shiftStore[d])).join('')}
@@ -775,14 +782,15 @@ function renderHistory(){
 // Build the plain-text block for one day, laid out for transcribing to the paysheet.
 function buildDayText(s){
   const L=[];
-  L.push(fmtDate(s.date)+(s.station?'  ('+s.station+')':''));
+  L.push(fmtDate(s.date));
   L.push('Actual: '+s.actualStart+'-'+s.actualEnd);
   if(s.otHours>0){
     L.push('Overtime: '+s.otHours+'h  '+s.otFrom+'-'+s.otTo+(s.otCads&&s.otCads.length?'  incident '+s.otCads.join(', '):''));
   } else L.push('Overtime: none');
   if(s.subsistence.length){
-    s.subsistence.forEach(x=>L.push('Subsistence: '+x.from+'-'+x.to+'  '+x.tier+'h'+(x.cads.length?'  incident '+x.cads.join(', '):'')));
+    s.subsistence.forEach(x=>L.push('Subsistence: '+x.from+'-'+x.to+'  '+(x.label||(x.tier+'h'))+(x.cads.length?'  incident '+x.cads.join(', '):'')));
   } else L.push('Subsistence: none');
+  if(s.manualSubs && s.manualSubs.length) L.push('Payments: '+s.manualSubs.map(m=>m.label+(m.value>0?' '+(s.currency||CURRENCY)+m.value.toFixed(2):'')).join(', '));
   return L.join('\n');
 }
 
@@ -807,7 +815,7 @@ function renderDayRow(s){
   const subBlocks = s.subsistence.length
     ? s.subsistence.map(x=>{
         const cads = x.cads.length ? x.cads.join(', ') : noneOrCleared;
-        return `<div class="subline">${x.from}-${x.to} <span class="pill ${x.tier===10?'t10':'t5'}">${x.tier}h</span>
+        return `<div class="subline">${x.from}-${x.to} <span class="pill psub">${x.label||(x.tier+'h')}</span>
           <div class="cadinline"><span class="dl">Incident no.</span>${cads}</div></div>`;
       }).join('')
     : '<span class="locnote">none</span>';
@@ -818,7 +826,6 @@ function renderDayRow(s){
     <div class="dayhead"><b>${fmtDate(s.date)}</b><span class="dayactions"><button class="act ghost xsmall copyday" data-date="${s.date}">Copy</button><button class="del delday" data-date="${s.date}" title="delete">&times;</button></span></div>
     <div class="daygrid">
       <div><span class="dl">Actual</span>${s.actualStart}-${s.actualEnd}</div>
-      <div><span class="dl">Station</span>${s.station||'-'}</div>
     </div>
     <div class="section-ot">
       <div class="dl">Overtime</div>
@@ -827,34 +834,20 @@ function renderDayRow(s){
     <div class="section-sub">
       <div class="dl">Subsistence</div>
       ${subBlocks}
+      ${s.manualSubs && s.manualSubs.length ? `<div class="msub-claimed">${s.manualSubs.map(m=>`<span class="pill psub">${m.label}${m.value>0?` ${(s.currency||CURRENCY)+m.value.toFixed(2)}`:''}</span>`).join(' ')}</div>` : ''}
     </div>
   </div>`;
 }
 
 /* ===== TABS ===== */
 function showTab(name){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on', t.dataset.tab===name));
+  document.querySelectorAll('.navbtn').forEach(t=>t.classList.toggle('on', t.dataset.tab===name));
   document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on', p.dataset.panel===name));
-  if(name==='enter') renderStationBanner();
   if(name==='weeks') renderWeekTotals();
   if(name==='roster') renderCalendar();
   window.scrollTo({top:0,behavior:'instant'});
 }
-document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>showTab(t.dataset.tab));
-
-/* Station banner on the Enter tab: shows current station, or nudges to Settings. */
-function renderStationBanner(){
-  const el=$('stationBanner'); if(!el) return;
-  if(LOC && homeStationId){
-    const stn=LOC.stations.find(s=>s.id===homeStationId);
-    el.className='banner';
-    el.innerHTML=`Station: <b>${stn?stn.name:'?'}</b>. <span class="mini">Drive-times measured from here.</span>`;
-  } else {
-    el.className='banner warn';
-    el.innerHTML=`No station set. <a class="gotoset">Choose your station in Settings</a> so drive-times work.`;
-    el.querySelector('.gotoset').onclick=()=>showTab('settings');
-  }
-}
+document.querySelectorAll('.navbtn').forEach(t=>t.onclick=()=>showTab(t.dataset.tab));
 
 /* Running totals across all saved weeks, shown atop My weeks. */
 function renderWeekTotals(){
@@ -863,16 +856,23 @@ function renderWeekTotals(){
   if(!all.length){ el.style.display='none'; return; }
   el.style.display='';
   const ot=all.reduce((s,d)=>s+d.otHours,0);
-  const t5=all.reduce((s,d)=>s+d.subsistence.filter(x=>x.tier===5).length,0);
-  const t10=all.reduce((s,d)=>s+d.subsistence.filter(x=>x.tier===10).length,0);
-  const sub=[t10?t10+'×10h':'',t5?t5+'×5h':''].filter(Boolean).join(' + ')||'none';
-  el.className='banner';
-  el.innerHTML=`Totals so far: <b>${ot}h</b> overtime &middot; <b>${sub}</b> subsistence <span class="mini">across ${all.length} day${all.length>1?'s':''}</span>`;
+  // count each subsistence tier by its label, across all saved days
+  const counts={};
+  all.forEach(d=>d.subsistence.forEach(x=>{const l=x.label||(x.tier+'h');counts[l]=(counts[l]||0)+1;}));
+  el.className='hero';
+  // order tiers by their numeric hours, highest first
+  const ordered=Object.entries(counts).sort((a,b)=>parseFloat(b[0])-parseFloat(a[0]));
+  let subs=ordered.map(([l,n])=>`<div class="sub-fig"><div class="n">${n}×${l}</div><div class="u">subsistence</div></div>`).join('');
+  const totalMoney=all.reduce((s,d)=>s+shiftSubsMoney(d),0);
+  if(totalMoney>0) subs+=`<div class="sub-fig"><div class="n">${money(totalMoney)}</div><div class="u">subsistence total</div></div>`;
+  el.innerHTML=`<div class="wk">Totals across ${all.length} day${all.length>1?'s':''}</div>
+    <div class="ot"><div class="n">${ot}<span class="un">hrs</span></div><div class="u">overtime</div></div>
+    ${subs?`<div class="subs">${subs}</div>`:''}`;
 }
 
 /* ===== ROSTER SYSTEM ===== */
 const DOW=['Mon','Tue','Wed','Thu','Fri','Sat','Sun']; // Mon..Sun
-const ROSTER_CHOICES=['off',...PATTERNS];
+function rosterChoices(){ return ['off',...PATTERNS]; }
 
 function blankCycle(weeks){
   return Array.from({length:weeks},()=>Array.from({length:7},()=>'off'));
@@ -896,7 +896,7 @@ function renderRosterGrid(){
           <div class="rday">
             <div class="rdow">${DOW[d]}</div>
             <select data-w="${w}" data-d="${d}" class="${val==='off'?'roff':'ron'}">
-              ${ROSTER_CHOICES.map(c=>`<option ${c===val?'selected':''}>${c}</option>`).join('')}
+              ${rosterChoices().map(c=>`<option ${c===val?'selected':''}>${c}</option>`).join('')}
             </select>
           </div>`).join('')}
       </div>
@@ -911,20 +911,42 @@ function renderAnchorWeekOptions(){
   sel.innerHTML=Array.from({length:roster.weeks},(_,i)=>`<option value="${i}" ${i===roster.anchorWeek?'selected':''}>Week ${i+1}</option>`).join('');
 }
 
-// Which cycle week+day does a given date fall on? Counts whole weeks from the anchor.
+// What does the repeating CYCLE say for this date (ignoring any exception)?
+// Used to tell an OT shift (cycle = off) from a Swap (cycle = a different shift).
+function rosterCycleSaysOff(dateStr){
+  if(!roster.cycle || !roster.anchorDate) return true;
+  const anchor=new Date(roster.anchorDate+'T00:00:00');
+  const target=new Date(dateStr+'T00:00:00');
+  const anchorDow=(anchor.getDay()+6)%7;
+  const anchorMonday=new Date(anchor); anchorMonday.setDate(anchor.getDate()-anchorDow);
+  const targetDow=(target.getDay()+6)%7;
+  const targetMonday=new Date(target); targetMonday.setDate(target.getDate()-targetDow);
+  const weeksBetween=Math.round((targetMonday-anchorMonday)/(7*86400000));
+  let wi=((roster.anchorWeek + weeksBetween) % roster.weeks + roster.weeks) % roster.weeks;
+  return roster.cycle[wi][targetDow]==='off';
+}
+
+// Resolve a date to its effective roster, exceptions override the repeating cycle.
+// Returns { pattern, source:'exception'|'cycle', exType?, week?, dow? }.
+//   pattern is a shift string ('07-19'), 'off', 'annual', or 'sick'.
 function rosterForDate(dateStr){
+  const ex = roster.exceptions && roster.exceptions[dateStr];
+  if(ex){
+    if(ex.type==='work')   return { pattern:ex.pattern, source:'exception', exType:'work' };
+    if(ex.type==='off')    return { pattern:'off',       source:'exception', exType:'off' };
+    if(ex.type==='annual') return { pattern:'annual',    source:'exception', exType:'annual' };
+    if(ex.type==='sick')   return { pattern:'sick',      source:'exception', exType:'sick' };
+  }
   if(!roster.cycle || !roster.anchorDate) return null;
   const anchor=new Date(roster.anchorDate+'T00:00:00');
   const target=new Date(dateStr+'T00:00:00');
-  // align anchor to the Monday of its week so day-of-week maps cleanly
   const anchorDow=(anchor.getDay()+6)%7;            // 0=Mon..6=Sun
   const anchorMonday=new Date(anchor); anchorMonday.setDate(anchor.getDate()-anchorDow);
   const targetDow=(target.getDay()+6)%7;
   const targetMonday=new Date(target); targetMonday.setDate(target.getDate()-targetDow);
   const weeksBetween=Math.round((targetMonday-anchorMonday)/(7*86400000));
-  // cycle week index, wrapping, offset by anchorWeek
   let wi=((roster.anchorWeek + weeksBetween) % roster.weeks + roster.weeks) % roster.weeks;
-  return { pattern: roster.cycle[wi][targetDow], week:wi, dow:targetDow };
+  return { pattern: roster.cycle[wi][targetDow], source:'cycle', week:wi, dow:targetDow };
 }
 
 $('rosterWeeks').onchange=()=>{ roster.weeks=Math.max(1,Math.min(26,Number($('rosterWeeks').value)||9)); ensureCycle(); renderRosterGrid(); renderAnchorWeekOptions(); };
@@ -961,7 +983,7 @@ function renderCalendar(){
     $('calDetail').innerHTML='';
     return;
   }
-  banner.className='banner'; banner.innerHTML='Your rostered pattern. Working days are filled; a dot shows whether you have logged that shift. One-off changes (leave, swaps) are not reflected yet.';
+  banner.className='banner'; banner.innerHTML='Tap any day to change it, mark an extra shift, a swap, annual or sick leave. One-off changes apply to that date only and never repeat.';
   const y=calCursor.getFullYear(), m=calCursor.getMonth();
   $('calMonth').textContent=calCursor.toLocaleDateString('en-IE',{month:'long',year:'numeric'});
   const first=new Date(y,m,1);
@@ -974,38 +996,88 @@ function renderCalendar(){
   for(let day=1;day<=daysInMonth;day++){
     const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
     const rf=rosterForDate(ds);
-    const working = rf && rf.pattern!=='off';
+    const isLeave = rf && (rf.pattern==='annual' || rf.pattern==='sick');
+    const working = rf && rf.pattern!=='off' && !isLeave;
+    const isException = rf && rf.source==='exception';
     const logged = !!shiftStore[ds];
     const past = ds < todayStr;
     let cls='calcell';
-    if(working) cls+= isNightPattern(rf.pattern) ? ' night' : ' day';
+    if(isLeave) cls+= rf.pattern==='annual' ? ' leave-a' : ' leave-s';
+    else if(working) cls+= isNightPattern(rf.pattern) ? ' night' : ' day';
     if(ds===todayStr) cls+=' today';
+    // small exception tag: OT (extra shift), Swap (swapped pattern), A/L, Sick
+    let tag='';
+    if(isException){
+      if(rf.exType==='work') tag = rosterCycleSaysOff(ds) ? 'OT' : 'Swap';
+      else if(rf.exType==='annual') tag='A/L';
+      else if(rf.exType==='sick') tag='Sick';
+    }
     cells+=`<div class="${cls}" data-date="${ds}">
       <span class="cnum">${day}</span>
+      ${tag?`<span class="cex-tag">${tag}</span>`:''}
       ${working?`<span class="cpat">${rf.pattern}</span>`:''}
       ${logged?'<i class="cflag logged"></i>':(working&&past?'<i class="cflag notlogged"></i>':'')}
     </div>`;
   }
   $('calGrid').innerHTML=cells;
+  // monthly subsistence money total across saved shifts in this month
+  let monthMoney=0;
+  Object.keys(shiftStore).forEach(ds=>{
+    const dt=new Date(ds+'T00:00:00');
+    if(dt.getFullYear()===y && dt.getMonth()===m) monthMoney+=shiftSubsMoney(shiftStore[ds]);
+  });
+  const mt=$('calMonthTotal');
+  if(mt) mt.innerHTML = monthMoney>0 ? `Subsistence this month: <b>${money(monthMoney)}</b>` : '';
   $('calGrid').querySelectorAll('.calcell[data-date]').forEach(c=>c.onclick=()=>showCalDetail(c.dataset.date));
   $('calDetail').innerHTML='';
 }
 function showCalDetail(ds){
   const rf=rosterForDate(ds);
   const logged=shiftStore[ds];
-  const working=rf && rf.pattern!=='off';
+  const isLeave = rf && (rf.pattern==='annual'||rf.pattern==='sick');
+  const working = rf && rf.pattern!=='off' && !isLeave;
+  const isException = rf && rf.source==='exception';
   const past=ds<ymd(new Date());
-  let html=`<div class="card"><b>${fmtDate(ds)}</b><br>`;
-  html+= working ? `Rostered: ${rf.pattern}<br>` : `Rostered: day off<br>`;
+
+  // current status line
+  let status;
+  if(isLeave) status = rf.pattern==='annual' ? 'Annual leave' : 'Sick leave';
+  else if(working) status = `Working ${rf.pattern}`;
+  else status = 'Day off';
+  const srcTag = isException ? '<span class="extag">one-off change</span>' : '<span class="cyctag">from cycle</span>';
+
+  let html=`<div class="card">
+    <div class="cd-head"><b>${fmtDate(ds)}</b>${srcTag}</div>
+    <div class="cd-status">${status}</div>`;
   if(logged){
-    html+=`<span class="stat confirmed">logged</span> ${logged.otHours}h OT, ${logged.subsistence.map(x=>x.tier+'h').join('+')||'no subsistence'}`;
+    html+=`<div class="cd-log"><span class="stat confirmed">logged</span> ${logged.otHours}h OT · ${logged.subsistence.map(x=>x.label||(x.tier+'h')).join(' + ')||'no subsistence'}</div>`;
   } else if(working && past){
-    html+=`<span class="stat estimate">not logged yet</span> you were rostered but no shift is saved for this day.`;
-  } else if(working){
-    html+=`Upcoming working day.`;
+    html+=`<div class="cd-log"><span class="stat estimate">not logged yet</span></div>`;
   }
-  html+='</div>';
+
+  // edit controls: change this one date
+  html+=`<div class="cd-edit">
+    <div class="cd-label">Change this day (one-off, does not repeat)</div>
+    <div class="cd-pats">${PATTERNS.map(p=>`<button class="cd-pat ${isNightPattern(p)?'night':'day'}" data-ex="work" data-pat="${p}" data-ds="${ds}">${p}</button>`).join('')}</div>
+    <div class="cd-rows">
+      <button class="cd-opt" data-ex="off" data-ds="${ds}">Day off</button>
+      <button class="cd-opt" data-ex="annual" data-ds="${ds}">Annual leave</button>
+      <button class="cd-opt" data-ex="sick" data-ds="${ds}">Sick leave</button>
+      ${isException?`<button class="cd-opt clear" data-ex="clear" data-ds="${ds}">Reset to cycle</button>`:''}
+    </div>
+  </div></div>`;
   $('calDetail').innerHTML=html;
+
+  $('calDetail').querySelectorAll('[data-ex]').forEach(b=>b.onclick=()=>{
+    const d=b.dataset.ds, kind=b.dataset.ex;
+    if(!roster.exceptions) roster.exceptions={};
+    if(kind==='clear') delete roster.exceptions[d];
+    else if(kind==='work') roster.exceptions[d]={type:'work',pattern:b.dataset.pat};
+    else roster.exceptions[d]={type:kind};   // off | annual | sick
+    persist();
+    renderCalendar();
+    showCalDetail(d);   // refresh the panel
+  });
 }
 $('calPrev').onclick=()=>{ calCursor.setMonth(calCursor.getMonth()-1); renderCalendar(); };
 $('calNext').onclick=()=>{ calCursor.setMonth(calCursor.getMonth()+1); renderCalendar(); };
@@ -1014,7 +1086,7 @@ $('calNext').onclick=()=>{ calCursor.setMonth(calCursor.getMonth()+1); renderCal
 function applyRosterToDate(){
   const date=$('shiftDate').value; if(!date) return;
   const rf=rosterForDate(date);
-  if(!rf || rf.pattern==='off') return;
+  if(!rf || rf.pattern==='off' || rf.pattern==='annual' || rf.pattern==='sick') return;
   const [s,e]=rf.pattern.split('-');
   $('rosterStart').value=s+':00'; $('rosterEnd').value=e+':00';
   if(!$('actualStart').value) $('actualStart').value=s+':00';
@@ -1025,11 +1097,11 @@ renderPatterns();$('shiftDate').valueAsDate=new Date();
 // when roster start is typed manually, mirror it to actual start if actual is still blank
 $('rosterStart').addEventListener('change',()=>{ if(!$('actualStart').value) $('actualStart').value=$('rosterStart').value; });
 $('shiftDate').addEventListener('change', applyRosterToDate);
-loadLocations();
-renderHistory();
-renderStationBanner();
-renderRosterGrid();
-renderAnchorWeekOptions();
+$('addPattern').onclick=addPattern;
+$('addTier').onclick=addTier;
+$('addManualSub').onclick=addManualSub;
+$('currencySel').onchange=()=>{ CURRENCY=$('currencySel').value; persist(); renderTierList(); renderManualSubList(); renderManualSubPicker(); renderHistory(); };
+initApp();
 </script>
 </body>
 </html>
