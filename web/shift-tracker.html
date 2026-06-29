@@ -696,6 +696,18 @@ function addPattern(){
 /* ---- subsistence tier manager (Settings) ---- */
 function tierLabel(t){ return (t.label && t.label.trim()) ? t.label.trim() : `${t.hours}h`; }
 function money(n){ return CURRENCY + (Math.round(n*100)/100).toFixed(2); }
+// Effective overtime money for a saved shift. Uses the value stored at save time if it
+// has one; otherwise (shift saved before a wage was entered) computes it from the saved
+// hours and the shift's multiplier at the CURRENT wage, so money shows up retroactively.
+function effOtMoney(s){
+  if(s.otMoney && s.otMoney>0) return s.otMoney;
+  if(s.otHours>0 && WAGE>0){
+    const mult = s.otMult || defaultOtRate();
+    return +(s.otHours * WAGE * mult).toFixed(2);
+  }
+  return 0;
+}
+function effOtMult(s){ return s.otMult || defaultOtRate(); }
 
 /* ---- overtime pay (Settings) ---- */
 function defaultOtRate(){
@@ -730,11 +742,21 @@ function addOtRate(){
   $('newOtRate').value='';
   persist(); renderOtRateList(); renderOtPicker();
 }
-// total subsistence money for a saved shift: computed windows + manual claims
+// total subsistence money for a saved shift: computed windows + manual claims.
+// If a window/claim was saved before its value was set (value 0), fall back to the
+// current configured value for that tier/label so money shows up retroactively.
 function shiftSubsMoney(s){
   let t=0;
-  (s.subsistence||[]).forEach(x=>{ t+=Number(x.value)||0; });
-  (s.manualSubs||[]).forEach(m=>{ t+=Number(m.value)||0; });
+  (s.subsistence||[]).forEach(x=>{
+    let v=Number(x.value)||0;
+    if(v===0 && x.tier){ const td=SUBS_TIERS.find(t=>t.hours===x.tier); if(td) v=Number(td.value)||0; }
+    t+=v;
+  });
+  (s.manualSubs||[]).forEach(m=>{
+    let v=Number(m.value)||0;
+    if(v===0){ const md=MANUAL_SUBS.find(x=>x.label===m.label); if(md) v=Number(md.value)||0; }
+    t+=v;
+  });
   return t;
 }
 function renderTierList(){
@@ -1252,7 +1274,12 @@ function saveShift(){
     cadsCleared: false
   };
   $('saveShift').style.display='none';
-  claimedManual=[]; shiftOtMult=null; renderManualSubPicker(); renderOtPicker();
+  claimedManual=[]; shiftOtMult=null;
+  // clear the entry so the next shift starts fresh (calls were saved to the week)
+  calls=[]; gapAnswers={};
+  if($('output')) $('output').innerHTML='';
+  renderCalls(); renderGaps();
+  renderManualSubPicker(); renderOtPicker();
   renderHistory();
   persist();
   // stay on Enter, show a brief confirmation, ready for the next day
@@ -1321,7 +1348,7 @@ function buildDayText(s){
   L.push(fmtDate(s.date));
   L.push('Actual: '+s.actualStart+'-'+s.actualEnd);
   if(s.otHours>0){
-    L.push('Overtime: '+s.otHours+'h  '+s.otFrom+'-'+s.otTo+(s.otMoney>0?'  '+(s.currency||CURRENCY)+s.otMoney.toFixed(2)+' ('+fmtMult(s.otMult)+')':'')+(s.otCads&&s.otCads.length?'  incident '+s.otCads.join(', '):''));
+    L.push('Overtime: '+s.otHours+'h  '+s.otFrom+'-'+s.otTo+(effOtMoney(s)>0?'  '+(s.currency||CURRENCY)+effOtMoney(s).toFixed(2)+' ('+fmtMult(effOtMult(s))+')':'')+(s.otCads&&s.otCads.length?'  incident '+s.otCads.join(', '):''));
   } else L.push('Overtime: none');
   if(s.subsistence.length){
     s.subsistence.forEach(x=>L.push('Subsistence: '+x.from+'-'+x.to+'  '+(x.label||(x.tier+'h'))+(x.cads.length?'  incident '+x.cads.join(', '):'')));
@@ -1365,7 +1392,7 @@ function renderDayRow(s){
     </div>
     <div class="section-ot">
       <div class="dl">Overtime</div>
-      <div>${s.otHours}h (${s.otFrom}-${s.otTo})${s.otHours>0?` &middot; incident no. ${otCadStr}`:''}${s.otMoney>0?` <span class="otmoney">${(s.currency||CURRENCY)+s.otMoney.toFixed(2)} (${fmtMult(s.otMult)})</span>`:''}</div>
+      <div>${s.otHours}h (${s.otFrom}-${s.otTo})${s.otHours>0?` &middot; incident no. ${otCadStr}`:''}${effOtMoney(s)>0?` <span class="otmoney">${(s.currency||CURRENCY)+effOtMoney(s).toFixed(2)} (${fmtMult(effOtMult(s))})</span>`:''}</div>
     </div>
     <div class="section-sub">
       <div class="dl">Subsistence</div>
