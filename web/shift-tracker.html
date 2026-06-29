@@ -820,25 +820,31 @@ function addCall(){calls.push({cad:'',start:'',clear:''});renderCalls();}
    incidents and their HH:MM:SS time pairs, and lets the user confirm before
    the rows drop into the call list. No upload, no server, no Claude. */
 let mdtRows=[];
-function mdtValidTime(t){ const m=(t||'').match(/^(\d{2}):(\d{2}):(\d{2})$/); if(!m) return false; return +m[1]<=23&&+m[2]<=59&&+m[3]<=59; }
+function mdtValidTime(t){ const m=(t||'').match(/^(\d{1,2}):(\d{2}):(\d{2})$/); if(!m) return false; return +m[1]<=23&&+m[2]<=59&&+m[3]<=59; }
+function padTime(t){ const m=(t||'').match(/^(\d{1,2}):(\d{2}):(\d{2})$/); return m ? String(+m[1]).padStart(2,'0')+':'+m[2]+':'+m[3] : t; }
 function mdtExtract(text){
-  // Robust two-stream approach: collect every CAD and every valid time-pair as
-  // ordered streams, then zip them, each CAD takes the next time-pair on its line
-  // or after. Survives CAD+time on one line, time-only lines, and the two-column
-  // layout where a right-hand message log is interleaved.
+  // Tolerant of real OCR glitches: a stray space inside a CAD (5901 640), AS+any
+  // digit (AS1/AS2), single or double dashes, and spaces inside times (00:1 4:31).
+  // Pairs each CAD with the NEAREST time within 2 lines below it, which resists the
+  // drift that pure order-pairing suffers when one time is dropped or garbled.
   const lines=text.split('\n');
   const cads=[]; const times=[];
   lines.forEach((line,idx)=>{
-    const cadM=line.match(/AS[I1l]?\s*[: ]?\s*(\d{7})\b/i);          // AS1 + exactly 7 digits
-    if(cadM) cads.push({cad:cadM[1], line:idx});
-    const pairM=line.match(/(\d{2}:\d{2}:\d{2})\s*[-–—]+\s*(\d{2}:\d{2}:\d{2})/);
-    if(pairM && mdtValidTime(pairM[1]) && mdtValidTime(pairM[2])) times.push({start:pairM[1], clear:pairM[2], line:idx});
+    const cadM=line.match(/AS[\dIl]\s+(\d[\d ]{5,7}\d)/i);
+    if(cadM){ const digits=cadM[1].replace(/\s/g,''); if(digits.length===7) cads.push({cad:digits, line:idx}); }
+    const pairM=line.match(/(\d{1,2}:\s?\d{2}:\s?\d{2})\s*[-–—]+\s*(\d{1,2}:\s?\d{2}:\s?\d{2})/);
+    if(pairM){ const s=padTime(pairM[1].replace(/\s/g,'')), c=padTime(pairM[2].replace(/\s/g,'')); if(mdtValidTime(s)&&mdtValidTime(c)) times.push({start:s, clear:c, line:idx, used:false}); }
   });
-  const out=[]; let ti=0;
-  for(const c of cads){
-    while(ti<times.length && times[ti].line < c.line) ti++;        // skip times before this CAD
-    if(ti<times.length){ out.push({cad:c.cad, start:times[ti].start, clear:times[ti].clear}); ti++; }
-    else out.push({cad:c.cad, start:'', clear:''});                 // CAD with no time found → user fills
+  const out=[];
+  for(const cd of cads){
+    let best=-1, bestDist=999;
+    for(let i=0;i<times.length;i++){
+      if(times[i].used) continue;
+      const dist=times[i].line - cd.line;            // time sits on or below its CAD line
+      if(dist>=0 && dist<=2 && dist<bestDist){ best=i; bestDist=dist; }
+    }
+    if(best>=0){ times[best].used=true; out.push({cad:cd.cad, start:times[best].start, clear:times[best].clear}); }
+    else out.push({cad:cd.cad, start:'', clear:''});   // no nearby time → user fills it in
   }
   return out;
 }
@@ -848,6 +854,17 @@ function mdtFlag(records){
     let flagged=false;
     if(!/^\d{7}$/.test(r.cad)) flagged=true;
     if(!mdtValidTime(r.start)||!mdtValidTime(r.clear)) flagged=true;
+    // logic check: a clear earlier than start signals a misread digit (e.g. 09→00),
+    // UNLESS it's a plausible overnight call (clear rolls past midnight). We treat a
+    // clear within ~8h after start (mod 24h) as a normal crossing; a big backwards
+    // gap is almost certainly a misread and worth a look.
+    if(mdtValidTime(r.start) && mdtValidTime(r.clear)){
+      const toMin=t=>{const p=t.split(':');return +p[0]*60+ +p[1];};
+      const s=toMin(r.start), c=toMin(r.clear);
+      let span = c - s; if(span<0) span+=1440;       // allow midnight wrap
+      if(span>720) flagged=true;                      // >12h call is implausible → likely misread
+      if(c < s && span>720) flagged=true;
+    }
     if(nums.length>=3){
       const others=nums.filter((_,j)=>j!==i);
       const span=Math.max(...others)-Math.min(...others);
