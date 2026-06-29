@@ -162,6 +162,9 @@
   .msub.on{background:var(--p-600);color:#fff;border-color:var(--p-600)}
   .msub-claimed{margin-top:7px;display:flex;flex-wrap:wrap;gap:5px}
   .msub-val{opacity:.85;font-weight:600}
+  .otdef{flex:1;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-soft);font-weight:500;cursor:pointer}
+  .otdef input{width:auto;margin:0}
+  .otmoney{font-weight:600;color:var(--p-600);margin-left:4px}
   .calmonthtotal{text-align:center;font-size:13px;color:var(--ink-soft);margin-top:14px}
   .calmonthtotal b{color:var(--p-700)}
   .pattype{flex:1;font-size:12px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em}
@@ -296,6 +299,7 @@
     </div>
 
     <div id="manualSubPicker"></div>
+    <div id="otRatePicker"></div>
 
     <div id="gapQuestions"></div>
     <button class="act" id="compute" style="margin-top:6px">Compute shift</button>
@@ -373,6 +377,15 @@
       </label>
     </div>
 
+    <h2 class="sec">Overtime pay</h2>
+    <div class="card">
+      <div class="locnote" style="margin-bottom:10px">Set your hourly wage and your overtime rates. Mark one rate as the default, it applies automatically; you can override it on a shift. Overtime money is worked out in the background. The hours stay the figure you write on the paysheet.</div>
+      <label class="fld"><span>Hourly wage</span><input type="number" id="wageInput" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+      <div id="otRateList"></div>
+      <label class="fld" style="margin-top:10px"><span>Add overtime rate (multiplier, e.g. 1.5)</span><input type="number" id="newOtRate" min="1" step="0.05" inputmode="decimal" placeholder="1.5"></label>
+      <button class="act ghost small" id="addOtRate">+ Add rate</button>
+    </div>
+
     <h2 class="sec">Your shift patterns</h2>
     <div class="card">
       <div class="locnote" style="margin-bottom:10px">Add the shift times your station runs. These become your quick-picks when entering a shift and building your roster.</div>
@@ -426,6 +439,11 @@ let SUBS_TIERS=[{hours:5,label:'',value:0},{hours:10,label:'',value:0}];
 let MANUAL_SUBS=[];
 /* Currency symbol for money display, chosen in Settings. */
 let CURRENCY='€';
+/* Overtime pay: an hourly wage and a list of multipliers (x1.5, x2, ...).
+   One multiplier is the default that auto-applies; a shift can override it.
+   Overtime money = hours * wage * multiplier. Hours stay primary; money is secondary. */
+let WAGE=0;
+let OT_RATES=[{mult:1.5,def:true},{mult:2,def:false}];
 // roster: a repeating cycle. cycle[w][d] = pattern string or 'off' (w=0..weeks-1, d=0..6 Mon..Sun)
 // exceptions: one-off overrides keyed by date 'YYYY-MM-DD', each {type, pattern?}.
 //   type 'work'  → worked a pattern (extra shift or swap to a different pattern); has .pattern
@@ -436,6 +454,7 @@ let CURRENCY='€';
 let roster = { weeks:9, cycle:null, anchorDate:null, anchorWeek:0, exceptions:{} };
 let calls=[]; let gapAnswers={};
 let claimedManual=[];   // manual subsistence labels ticked for the current shift entry
+let shiftOtMult=null;   // overtime multiplier chosen for the current shift (null = use default)
 const $=id=>document.getElementById(id);
 
 /* ---- init: load persisted data (no external data file needed anymore) ---- */
@@ -447,6 +466,8 @@ function initApp(){
   if(savedData && Array.isArray(savedData.subsTiers) && savedData.subsTiers.length) SUBS_TIERS = savedData.subsTiers.map(t=>({hours:t.hours,label:t.label||'',value:Number(t.value)||0}));
   if(savedData && Array.isArray(savedData.manualSubs)) MANUAL_SUBS = savedData.manualSubs.map(m=> typeof m==='string' ? {label:m,value:0} : {label:m.label,value:Number(m.value)||0});
   if(savedData && savedData.currency) CURRENCY = savedData.currency;
+  if(savedData && savedData.wage!=null) WAGE = Number(savedData.wage)||0;
+  if(savedData && Array.isArray(savedData.otRates) && savedData.otRates.length) OT_RATES = savedData.otRates;
   renderCalls(); renderHistory();
   // reflect restored roster into its UI
   $('rosterWeeks').value=roster.weeks;
@@ -457,7 +478,10 @@ function initApp(){
   renderTierList();
   renderManualSubList();
   renderManualSubPicker();
+  renderOtRateList();
+  renderOtPicker();
   if($('currencySel')) $('currencySel').value=CURRENCY;
+  if($('wageInput')) $('wageInput').value = WAGE>0 ? WAGE : '';
 }
 
 /* ===== PERSISTENCE (localStorage) =====
@@ -470,7 +494,7 @@ let storageOK = (()=>{ try{ const k='__t'; localStorage.setItem(k,'1'); localSto
 function persist(){
   if(!storageOK) return;
   try{
-    localStorage.setItem(STORE_KEY, JSON.stringify({ v:2, shiftStore, roster, patterns:PATTERNS, subsTiers:SUBS_TIERS, manualSubs:MANUAL_SUBS, currency:CURRENCY }));
+    localStorage.setItem(STORE_KEY, JSON.stringify({ v:2, shiftStore, roster, patterns:PATTERNS, subsTiers:SUBS_TIERS, manualSubs:MANUAL_SUBS, currency:CURRENCY, wage:WAGE, otRates:OT_RATES }));
   }catch(e){ /* quota or serialization issue: fail quietly, app still works in-session */ }
 }
 function loadPersisted(){
@@ -529,6 +553,40 @@ function addPattern(){
 /* ---- subsistence tier manager (Settings) ---- */
 function tierLabel(t){ return (t.label && t.label.trim()) ? t.label.trim() : `${t.hours}h`; }
 function money(n){ return CURRENCY + (Math.round(n*100)/100).toFixed(2); }
+
+/* ---- overtime pay (Settings) ---- */
+function defaultOtRate(){
+  const d = OT_RATES.find(r=>r.def);
+  return d ? d.mult : (OT_RATES[0] ? OT_RATES[0].mult : 1);
+}
+function fmtMult(m){ return 'x'+(Math.round(m*100)/100).toString().replace(/\.00$/,''); }
+function renderOtRateList(){
+  const el=$('otRateList'); if(!el) return;
+  if(!OT_RATES.length){ el.innerHTML='<div class="locnote">No rates yet. Add one below.</div>'; return; }
+  el.innerHTML=OT_RATES.map((r,i)=>`<div class="patrow">
+    <span class="patbadge sub">${fmtMult(r.mult)}</span>
+    <label class="otdef"><input type="radio" name="otdef" ${r.def?'checked':''} data-def="${i}"> default</label>
+    <button class="patdel" data-i="${i}" aria-label="delete">&times;</button>
+  </div>`).join('');
+  el.querySelectorAll('[data-def]').forEach(rb=>rb.onchange=()=>{
+    OT_RATES.forEach((r,j)=>r.def=(j===+rb.dataset.def)); persist(); renderOtRateList(); renderOtPicker();
+  });
+  el.querySelectorAll('.patdel').forEach(b=>b.onclick=()=>{
+    const wasDef=OT_RATES[+b.dataset.i].def;
+    OT_RATES.splice(+b.dataset.i,1);
+    if(wasDef && OT_RATES.length) OT_RATES[0].def=true;   // keep a default
+    persist(); renderOtRateList(); renderOtPicker();
+  });
+}
+function addOtRate(){
+  const m=parseFloat($('newOtRate').value);
+  if(!m || m<=0){ alert('Enter a multiplier, e.g. 1.5'); return; }
+  if(OT_RATES.some(r=>r.mult===m)){ alert('That rate is already in your list.'); return; }
+  OT_RATES.push({mult:m, def:OT_RATES.length===0});
+  OT_RATES.sort((a,b)=>a.mult-b.mult);
+  $('newOtRate').value='';
+  persist(); renderOtRateList(); renderOtPicker();
+}
 // total subsistence money for a saved shift: computed windows + manual claims
 function shiftSubsMoney(s){
   let t=0;
@@ -577,6 +635,26 @@ function renderManualSubPicker(){
     if(claimedManual.includes(n)) claimedManual=claimedManual.filter(x=>x!==n);
     else claimedManual.push(n);
     b.classList.toggle('on');
+  });
+}
+
+/* ---- overtime rate picker (Enter screen) ---- */
+// Shows the rate applied to this shift's overtime. Default is pre-selected; tap another
+// to override just this shift. Only shown when a wage and at least one rate are set.
+function renderOtPicker(){
+  const el=$('otRatePicker'); if(!el) return;
+  if(!WAGE || !OT_RATES.length){ el.innerHTML=''; return; }
+  const active = shiftOtMult!=null ? shiftOtMult : defaultOtRate();
+  el.innerHTML=`<h2 class="sec">Overtime rate</h2>
+    <div class="card">
+      <div class="locnote" style="margin-bottom:10px">Your default rate is applied automatically. Tap another only if this shift's overtime was at a different rate.</div>
+      <div class="msubs">${OT_RATES.map(r=>`
+        <button class="msub ${r.mult===active?'on':''}" data-r="${r.mult}">${fmtMult(r.mult)}${r.def?' <span class="msub-val">default</span>':''}</button>`).join('')}</div>
+    </div>`;
+  el.querySelectorAll('.msub').forEach(b=>b.onclick=()=>{
+    shiftOtMult=parseFloat(b.dataset.r);
+    el.querySelectorAll('.msub').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
   });
 }
 function renderManualSubList(){
@@ -699,6 +777,11 @@ function saveShift(){
     return { label, value: def ? (Number(def.value)||0) : 0 };
   });
 
+  // overtime money: hours * wage * the applicable multiplier (shift override or default)
+  const otMult = shiftOtMult!=null ? shiftOtMult : defaultOtRate();
+  const otHoursVal = +(r.overtime.roundedMin/60).toFixed(2);
+  const otMoney = (WAGE>0 && otHoursVal>0) ? +(otHoursVal * WAGE * otMult).toFixed(2) : 0;
+
   // capture exactly what the paysheet row needs
   shiftStore[date] = {
     date,
@@ -707,7 +790,8 @@ function saveShift(){
     actualEnd: ENGINE.fmtClock(r.overtime.backM),
     otFrom: ENGINE.fmtClock(r.overtime.rosterEndM),
     otTo: ENGINE.fmtClock(r.overtime.backM),
-    otHours: +(r.overtime.roundedMin/60).toFixed(2),
+    otHours: otHoursVal,
+    otMult, otMoney, wage: WAGE,
     otCads,
     subsistence,
     manualSubs: manualClaimed,
@@ -716,7 +800,7 @@ function saveShift(){
     cadsCleared: false
   };
   $('saveShift').style.display='none';
-  claimedManual=[]; renderManualSubPicker();
+  claimedManual=[]; shiftOtMult=null; renderManualSubPicker(); renderOtPicker();
   renderHistory();
   persist();
   // stay on Enter, show a brief confirmation, ready for the next day
@@ -785,7 +869,7 @@ function buildDayText(s){
   L.push(fmtDate(s.date));
   L.push('Actual: '+s.actualStart+'-'+s.actualEnd);
   if(s.otHours>0){
-    L.push('Overtime: '+s.otHours+'h  '+s.otFrom+'-'+s.otTo+(s.otCads&&s.otCads.length?'  incident '+s.otCads.join(', '):''));
+    L.push('Overtime: '+s.otHours+'h  '+s.otFrom+'-'+s.otTo+(s.otMoney>0?'  '+(s.currency||CURRENCY)+s.otMoney.toFixed(2)+' ('+fmtMult(s.otMult)+')':'')+(s.otCads&&s.otCads.length?'  incident '+s.otCads.join(', '):''));
   } else L.push('Overtime: none');
   if(s.subsistence.length){
     s.subsistence.forEach(x=>L.push('Subsistence: '+x.from+'-'+x.to+'  '+(x.label||(x.tier+'h'))+(x.cads.length?'  incident '+x.cads.join(', '):'')));
@@ -829,7 +913,7 @@ function renderDayRow(s){
     </div>
     <div class="section-ot">
       <div class="dl">Overtime</div>
-      <div>${s.otHours}h (${s.otFrom}-${s.otTo})${s.otHours>0?` &middot; incident no. ${otCadStr}`:''}</div>
+      <div>${s.otHours}h (${s.otFrom}-${s.otTo})${s.otHours>0?` &middot; incident no. ${otCadStr}`:''}${s.otMoney>0?` <span class="otmoney">${(s.currency||CURRENCY)+s.otMoney.toFixed(2)} (${fmtMult(s.otMult)})</span>`:''}</div>
     </div>
     <div class="section-sub">
       <div class="dl">Subsistence</div>
@@ -1101,6 +1185,8 @@ $('addPattern').onclick=addPattern;
 $('addTier').onclick=addTier;
 $('addManualSub').onclick=addManualSub;
 $('currencySel').onchange=()=>{ CURRENCY=$('currencySel').value; persist(); renderTierList(); renderManualSubList(); renderManualSubPicker(); renderHistory(); };
+$('wageInput').oninput=()=>{ WAGE=parseFloat($('wageInput').value)||0; persist(); renderOtPicker(); };
+$('addOtRate').onclick=addOtRate;
 initApp();
 </script>
 </body>
