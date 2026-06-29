@@ -888,7 +888,11 @@ function mdtExtract(text){
 }
 // Pull valid HH:MM:SS times from a line, fixing apostrophe-as-colon and inner spaces.
 function grabTimes(line){
-  const norm=line.replace(/[']/g,':');
+  let norm=line.replace(/[']/g,':');
+  // repair a space where a colon should be: '07:41 01' -> '07:41:01' (2nd colon),
+  // and '07 41:01' -> '07:41:01' (1st colon). OCR often drops a colon to a space.
+  norm=norm.replace(/(\d{1,2}:\d{2})\s+(\d{2})(?!\d)/g,'$1:$2');
+  norm=norm.replace(/(\d{1,2})\s+(\d{2}:\d{2})/g,'$1:$2');
   const toks=(norm.match(/\d{1,2}\s*:\s*\d{2}\s*:\s*\d{2}/g)||[]).map(t=>padTime(t.replace(/\s/g,'')));
   return toks.filter(mdtValidTime);
 }
