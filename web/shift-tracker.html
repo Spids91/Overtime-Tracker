@@ -1158,7 +1158,10 @@ function compute(){
   if(r.error){out.innerHTML=`<div class="card warnline">${r.error}</div>`;return;}
   if(!r.ok){renderGaps();out.innerHTML='<div class="card warnline">Answer the gap question(s) above, then compute again.</div>';return;}
   const ot=r.overtime,sub=r.subsistence;
-  out.innerHTML=`<div class="result"><div class="head"><div class="ttl">Computed shift &middot; ${$('shiftDate').value||'no date'}</div></div>
+  const warnBanner = (r.warnings && r.warnings.length)
+    ? `<div class="card warnline" style="margin-bottom:10px"><b>Check these figures.</b><br>${r.warnings.join('<br>')}</div>`
+    : '';
+  out.innerHTML=warnBanner+`<div class="result"><div class="head"><div class="ttl">Computed shift &middot; ${$('shiftDate').value||'no date'}</div></div>
     <div class="metrics"><div class="metric ot"><div class="big">${(ot.roundedMin/60).toFixed(2).replace(/\.00$/,'')}h</div><div class="lbl">Overtime ${Number($('otRound').value)?'(up '+$('otRound').value+'m)':'(exact)'}</div></div>
     <div class="metric sub"><div class="big">${sub.summary}</div><div class="lbl">Subsistence tiers</div></div></div>
     <div class="ledger">${r.awayWindows.map((w,i)=>`<div class="lrow"><span class="t">${ENGINE.fmtClock(w.start)}-${ENGINE.fmtClock(w.end)}</span><span class="d">Away window ${i+1}: ${ENGINE.fmtDur(w.durMin)} ${w.tier>0?`<span class="pill psub">${w.tierLabel||(w.tier+'h')} tier</span>`:'<span class="pill">under threshold</span>'}</span></div>`).join('')}

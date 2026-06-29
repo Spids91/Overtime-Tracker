@@ -204,8 +204,21 @@ function computeShift(input) {
   const rawMin = Math.max(0, backM - rosterEndM);
   const roundedMin = roundUp(rawMin, input.otRoundInc || 0);
 
+  // ---- sanity warnings ----
+  // Physically implausible figures usually mean a misread time or a day-wrap error fed
+  // bad input. Surface them so the UI can flag rather than present them as fact.
+  const warnings = [];
+  const MAX_PLAUSIBLE_WINDOW = 18 * 60;   // a single continuous away-window over 18h is suspect
+  const MAX_PLAUSIBLE_OT = 16 * 60;       // over 16h overtime on one shift is suspect
+  awayWindows.forEach((w, i) => {
+    if (w.durMin > MAX_PLAUSIBLE_WINDOW)
+      warnings.push(`Away window ${i + 1} is ${(w.durMin / 60).toFixed(1)}h, which is unusually long. Check the call times for a misread.`);
+  });
+  if (rawMin > MAX_PLAUSIBLE_OT)
+    warnings.push(`Overtime is ${(rawMin / 60).toFixed(1)}h, which is unusually high. Check the back-at-base time and call times.`);
+
   return {
-    ok: true, needAnswers: [], error: null, gaps,
+    ok: true, needAnswers: [], error: null, gaps, warnings,
     awayWindows,
     subsistence: { count5, count10, summary },
     overtime: { rawMin, roundedMin, hours: roundedMin / 60, rosterEndM, backM },
