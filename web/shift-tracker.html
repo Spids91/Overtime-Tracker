@@ -871,10 +871,13 @@ function mdtExtract(text){
     const cadM=line.match(/AS[\dITLil]\s+(\d[\d ]{5,7}\d)/i);   // normal: AS1/AS2 + 7 digits
     if(cadM){ const digits=cadM[1].replace(/\s/g,''); if(digits.length===7) cadFound=digits; }
     // fallback: AS prefix badly mangled (e.g. '"a 5901651'). Catch a bare 7-digit CAD
-    // (starts with 5) ONLY on a line that is not a time line, to avoid message-log noise.
+    // (starts with 5) but ONLY when it's NOT inside parentheses (those are message-log
+    // refs like '(5901441)') and appears near the START of the line (incident CADs lead
+    // their row; message CADs sit mid-text). This prevents false incidents from the log.
     if(!cadFound && !isTimeLine){
-      const bare=line.match(/(?:^|[^\d])(5\d{6})(?:[^\d]|$)/);
-      if(bare) cadFound=bare[1];
+      const noParen=line.replace(/\([^)]*\)/g,' ');
+      const bare=noParen.match(/(?:^|[^\d])(5\d{6})(?:[^\d]|$)/);
+      if(bare && noParen.indexOf(bare[1])<=14) cadFound=bare[1];
     }
     if(cadFound) cads.push({cad:cadFound, line:idx});
     if(isTimeLine) times.push({start:toks[0], clear:toks[1], line:idx, used:false});
@@ -902,18 +905,19 @@ function mdtExtract(text){
   return out.map(r=>({cad:r.cad, start:r.start, clear:r.clear}));
 }
 // Pull valid HH:MM:SS times from a line, fixing apostrophe-as-colon and inner spaces.
-function grabTimes(line){
-  // Primary: a clean incident time line has exactly 12 digits (HHMMSS + HHMMSS).
-  // Rebuild both times straight from the digits, ignoring whatever the separators
-  // got mangled into (space, dash, tilde, apostrophe, missing). Most robust path.
-  const digits=(line.match(/\d/g)||[]).join('');
+function grabTimes(rawline){
+  // Strip parenthesised message-log CAD refs like '(5901441)' so they don't pollute the
+  // digit count, and fix a period used as a colon ('21:09.49'). Then the 12-digit
+  // reconstruction can fire on the clean incident time.
+  const line=rawline.replace(/\([^)]*\)/g,' ');
+  let work=line.replace(/(\d{1,2}:\d{2})[.](\d{2})/g,'$1:$2');
+  const digits=(work.match(/\d/g)||[]).join('');
   if(digits.length===12){
     const t1=digits.slice(0,2)+':'+digits.slice(2,4)+':'+digits.slice(4,6);
     const t2=digits.slice(6,8)+':'+digits.slice(8,10)+':'+digits.slice(10,12);
     if(mdtValidTime(t1)&&mdtValidTime(t2)) return [t1,t2];
   }
-  // Fallback for lines with extra digits or only one time: token-grab with colon repairs.
-  let norm=line.replace(/[']/g,':');
+  let norm=work.replace(/[']/g,':');
   norm=norm.replace(/(\d{1,2}:\d{2})\s+(\d{2})(?!\d)/g,'$1:$2');
   norm=norm.replace(/(\d{1,2})\s+(\d{2}:\d{2})/g,'$1:$2');
   norm=norm.replace(/(\d{1,2}:\d{2})(\d{2})(?!\d)/g,'$1:$2');
