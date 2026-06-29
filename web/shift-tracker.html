@@ -823,30 +823,38 @@ let mdtRows=[];
 function mdtValidTime(t){ const m=(t||'').match(/^(\d{1,2}):(\d{2}):(\d{2})$/); if(!m) return false; return +m[1]<=23&&+m[2]<=59&&+m[3]<=59; }
 function padTime(t){ const m=(t||'').match(/^(\d{1,2}):(\d{2}):(\d{2})$/); return m ? String(+m[1]).padStart(2,'0')+':'+m[2]+':'+m[3] : t; }
 function mdtExtract(text){
-  // Tolerant of real OCR glitches: a stray space inside a CAD (5901 640), AS+any
-  // digit (AS1/AS2), single or double dashes, and spaces inside times (00:1 4:31).
-  // Pairs each CAD with the NEAREST time within 2 lines below it, which resists the
-  // drift that pure order-pairing suffers when one time is dropped or garbled.
+  // Tolerant of real OCR glitches seen on actual MDT photos:
+  //  - CAD with a stray inner space (5900 185) and AS1 misread as AST/ASI
+  //  - time separators that are missing, a tilde, or a dash
+  //  - colons misread as apostrophes (07:41'01) and spaces around colons
+  // Approach: per line, grab ALL valid HH:MM:SS tokens (a line's incident pair is the
+  // first two), and pair each CAD with the nearest time-bearing line within 2 lines.
   const lines=text.split('\n');
   const cads=[]; const times=[];
   lines.forEach((line,idx)=>{
-    const cadM=line.match(/AS[\dIl]\s+(\d[\d ]{5,7}\d)/i);
+    const cadM=line.match(/AS[\dITLil]\s+(\d[\d ]{5,7}\d)/i);
     if(cadM){ const digits=cadM[1].replace(/\s/g,''); if(digits.length===7) cads.push({cad:digits, line:idx}); }
-    const pairM=line.match(/(\d{1,2}:\s?\d{2}:\s?\d{2})\s*[-–—]+\s*(\d{1,2}:\s?\d{2}:\s?\d{2})/);
-    if(pairM){ const s=padTime(pairM[1].replace(/\s/g,'')), c=padTime(pairM[2].replace(/\s/g,'')); if(mdtValidTime(s)&&mdtValidTime(c)) times.push({start:s, clear:c, line:idx, used:false}); }
+    const toks=grabTimes(line);
+    if(toks.length>=2) times.push({start:toks[0], clear:toks[1], line:idx, used:false});
   });
   const out=[];
   for(const cd of cads){
     let best=-1, bestDist=999;
     for(let i=0;i<times.length;i++){
       if(times[i].used) continue;
-      const dist=times[i].line - cd.line;            // time sits on or below its CAD line
+      const dist=times[i].line - cd.line;
       if(dist>=0 && dist<=2 && dist<bestDist){ best=i; bestDist=dist; }
     }
     if(best>=0){ times[best].used=true; out.push({cad:cd.cad, start:times[best].start, clear:times[best].clear}); }
-    else out.push({cad:cd.cad, start:'', clear:''});   // no nearby time → user fills it in
+    else out.push({cad:cd.cad, start:'', clear:''});
   }
   return out;
+}
+// Pull valid HH:MM:SS times from a line, fixing apostrophe-as-colon and inner spaces.
+function grabTimes(line){
+  const norm=line.replace(/[']/g,':');
+  const toks=(norm.match(/\d{1,2}\s*:\s*\d{2}\s*:\s*\d{2}/g)||[]).map(t=>padTime(t.replace(/\s/g,'')));
+  return toks.filter(mdtValidTime);
 }
 function mdtFlag(records){
   const nums=records.map(r=>parseInt(r.cad,10));
